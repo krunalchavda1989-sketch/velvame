@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Crown, LayoutDashboard, Users, Wallet, ShoppingBag,
-  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award
+  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, Shield
 } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -20,6 +21,7 @@ const menuItems = [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { isAdmin } = useAdminCheck();
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -51,6 +53,20 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             );
           })}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors mt-4 border border-primary/20 ${
+                location.pathname.startsWith("/admin")
+                  ? "bg-primary/10 text-primary"
+                  : "text-primary/80 hover:text-primary hover:bg-primary/5"
+              }`}
+            >
+              <Shield className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && <span>Admin Panel</span>}
+            </Link>
+          )}
         </nav>
 
         <div className="p-2 border-t border-border">
