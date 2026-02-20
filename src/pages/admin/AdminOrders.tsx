@@ -4,12 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Coins, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
@@ -17,13 +20,21 @@ const AdminOrders = () => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    // Fetch profiles to map user_id -> name
-    const { data: profilesData } = await supabase.from("profiles").select("user_id, full_name, referral_code");
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, referral_code");
     const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
+
+    // Check which orders already have commissions processed
+    const { data: commData } = await supabase
+      .from("commissions")
+      .select("order_id");
+    const processedOrderIds = new Set((commData || []).map((c) => c.order_id));
 
     const enriched = (ordersData || []).map((o) => ({
       ...o,
       profile: profileMap.get(o.user_id) || null,
+      commissions_processed: processedOrderIds.has(o.id),
     }));
 
     setOrders(enriched);
@@ -36,7 +47,54 @@ const AdminOrders = () => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Order status updated to ${status}`);
-    fetchOrders();
+
+    // Auto-process commissions when order is confirmed
+    if (status === "confirmed") {
+      await processCommissions(id, true);
+    } else {
+      fetchOrders();
+    }
+  };
+
+  const processCommissions = async (orderId: string, silent = false) => {
+    setProcessingId(orderId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-commissions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ order_id: orderId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) throw new Error(result.error);
+
+      if (result.message === "Already processed") {
+        if (!silent) toast.info("Commissions were already processed for this order.");
+      } else if (result.commissions_distributed === 0) {
+        if (!silent) toast.info("No upline found — no commissions distributed.");
+        else toast.info("Order confirmed. No referral chain found.");
+      } else {
+        toast.success(
+          `✅ ${result.commissions_distributed} commission${result.commissions_distributed > 1 ? "s" : ""} distributed — ₹${result.total_distributed} across ${result.commissions_distributed} level${result.commissions_distributed > 1 ? "s" : ""}`
+        );
+      }
+    } catch (err: any) {
+      toast.error(`Commission processing failed: ${err.message}`);
+    } finally {
+      setProcessingId(null);
+      fetchOrders();
+    }
   };
 
   const statusColor = (s: string) => {
@@ -53,7 +111,12 @@ const AdminOrders = () => {
     <AdminLayout>
       <div className="p-6 lg:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-display font-bold text-foreground">Order Tracking</h1>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Order Tracking</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Commissions are auto-processed when an order is confirmed.
+            </p>
+          </div>
           <Badge variant="outline" className="text-muted-foreground">{orders.length} orders</Badge>
         </div>
 
@@ -74,6 +137,7 @@ const AdminOrders = () => {
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
                   </tr>
@@ -93,6 +157,31 @@ const AdminOrders = () => {
                       </td>
                       <td className="p-3">
                         <Badge className={statusColor(o.status)}>{o.status}</Badge>
+                      </td>
+                      <td className="p-3">
+                        {o.commissions_processed ? (
+                          <div className="flex items-center gap-1.5 text-xs text-success font-medium">
+                            <Coins className="w-3.5 h-3.5" />
+                            Distributed
+                          </div>
+                        ) : o.status === "cancelled" ? (
+                          <span className="text-xs text-muted-foreground">N/A</span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10"
+                            disabled={processingId === o.id}
+                            onClick={() => processCommissions(o.id)}
+                          >
+                            {processingId === o.id ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Coins className="w-3 h-3" />
+                            )}
+                            {processingId === o.id ? "Processing…" : "Process"}
+                          </Button>
+                        )}
                       </td>
                       <td className="p-3 text-muted-foreground text-xs">{new Date(o.created_at).toLocaleDateString()}</td>
                       <td className="p-3">
