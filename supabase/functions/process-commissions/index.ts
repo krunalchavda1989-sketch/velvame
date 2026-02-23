@@ -49,7 +49,19 @@ Deno.serve(async (req: Request) => {
     if (!roleRow) throw new Error("Forbidden: admin access required");
 
     const { order_id } = await req.json();
-    if (!order_id) throw new Error("order_id is required");
+    if (!order_id || typeof order_id !== "string") {
+      return new Response(
+        JSON.stringify({ success: false, error: "order_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(order_id)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid order_id format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Fetch order
     const { data: order, error: orderError } = await supabase
@@ -182,8 +194,21 @@ Deno.serve(async (req: Request) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ success: false, error: message }), {
+    console.error("[Commission Processing Error]", err);
+
+    let clientMessage = "Commission processing failed";
+    if (err instanceof Error) {
+      const msg = err.message;
+      if (msg === "Unauthorized" || msg === "Missing Authorization header") {
+        clientMessage = "Authentication required";
+      } else if (msg.includes("admin access required")) {
+        clientMessage = "Insufficient permissions";
+      } else if (msg.includes("Order not found")) {
+        clientMessage = "Order not found";
+      }
+    }
+
+    return new Response(JSON.stringify({ success: false, error: clientMessage }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
