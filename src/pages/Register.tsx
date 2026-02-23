@@ -28,6 +28,18 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Validate referral code if provided
+      if (form.referralCode) {
+        const { data: isValid } = await supabase.rpc("validate_referral_code", {
+          _code: form.referralCode,
+        });
+        if (!isValid) {
+          toast.error("Invalid referral code. Please check and try again.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
