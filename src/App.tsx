@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import MyTeam from "./pages/dashboard/MyTeam";
+import Wallet from "./pages/dashboard/Wallet";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -46,6 +47,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MyTeam />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/wallet"
+              element={
+                <ProtectedRoute>
+                  <Wallet />
                 </ProtectedRoute>
               }
             />
