@@ -22,6 +22,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import Settings from "./pages/dashboard/Settings";
+import MyTitle from "./pages/dashboard/MyTitle";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/title"
+              element={
+                <ProtectedRoute>
+                  <MyTitle />
                 </ProtectedRoute>
               }
             />
