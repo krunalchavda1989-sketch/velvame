@@ -2,3 +2,6 @@ project_id = "btuzcxvgtlqszynjukoo"
 
 [functions.process-commissions]
 verify_jwt = false
+
+[functions.razorpay]
+verify_jwt = false

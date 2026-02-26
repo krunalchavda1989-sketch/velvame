@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Lock, Bell, Save, Loader2 } from "lucide-react";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -203,6 +204,24 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Razorpay / Payments */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Link to="/dashboard/settings/razorpay">
+            <Card className="hover:border-primary/30 transition-colors cursor-pointer">
+              <CardContent className="flex items-center justify-between py-5">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Payment & Subscription</p>
+                    <p className="text-xs text-muted-foreground">Manage Razorpay payments and subscription status</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
         </motion.div>
       </div>
     </DashboardLayout>
