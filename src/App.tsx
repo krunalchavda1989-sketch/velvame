@@ -23,6 +23,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
+import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MyTitle />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/settings/razorpay"
+              element={
+                <ProtectedRoute>
+                  <RazorpaySettings />
                 </ProtectedRoute>
               }
             />
