@@ -174,6 +174,22 @@ Deno.serve(async (req) => {
           .eq("user_id", payment.user_id);
       }
 
+      // If shop payment, update order status
+      if (payment?.purpose === "shop") {
+        const { data: paymentRecord } = await serviceClient
+          .from("payments")
+          .select("order_ref_id")
+          .eq("razorpay_order_id", razorpay_order_id)
+          .single();
+
+        if (paymentRecord?.order_ref_id) {
+          await serviceClient
+            .from("orders")
+            .update({ status: "confirmed", payment_method: "razorpay" })
+            .eq("id", paymentRecord.order_ref_id);
+        }
+      }
+
       return new Response(
         JSON.stringify({ success: true, status: "paid" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
