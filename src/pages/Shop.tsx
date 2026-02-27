@@ -6,14 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
-
-type CartItem = { id: string; qty: number };
+import CartDrawer, { type CartItem } from "@/components/shop/CartDrawer";
 
 const Shop = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -26,6 +26,17 @@ const Shop = () => {
       setLoading(false);
     };
     fetchProducts();
+  }, []);
+
+  // Load Razorpay SDK
+  useEffect(() => {
+    if (!document.getElementById("razorpay-sdk")) {
+      const script = document.createElement("script");
+      script.id = "razorpay-sdk";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }, []);
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
@@ -51,7 +62,7 @@ const Shop = () => {
             <h1 className="text-3xl font-display font-bold text-foreground">Shop Products</h1>
             <p className="text-sm text-muted-foreground mt-1">Quality products at distributor prices</p>
           </div>
-          <Button variant="outline" className="relative border-border">
+          <Button variant="outline" className="relative border-border" onClick={() => setCartOpen(true)}>
             <ShoppingCart className="h-4 w-4 mr-2" />
             Cart
             {totalItems > 0 && (
@@ -122,6 +133,14 @@ const Shop = () => {
         )}
       </div>
       <Footer />
+
+      <CartDrawer
+        open={cartOpen}
+        onOpenChange={setCartOpen}
+        cart={cart}
+        setCart={setCart}
+        products={products}
+      />
     </div>
   );
 };
