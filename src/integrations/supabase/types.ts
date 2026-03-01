@@ -333,6 +333,42 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          bank_details: Json | null
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          upi_id: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          bank_details?: Json | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          upi_id?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          bank_details?: Json | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          upi_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
