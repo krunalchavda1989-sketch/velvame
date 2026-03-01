@@ -5,6 +5,82 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+// Commission rates
+const LEVEL_RATES = [0.05, 0.045, 0.04, 0.035, 0.03, 0.025, 0.02, 0.015, 0.01];
+const REPURCHASE_RATES = [0.03, 0.02, 0.01];
+const QUALIFICATION_REQUIRED = [1, 3, 3, 3, 3, 6, 6, 6, 6];
+
+async function processCommissions(serviceClient: any, orderId: string) {
+  // Idempotency check
+  const { data: existing } = await serviceClient
+    .from("commissions")
+    .select("id")
+    .eq("order_id", orderId)
+    .limit(1);
+  if (existing && existing.length > 0) return;
+
+  const { data: order } = await serviceClient
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .single();
+  if (!order) return;
+
+  const { data: buyerProfile } = await serviceClient
+    .from("profiles")
+    .select("id, referred_by, user_id")
+    .eq("user_id", order.user_id)
+    .single();
+  if (!buyerProfile?.referred_by) return;
+
+  const isRepurchase = order.is_repurchase;
+  const maxLevels = isRepurchase ? 3 : 9;
+  const rates = isRepurchase ? REPURCHASE_RATES : LEVEL_RATES;
+  const commissionType = isRepurchase ? "repurchase" : "level";
+
+  const commissionsToInsert: Record<string, unknown>[] = [];
+  const walletUpdates: { user_id: string; amount: number }[] = [];
+  let currentProfileId: string | null = buyerProfile.referred_by;
+
+  for (let level = 1; level <= maxLevels; level++) {
+    if (!currentProfileId) break;
+    const { data: upline } = await serviceClient
+      .from("profiles")
+      .select("id, user_id, direct_referral_count, referred_by")
+      .eq("id", currentProfileId)
+      .single();
+    if (!upline) break;
+
+    if (upline.direct_referral_count >= QUALIFICATION_REQUIRED[level - 1]) {
+      const rate = rates[level - 1];
+      const amount = Math.round(order.total_amount * rate * 100) / 100;
+      commissionsToInsert.push({
+        order_id: order.id, beneficiary_id: upline.user_id,
+        source_user_id: order.user_id, level, rate, amount,
+        commission_type: commissionType, status: "pending",
+      });
+      walletUpdates.push({ user_id: upline.user_id, amount });
+    }
+    currentProfileId = upline.referred_by ?? null;
+  }
+
+  if (commissionsToInsert.length > 0) {
+    await serviceClient.from("commissions").insert(commissionsToInsert);
+    for (const { user_id, amount } of walletUpdates) {
+      const { data: wallet } = await serviceClient
+        .from("wallets")
+        .select("balance, total_earned")
+        .eq("user_id", user_id)
+        .single();
+      if (wallet) {
+        await serviceClient.from("wallets").update({
+          balance: Number(wallet.balance) + amount,
+          total_earned: Number(wallet.total_earned) + amount,
+        }).eq("user_id", user_id);
+      }
+    }
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -174,7 +250,7 @@ Deno.serve(async (req) => {
           .eq("user_id", payment.user_id);
       }
 
-      // If shop payment, update order status
+      // If shop payment, update order status and process commissions
       if (payment?.purpose === "shop") {
         const { data: paymentRecord } = await serviceClient
           .from("payments")
@@ -187,6 +263,13 @@ Deno.serve(async (req) => {
             .from("orders")
             .update({ status: "confirmed", payment_method: "razorpay" })
             .eq("id", paymentRecord.order_ref_id);
+
+          // Auto-process commissions for the confirmed order
+          try {
+            await processCommissions(serviceClient, paymentRecord.order_ref_id);
+          } catch (commErr) {
+            console.error("Commission processing error (non-fatal):", commErr);
+          }
         }
       }
 
