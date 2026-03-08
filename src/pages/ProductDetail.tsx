@@ -207,6 +207,7 @@ const ProductDetail = () => {
                     className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
                     disabled={product.stock <= 0}
                     onClick={() => {
+                      addToCart(product.id, qty);
                       toast.success(`Added ${qty}x ${product.name} to cart`);
                     }}
                   >
