@@ -402,6 +402,9 @@ const PaymentTab = () => {
         </CardHeader>
         <CardContent><PaymentStats /></CardContent>
       </Card>
+
+      {/* Transaction Lists */}
+      <PaymentTransactionList />
     </div>
   );
 };
