@@ -85,7 +85,7 @@ const RazorpaySettings = () => {
         amount: orderData.amount,
         currency: orderData.currency,
         name: "NexaMLM",
-        description: "Lifetime Subscription - ₹2,800",
+        description: `Lifetime Subscription - ₹${SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")}`,
         order_id: orderData.order_id,
         prefill: {
           name: profile?.full_name || "",
@@ -171,14 +171,14 @@ const RazorpaySettings = () => {
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Pay ₹2,800 one-time to activate your account and start earning commissions.
+                      Pay ₹{SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")} one-time to activate your account and start earning commissions.
                     </p>
                   )}
                 </div>
                 {!profile?.subscription_paid && (
                   <Button onClick={handlePaySubscription} disabled={paying} className="gap-2">
                     {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <IndianRupee className="h-4 w-4" />}
-                    Pay ₹2,800
+                    Pay ₹{SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")}
                   </Button>
                 )}
               </div>
