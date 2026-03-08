@@ -382,10 +382,11 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
                 <span className="text-muted-foreground">Method</span>
                 <span className="text-foreground capitalize">{order.shipping_method || "Free"}</span>
               </div>
-              {shippingAddr.name || shippingAddr.address || shippingAddr.city ? (
+              {shippingAddr.name || shippingAddr.line1 || shippingAddr.city ? (
                 <div className="text-sm text-foreground space-y-0.5 pt-1 border-t border-border mt-2">
                   {shippingAddr.name && <p className="font-medium">{shippingAddr.name}</p>}
-                  {shippingAddr.address && <p className="text-muted-foreground text-xs">{shippingAddr.address}</p>}
+                  {(shippingAddr.line1 || shippingAddr.address) && <p className="text-muted-foreground text-xs">{shippingAddr.line1 || shippingAddr.address}</p>}
+                  {shippingAddr.line2 && <p className="text-muted-foreground text-xs">{shippingAddr.line2}</p>}
                   {(shippingAddr.city || shippingAddr.state || shippingAddr.pincode) && (
                     <p className="text-muted-foreground text-xs">
                       {[shippingAddr.city, shippingAddr.state, shippingAddr.pincode].filter(Boolean).join(", ")}
