@@ -1155,26 +1155,45 @@ const SmtpTab = () => {
 };
 
 /* ───────── Shipping Tab ───────── */
+interface FreeShippingSettings {
+  enabled: boolean;
+  label: string;
+  min_amount: number;
+}
+
+interface FlatRateSettings {
+  enabled: boolean;
+  label: string;
+  cost: number;
+}
+
+const DEFAULT_FREE_SHIPPING: FreeShippingSettings = { enabled: false, label: "Free Shipping", min_amount: 0 };
+const DEFAULT_FLAT_RATE: FlatRateSettings = { enabled: true, label: "Flat Rate", cost: 0 };
+
 const ShippingTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [savingFreeShipping, setSavingFreeShipping] = useState(false);
+  const [savingFlatRate, setSavingFlatRate] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
     channel_id: "",
     sandbox: false,
   });
+  const [freeShipping, setFreeShipping] = useState<FreeShippingSettings>(DEFAULT_FREE_SHIPPING);
+  const [flatRate, setFlatRate] = useState<FlatRateSettings>(DEFAULT_FLAT_RATE);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from("pages_content")
-        .select("content")
-        .eq("page_slug", "shipping-settings")
-        .maybeSingle();
-      if (data?.content) {
-        const c = data.content as any;
+      const [shiprocketRes, shippingMethodsRes] = await Promise.all([
+        supabase.from("pages_content").select("content").eq("page_slug", "shipping-settings").maybeSingle(),
+        supabase.from("pages_content").select("content").eq("page_slug", "shipping-methods").maybeSingle(),
+      ]);
+
+      if (shiprocketRes.data?.content) {
+        const c = shiprocketRes.data.content as any;
         setForm({
           email: c.email || "",
           password: c.password ? "••••••••" : "",
@@ -1182,10 +1201,46 @@ const ShippingTab = () => {
           sandbox: c.sandbox || false,
         });
       }
+
+      if (shippingMethodsRes.data?.content) {
+        const c = shippingMethodsRes.data.content as any;
+        if (c.free_shipping) setFreeShipping({ ...DEFAULT_FREE_SHIPPING, ...c.free_shipping });
+        if (c.flat_rate) setFlatRate({ ...DEFAULT_FLAT_RATE, ...c.flat_rate });
+      }
+
       setLoading(false);
     };
     load();
   }, []);
+
+  const saveShippingMethods = async (type: "free_shipping" | "flat_rate") => {
+    const setter = type === "free_shipping" ? setSavingFreeShipping : setSavingFlatRate;
+    setter(true);
+
+    const payload = type === "free_shipping" ? { free_shipping: freeShipping } : { flat_rate: flatRate };
+
+    const { data: existing } = await supabase
+      .from("pages_content")
+      .select("id, content")
+      .eq("page_slug", "shipping-methods")
+      .maybeSingle();
+
+    if (existing) {
+      const merged = { ...(existing.content as any), ...payload };
+      await supabase
+        .from("pages_content")
+        .update({ content: merged as any, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("pages_content").insert({
+        page_slug: "shipping-methods",
+        title: "Shipping Methods",
+        content: payload as any,
+      });
+    }
+    setter(false);
+    toast.success(`${type === "free_shipping" ? "Free Shipping" : "Flat Rate"} settings saved`);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -1207,7 +1262,6 @@ const ShippingTab = () => {
 
       if (existing) {
         const merged = { ...(existing.content as any), ...payload };
-        // preserve existing password if not changed
         if (!payload.password && (existing.content as any)?.password) {
           merged.password = (existing.content as any).password;
         }
@@ -1234,10 +1288,6 @@ const ShippingTab = () => {
   const handleTest = async () => {
     setTesting(true);
     try {
-      // Test by generating a Shiprocket auth token
-      const baseUrl = form.sandbox
-        ? "https://apiv2.shiprocket.in/v1/external"
-        : "https://apiv2.shiprocket.in/v1/external";
       const email = form.email;
       const password = form.password === "••••••••" ? null : form.password;
 
@@ -1259,6 +1309,100 @@ const ShippingTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* Free Shipping */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Free Shipping</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="free-shipping-enabled"
+              checked={freeShipping.enabled}
+              onCheckedChange={(v) => setFreeShipping((prev) => ({ ...prev, enabled: v }))}
+            />
+            <Label htmlFor="free-shipping-enabled" className="text-sm cursor-pointer">Enable Free Shipping</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Label <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={freeShipping.label}
+              onChange={(e) => setFreeShipping((prev) => ({ ...prev, label: e.target.value }))}
+              placeholder="Free Shipping"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Minimum Amount</Label>
+            <Input
+              type="number"
+              min={0}
+              value={freeShipping.min_amount}
+              onChange={(e) => setFreeShipping((prev) => ({ ...prev, min_amount: Number(e.target.value) }))}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">Orders above this amount qualify for free shipping. Set 0 for no minimum.</p>
+          </div>
+
+          <Button onClick={() => saveShippingMethods("free_shipping")} disabled={savingFreeShipping} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+            {savingFreeShipping ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Save
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Flat Rate */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Flat Rate</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="flat-rate-enabled"
+              checked={flatRate.enabled}
+              onCheckedChange={(v) => setFlatRate((prev) => ({ ...prev, enabled: v }))}
+            />
+            <Label htmlFor="flat-rate-enabled" className="text-sm cursor-pointer">Enable Flat Rate</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Label <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={flatRate.label}
+              onChange={(e) => setFlatRate((prev) => ({ ...prev, label: e.target.value }))}
+              placeholder="Flat Rate"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Cost <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              value={flatRate.cost}
+              onChange={(e) => setFlatRate((prev) => ({ ...prev, cost: Number(e.target.value) }))}
+              placeholder="0"
+            />
+          </div>
+
+          <Button onClick={() => saveShippingMethods("flat_rate")} disabled={savingFlatRate} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+            {savingFlatRate ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Save
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      {/* Shiprocket Config */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -1278,7 +1422,6 @@ const ShippingTab = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Sandbox Toggle */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
             <div>
               <p className="text-sm font-medium text-foreground flex items-center gap-2">
