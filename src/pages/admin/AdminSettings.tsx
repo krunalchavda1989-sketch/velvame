@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,12 +126,20 @@ interface AllGateways {
   razorpay: GatewayConfig;
   phonepe: GatewayConfig;
   stripe: GatewayConfig;
+  paytm: GatewayConfig;
+  instamojo: GatewayConfig;
+  bank_transfer: GatewayConfig;
+  cod: GatewayConfig;
 }
 
 const DEFAULT_GATEWAYS: AllGateways = {
   razorpay: { enabled: false, sandbox: false, fields: { key_id: "", key_secret: "" } },
   phonepe: { enabled: false, sandbox: false, fields: { merchant_id: "", salt_key: "", salt_index: "1" } },
   stripe: { enabled: false, sandbox: false, fields: { publishable_key: "", secret_key: "" } },
+  paytm: { enabled: false, sandbox: false, fields: { merchant_id: "", merchant_key: "" } },
+  instamojo: { enabled: false, sandbox: false, fields: { api_key: "", auth_token: "" } },
+  bank_transfer: { enabled: false, sandbox: false, fields: { bank_name: "", account_name: "", account_number: "", ifsc_code: "", upi_id: "" } },
+  cod: { enabled: false, sandbox: false, fields: { min_order_amount: "0", max_order_amount: "", instructions: "" } },
 };
 
 const GATEWAY_META = [
@@ -170,6 +178,58 @@ const GATEWAY_META = [
     fields: [
       { key: "publishable_key", label: "Publishable Key", placeholder: "pk_live_xxxxxxxx", secret: false },
       { key: "secret_key", label: "Secret Key", placeholder: "sk_live_xxxxxxxx", secret: true },
+    ],
+  },
+  {
+    key: "paytm" as const,
+    label: "Paytm",
+    icon: Wallet,
+    color: "text-sky-500",
+    bgColor: "bg-sky-500/10 border-sky-500/20",
+    docsUrl: "https://dashboard.paytm.com/next/apikeys",
+    fields: [
+      { key: "merchant_id", label: "Merchant ID", placeholder: "YOUR_MERCHANT_ID", secret: false },
+      { key: "merchant_key", label: "Merchant Key", placeholder: "Enter your merchant key", secret: true },
+    ],
+  },
+  {
+    key: "instamojo" as const,
+    label: "Instamojo",
+    icon: Zap,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10 border-emerald-500/20",
+    docsUrl: "https://www.instamojo.com/developers/",
+    fields: [
+      { key: "api_key", label: "API Key", placeholder: "Enter your API key", secret: false },
+      { key: "auth_token", label: "Auth Token", placeholder: "Enter your auth token", secret: true },
+    ],
+  },
+  {
+    key: "bank_transfer" as const,
+    label: "Bank Transfer",
+    icon: Building2,
+    color: "text-amber-600",
+    bgColor: "bg-amber-500/10 border-amber-500/20",
+    docsUrl: "",
+    fields: [
+      { key: "bank_name", label: "Bank Name", placeholder: "e.g. State Bank of India", secret: false },
+      { key: "account_name", label: "Account Holder Name", placeholder: "e.g. Your Company Pvt Ltd", secret: false },
+      { key: "account_number", label: "Account Number", placeholder: "e.g. 1234567890", secret: false },
+      { key: "ifsc_code", label: "IFSC Code", placeholder: "e.g. SBIN0001234", secret: false },
+      { key: "upi_id", label: "UPI ID (optional)", placeholder: "e.g. company@upi", secret: false },
+    ],
+  },
+  {
+    key: "cod" as const,
+    label: "Cash on Delivery",
+    icon: Package,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10 border-orange-500/20",
+    docsUrl: "",
+    fields: [
+      { key: "min_order_amount", label: "Min Order Amount (₹)", placeholder: "0", secret: false },
+      { key: "max_order_amount", label: "Max Order Amount (₹)", placeholder: "Leave empty for no limit", secret: false },
+      { key: "instructions", label: "Instructions for Customers", placeholder: "e.g. Pay at the time of delivery", secret: false },
     ],
   },
 ];
@@ -424,11 +484,19 @@ const PaymentTab = () => {
       .maybeSingle();
     if (data?.content) {
       const saved = data.content as any;
-      setGateways((prev) => ({
-        razorpay: { ...prev.razorpay, ...saved.razorpay, fields: { ...prev.razorpay.fields, ...maskFields(saved.razorpay?.fields) } },
-        phonepe: { ...prev.phonepe, ...saved.phonepe, fields: { ...prev.phonepe.fields, ...maskFields(saved.phonepe?.fields) } },
-        stripe: { ...prev.stripe, ...saved.stripe, fields: { ...prev.stripe.fields, ...maskFields(saved.stripe?.fields) } },
-      }));
+      setGateways((prev) => {
+        const merged = { ...prev } as any;
+        for (const key of Object.keys(prev)) {
+          if (saved[key]) {
+            merged[key] = {
+              ...prev[key as keyof AllGateways],
+              ...saved[key],
+              fields: { ...prev[key as keyof AllGateways].fields, ...maskFields(saved[key]?.fields) },
+            };
+          }
+        }
+        return merged;
+      });
     }
     setLoading(false);
   }, []);
