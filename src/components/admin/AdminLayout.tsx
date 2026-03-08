@@ -8,7 +8,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X
+  TrendingUp, Menu, X, MessageSquare
 } from "lucide-react";
 
 interface MenuItem {
@@ -52,6 +52,7 @@ const menuItems: MenuItem[] = [
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: TrendingUp, label: "Reports", href: "/admin/reports" },
+  { icon: MessageSquare, label: "Bulk SMS", href: "/admin/bulk-sms" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 

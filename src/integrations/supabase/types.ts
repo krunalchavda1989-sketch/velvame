@@ -1112,6 +1112,57 @@ export type Database = {
           },
         ]
       }
+      sms_campaigns: {
+        Row: {
+          audience_filter: Json
+          audience_type: string
+          created_at: string
+          created_by: string
+          failed_count: number
+          id: string
+          message: string
+          name: string
+          recipient_count: number
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          audience_filter?: Json
+          audience_type?: string
+          created_at?: string
+          created_by: string
+          failed_count?: number
+          id?: string
+          message?: string
+          name?: string
+          recipient_count?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          audience_filter?: Json
+          audience_type?: string
+          created_at?: string
+          created_by?: string
+          failed_count?: number
+          id?: string
+          message?: string
+          name?: string
+          recipient_count?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sms_settings: {
         Row: {
           api_key: string
@@ -1154,6 +1205,36 @@ export type Database = {
           template_id?: string
           updated_at?: string
           welcome_sms_enabled?: boolean
+        }
+        Relationships: []
+      }
+      sms_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
