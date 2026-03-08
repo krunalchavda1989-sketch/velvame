@@ -147,6 +147,11 @@ const AdminOrders = () => {
                 <tbody className="divide-y divide-border">
                   {orders.map((o) => (
                     <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
+                      <td className="p-3">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate(`/admin/orders/${o.id}`)}>
+                          <Eye className="w-3 h-3" /> View
+                        </Button>
+                      </td>
                       <td className="p-3 font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}…</td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
