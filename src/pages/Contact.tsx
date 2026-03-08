@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
 
 const Contact = () => {
+  const brand = useBrand();
   const [page, setPage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -43,9 +44,9 @@ const Contact = () => {
 
   const content = page?.content || {};
   const contactItems = [
-    { icon: Mail, label: "Email", value: content.email },
-    { icon: Phone, label: "Phone", value: content.phone },
-    { icon: MapPin, label: "Address", value: content.address },
+    { icon: Mail, label: "Email", value: brand.email || content.email },
+    { icon: Phone, label: "Phone", value: brand.phone || content.phone },
+    { icon: MapPin, label: "Address", value: brand.address || content.address },
     { icon: Clock, label: "Working Hours", value: content.working_hours },
   ].filter((c) => c.value);
 
