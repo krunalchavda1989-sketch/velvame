@@ -6,6 +6,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const HeroSection = () => {
+  const { amount: membershipAmount } = useMembershipAmount();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div
