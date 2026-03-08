@@ -38,9 +38,13 @@ const AdminOverview = () => {
         supabase.from("commissions").select("amount, commission_type, created_at"),
       ]);
 
-      const orders = ordersRes.data || [];
+      const allOrders = ordersRes.data || [];
       const commissions = commissionsRes.data || [];
       const profiles = profilesRes.data || [];
+
+      // Only count successful orders (not pending or cancelled)
+      const successStatuses = ["confirmed", "shipped", "delivered"];
+      const orders = allOrders.filter((o) => successStatuses.includes(o.status));
       const revenue = orders.reduce((s, o) => s + Number(o.total_amount), 0);
       const commTotal = commissions.reduce((s, c) => s + Number(c.amount), 0);
 
