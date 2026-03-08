@@ -29,7 +29,7 @@ interface AppliedCoupon {
 
 const CartDrawer = () => {
   const { user } = useAuth();
-  const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart } = useCart();
+  const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart, getPrice } = useCart();
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "address" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
