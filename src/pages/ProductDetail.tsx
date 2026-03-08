@@ -8,9 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<any>(null);
   const [recommended, setRecommended] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,6 +208,7 @@ const ProductDetail = () => {
                     className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
                     disabled={product.stock <= 0}
                     onClick={() => {
+                      addToCart(product.id, qty);
                       toast.success(`Added ${qty}x ${product.name} to cart`);
                     }}
                   >

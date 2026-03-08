@@ -1,58 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
-import CartDrawer, { type CartItem } from "@/components/shop/CartDrawer";
+import { useCart } from "@/contexts/CartContext";
 
 const Shop = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { products, addToCart, totalItems, setCartOpen } = useCart();
   const [filter, setFilter] = useState("All");
-  const [loading, setLoading] = useState(true);
-  const [cartOpen, setCartOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("active", true)
-        .order("created_at");
-      setProducts(data || []);
-      setLoading(false);
-    };
-    fetchProducts();
-  }, []);
-
-  // Load Razorpay SDK
-  useEffect(() => {
-    if (!document.getElementById("razorpay-sdk")) {
-      const script = document.createElement("script");
-      script.id = "razorpay-sdk";
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  }, []);
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
-
-  const addToCart = (id: string) => {
-    setCart((prev) => {
-      const existing = prev.find((c) => c.id === id);
-      if (existing) return prev.map((c) => (c.id === id ? { ...c, qty: c.qty + 1 } : c));
-      return [...prev, { id, qty: 1 }];
-    });
-    toast.success("Added to cart");
-  };
-
-  const totalItems = cart.reduce((sum, c) => sum + c.qty, 0);
+  const loading = products.length === 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,7 +91,7 @@ const Shop = () => {
                     </div>
                     <Button
                       size="sm"
-                      onClick={() => addToCart(product.id)}
+                      onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
                       className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                     >
                       <Plus className="h-4 w-4" />
@@ -142,14 +104,6 @@ const Shop = () => {
         )}
       </div>
       <Footer />
-
-      <CartDrawer
-        open={cartOpen}
-        onOpenChange={setCartOpen}
-        cart={cart}
-        setCart={setCart}
-        products={products}
-      />
     </div>
   );
 };
