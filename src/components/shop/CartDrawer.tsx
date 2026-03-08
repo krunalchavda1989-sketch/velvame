@@ -29,7 +29,7 @@ interface AppliedCoupon {
 
 const CartDrawer = () => {
   const { user } = useAuth();
-  const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart } = useCart();
+  const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart, getPrice } = useCart();
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "address" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
@@ -168,7 +168,7 @@ const CartDrawer = () => {
         order_id: order.id,
         product_id: p.id,
         quantity: p.qty,
-        price: p.distributor_price,
+        price: getPrice(p),
       }));
 
       const { error: itemsError } = await supabase.from("order_items").insert(items);
@@ -315,7 +315,7 @@ const CartDrawer = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-sm font-display font-bold text-primary">₹{p.distributor_price}</p>
+                      <p className="text-sm font-display font-bold text-primary">₹{getPrice(p)}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQty(p.id, -1)}>

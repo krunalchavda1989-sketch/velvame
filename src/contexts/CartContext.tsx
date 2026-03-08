@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type CartItem = { id: string; qty: number };
 
@@ -28,11 +29,16 @@ interface CartContextType {
   totalItems: number;
   totalPrice: number;
   cartProducts: (Product & { qty: number })[];
+  isMember: boolean;
+  getPrice: (product: Product) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { profile } = useAuth();
+  const isMember = !!profile?.subscription_paid;
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem("cart");
@@ -61,6 +67,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
     fetchProducts();
   }, []);
+
+  const getPrice = (product: Product) => {
+    return isMember ? product.distributor_price : product.retail_price;
+  };
 
   const addToCart = (id: string, qty = 1) => {
     setCart((prev) => {
@@ -92,7 +102,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     .filter(Boolean) as (Product & { qty: number })[];
 
   const totalItems = cart.reduce((sum, c) => sum + c.qty, 0);
-  const totalPrice = cartProducts.reduce((sum, p) => sum + p.distributor_price * p.qty, 0);
+  const totalPrice = cartProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
 
   return (
     <CartContext.Provider
@@ -108,6 +118,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         totalItems,
         totalPrice,
         cartProducts,
+        isMember,
+        getPrice,
       }}
     >
       {children}
