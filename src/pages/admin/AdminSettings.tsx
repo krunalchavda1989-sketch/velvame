@@ -155,6 +155,8 @@ const GATEWAY_META = [
 const PaymentTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, { success: boolean; message?: string; error?: string }>>({});
   const [gateways, setGateways] = useState<AllGateways>(DEFAULT_GATEWAYS);
   const [expandedGateway, setExpandedGateway] = useState<string | null>("razorpay");
 
