@@ -12,6 +12,7 @@ const menuItems = [
   { icon: Users, label: "My Team", href: "/dashboard/team" },
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
   { icon: BarChart3, label: "Earnings", href: "/dashboard/earnings" },
+  { icon: Package, label: "Orders", href: "/dashboard/orders" },
   { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Link2, label: "Invite Link", href: "/dashboard/invite" },
   { icon: Award, label: "My Title", href: "/dashboard/title" },
