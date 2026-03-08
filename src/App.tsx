@@ -14,6 +14,8 @@ import Shop from "./pages/Shop";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import MyTeam from "./pages/dashboard/MyTeam";
 import GenealogyTree from "./pages/dashboard/GenealogyTree";
 import Wallet from "./pages/dashboard/Wallet";
