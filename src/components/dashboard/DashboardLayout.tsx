@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
-  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, Shield, GitBranch
+  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard
 } from "lucide-react";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { supabase } from "@/integrations/supabase/client";
+import { useBrand } from "@/contexts/BrandContext";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -14,6 +15,7 @@ const menuItems = [
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
   { icon: BarChart3, label: "Earnings", href: "/dashboard/earnings" },
   { icon: Package, label: "Orders", href: "/dashboard/orders" },
+  { icon: CreditCard, label: "Payment & Subscription", href: "/dashboard/payment" },
   { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Link2, label: "Invite Link", href: "/dashboard/invite" },
   { icon: Award, label: "My Title", href: "/dashboard/title" },
@@ -23,7 +25,13 @@ const menuItems = [
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { isAdmin } = useAdminCheck();
+  const navigate = useNavigate();
+  const brand = useBrand();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -33,13 +41,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         } hidden md:flex flex-col`}
       >
         <div className="flex items-center gap-2 px-4 h-16 border-b border-border">
-          <Crown className="h-6 w-6 text-primary flex-shrink-0" />
-          {!collapsed && <span className="font-display font-bold text-gradient-gold">NexaMLM</span>}
+          {brand.logo_url ? (
+            <img src={brand.logo_url} alt={brand.brand_name} className="h-6 w-6 object-contain rounded flex-shrink-0" />
+          ) : (
+            <Crown className="h-6 w-6 text-primary flex-shrink-0" />
+          )}
+          {!collapsed && <span className="font-display font-bold text-gradient-gold">{brand.brand_name}</span>}
         </div>
 
-        <nav className="flex-1 py-4 space-y-1 px-2">
+        <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
           {menuItems.map((item) => {
-            const active = location.pathname === item.href;
+            const active = location.pathname === item.href || 
+              (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
             return (
               <Link
                 key={item.label}
@@ -55,20 +68,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             );
           })}
-
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors mt-4 border border-primary/20 ${
-                location.pathname.startsWith("/admin")
-                  ? "bg-primary/10 text-primary"
-                  : "text-primary/80 hover:text-primary hover:bg-primary/5"
-              }`}
-            >
-              <Shield className="h-4 w-4 flex-shrink-0" />
-              {!collapsed && <span>Admin Panel</span>}
-            </Link>
-          )}
         </nav>
 
         <div className="p-2 border-t border-border">
@@ -79,13 +78,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             {!collapsed && <span>Collapse</span>}
           </button>
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full"
           >
             <LogOut className="h-4 w-4 flex-shrink-0" />
             {!collapsed && <span>Logout</span>}
-          </Link>
+          </button>
         </div>
       </aside>
 
