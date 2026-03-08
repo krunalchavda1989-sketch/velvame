@@ -218,7 +218,7 @@ const AdminOrders = () => {
                           <Eye className="w-3 h-3" /> View
                         </Button>
                       </td>
-                      <td className="p-3 font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}…</td>
+                      <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
                       <td className="p-3">

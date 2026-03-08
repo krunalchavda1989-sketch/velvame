@@ -166,7 +166,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
         </Button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-display font-bold text-foreground">Order #{orderId.slice(0, 8).toUpperCase()}</h1>
+            <h1 className="text-xl font-display font-bold text-foreground">Order #{(order as any).order_number || orderId.slice(0, 8).toUpperCase()}</h1>
             <button onClick={copyId} className="text-muted-foreground hover:text-foreground">
               <Copy className="h-3.5 w-3.5" />
             </button>
