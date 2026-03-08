@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Megaphone, Plus, Pencil, Trash2, Loader2, Save, Image, Tag } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Megaphone, Plus, Pencil, Trash2, Loader2, Save, Image, Tag, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
 interface Offer {
   id: string;
@@ -42,6 +41,8 @@ const AdminOffers = () => {
   const [editing, setEditing] = useState<Offer | null>(null);
   const [form, setForm] = useState(emptyOffer);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
     const [{ data: o }, { data: p }] = await Promise.all([
@@ -57,6 +58,51 @@ const AdminOffers = () => {
 
   const openAdd = () => { setEditing(null); setForm(emptyOffer); setDialogOpen(true); };
   const openEdit = (o: Offer) => { setEditing(o); setForm(o); setDialogOpen(true); };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const fileName = `offer-${Date.now()}.${ext}`;
+    const filePath = `offers/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+    if (error) {
+      toast.error("Upload failed: " + error.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    toast.success("Image uploaded!");
+    setUploading(false);
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const clearImage = () => {
+    setForm((prev) => ({ ...prev, image_url: "" }));
+  };
 
   const handleSave = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
@@ -141,7 +187,55 @@ const AdminOffers = () => {
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
               <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} /></div>
-              <div className="space-y-2"><Label>Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Offer Image</Label>
+                {form.image_url ? (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img src={form.image_url} alt="Offer" className="w-full h-40 object-cover" />
+                    <button
+                      onClick={clearImage}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 border border-border flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all"
+                  >
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-sm text-muted-foreground">Uploading...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Click to upload image</span>
+                        <span className="text-xs text-muted-foreground">PNG, JPG up to 5MB</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                {/* Fallback: manual URL */}
+                <Input
+                  value={form.image_url}
+                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                  placeholder="Or paste image URL..."
+                  className="text-xs"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label>Offer Type</Label>
                 <Select value={form.offer_type} onValueChange={(v) => setForm({ ...form, offer_type: v })}>
