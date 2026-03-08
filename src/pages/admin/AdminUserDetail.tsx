@@ -557,6 +557,11 @@ const AdminUserDetail = () => {
             </Card>
           </TabsContent>
 
+          {/* KYC Tab */}
+          <TabsContent value="kyc">
+            <KycAdminTab docs={kycDocs} onUpdate={setKycDocs} userId={profile.user_id} />
+          </TabsContent>
+
           {/* Achievements Tab */}
           <TabsContent value="achievements">
             <div className="space-y-4">
