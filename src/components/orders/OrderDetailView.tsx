@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft, Package, Truck, CreditCard, MapPin, Clock,
-  CheckCircle2, XCircle, CircleDot, User, Hash, Calendar,
+  CheckCircle2, XCircle, CircleDot, User, Hash,
   Copy, ShoppingBag,
 } from "lucide-react";
 import { toast } from "sonner";
