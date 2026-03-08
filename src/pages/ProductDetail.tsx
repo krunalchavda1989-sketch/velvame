@@ -14,6 +14,8 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<any>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [recommended, setRecommended] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
