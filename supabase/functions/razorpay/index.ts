@@ -257,7 +257,15 @@ Deno.serve(async (req) => {
           .single();
 
         if (wallet) {
-          const subAmount = 2800;
+          // Fetch dynamic membership amount
+          const { data: membershipSettings } = await serviceClient
+            .from("pages_content")
+            .select("content")
+            .eq("page_slug", "membership-settings")
+            .maybeSingle();
+          const subAmount = membershipSettings?.content
+            ? Number((membershipSettings.content as any).membership_amount) || 2800
+            : 2800;
           await serviceClient.from("wallets").update({
             balance: Number(wallet.balance) + subAmount,
             total_earned: Number(wallet.total_earned) + subAmount,
