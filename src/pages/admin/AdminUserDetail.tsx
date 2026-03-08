@@ -72,16 +72,18 @@ const AdminUserDetail = () => {
           subscription_paid: prof.subscription_paid || false,
         });
 
-        const [{ data: w }, { data: o }, { data: c }, { data: wdr }] = await Promise.all([
+        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("orders").select("*, order_items(*, products(name, image_url))").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("commissions").select("*").eq("beneficiary_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("withdrawal_requests").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
+          supabase.from("kyc_documents").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
         ]);
         setWallet(w);
         setOrders(o || []);
         setCommissions(c || []);
         setWithdrawals(wdr || []);
+        setKycDocs((kyc as any) || []);
       }
 
       setLoading(false);
