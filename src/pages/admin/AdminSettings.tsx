@@ -366,7 +366,28 @@ const PaymentTab = () => {
                     {saving === meta.key ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Save {meta.label}
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestConnection(meta.key)}
+                    disabled={testing === meta.key}
+                  >
+                    {testing === meta.key ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Shield className="h-4 w-4 mr-2" />}
+                    Test Connection
+                  </Button>
                 </div>
+
+                {/* Test Result */}
+                {testResults[meta.key] && (
+                  <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
+                    testResults[meta.key].success
+                      ? "bg-success/10 text-success border border-success/20"
+                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                  }`}>
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    {testResults[meta.key].success ? testResults[meta.key].message : testResults[meta.key].error}
+                  </div>
+                )}
               </CardContent>
             )}
           </Card>
