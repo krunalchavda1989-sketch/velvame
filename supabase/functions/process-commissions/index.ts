@@ -170,7 +170,7 @@ Deno.serve(async (req: Request) => {
       let beneficiaryPurchaseOk = true;
       if (isRepurchase && isQualified) {
         const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
-        beneficiaryPurchaseOk = uplineMonthlyTotal >= MIN_MONTHLY_PURCHASE;
+        beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
       }
 
       if (isQualified && beneficiaryPurchaseOk) {
