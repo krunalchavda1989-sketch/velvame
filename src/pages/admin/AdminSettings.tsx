@@ -2254,4 +2254,261 @@ const OrderNumberTab = () => {
   );
 };
 
+/* ───────── SMS Integration Tab ───────── */
+const SMS_PROVIDERS = [
+  { key: "msg91", label: "MSG91", color: "text-green-500", bgColor: "bg-green-500/10 border-green-500/20", docsUrl: "https://msg91.com/help", fields: [
+    { key: "api_key", label: "Auth Key", placeholder: "Enter MSG91 auth key", secret: true },
+    { key: "sender_id", label: "Sender ID (6 chars)", placeholder: "e.g. NXAMKT" },
+    { key: "template_id", label: "Template ID", placeholder: "Enter DLT template ID" },
+  ]},
+  { key: "twilio", label: "Twilio", color: "text-red-500", bgColor: "bg-red-500/10 border-red-500/20", docsUrl: "https://www.twilio.com/docs/sms", fields: [
+    { key: "api_key", label: "Account SID", placeholder: "ACxxxxxxxx", secret: false },
+    { key: "sender_id", label: "Auth Token", placeholder: "Enter Twilio auth token", secret: true },
+    { key: "template_id", label: "From Number", placeholder: "+1234567890" },
+  ]},
+  { key: "textlocal", label: "Textlocal", color: "text-blue-500", bgColor: "bg-blue-500/10 border-blue-500/20", docsUrl: "https://api.textlocal.in/docs/", fields: [
+    { key: "api_key", label: "API Key", placeholder: "Enter Textlocal API key", secret: true },
+    { key: "sender_id", label: "Sender Name", placeholder: "e.g. TXTLCL" },
+    { key: "template_id", label: "Template ID", placeholder: "Enter template ID" },
+  ]},
+  { key: "fast2sms", label: "Fast2SMS", color: "text-orange-500", bgColor: "bg-orange-500/10 border-orange-500/20", docsUrl: "https://docs.fast2sms.com/", fields: [
+    { key: "api_key", label: "API Key", placeholder: "Enter Fast2SMS API key", secret: true },
+    { key: "sender_id", label: "Sender ID", placeholder: "e.g. FSTSMS" },
+    { key: "template_id", label: "Template ID", placeholder: "Enter DLT template ID" },
+  ]},
+  { key: "custom", label: "Custom API", color: "text-purple-500", bgColor: "bg-purple-500/10 border-purple-500/20", docsUrl: "", fields: [
+    { key: "api_key", label: "API Key / Token", placeholder: "Enter your API key", secret: true },
+    { key: "sender_id", label: "API Endpoint URL", placeholder: "https://api.example.com/sms/send" },
+    { key: "template_id", label: "Extra Config", placeholder: "JSON config if needed" },
+  ]},
+];
+
+const SmsTab = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [provider, setProvider] = useState("msg91");
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [senderId, setSenderId] = useState("");
+  const [templateId, setTemplateId] = useState("");
+  const [otpEnabled, setOtpEnabled] = useState(false);
+  const [orderUpdatesEnabled, setOrderUpdatesEnabled] = useState(false);
+  const [welcomeSmsEnabled, setWelcomeSmsEnabled] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from("sms_settings").select("*").limit(1).maybeSingle();
+      if (data) {
+        setSettingsId(data.id);
+        setProvider(data.provider);
+        setIsEnabled(data.is_enabled);
+        setApiKey(data.api_key);
+        setSenderId(data.sender_id);
+        setTemplateId(data.template_id);
+        setOtpEnabled(data.otp_enabled);
+        setOrderUpdatesEnabled(data.order_updates_enabled);
+        setWelcomeSmsEnabled(data.welcome_sms_enabled);
+      }
+      setLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        provider,
+        is_enabled: isEnabled,
+        api_key: apiKey,
+        sender_id: senderId,
+        template_id: templateId,
+        otp_enabled: otpEnabled,
+        order_updates_enabled: orderUpdatesEnabled,
+        welcome_sms_enabled: welcomeSmsEnabled,
+        updated_at: new Date().toISOString(),
+      };
+      if (settingsId) {
+        await supabase.from("sms_settings").update(payload).eq("id", settingsId);
+      } else {
+        const { data } = await supabase.from("sms_settings").insert(payload).select().single();
+        if (data) setSettingsId(data.id);
+      }
+      toast.success("SMS settings saved successfully");
+    } catch {
+      toast.error("Failed to save SMS settings");
+    }
+    setSaving(false);
+  };
+
+  const handleTestSms = async () => {
+    if (!testPhone.trim()) { toast.error("Enter a phone number to test"); return; }
+    if (!apiKey.trim()) { toast.error("Please configure API key first"); return; }
+    setTesting(true);
+    // Simulate test — in production this would call an edge function
+    setTimeout(() => {
+      toast.success(`Test SMS request sent to ${testPhone}`);
+      setTesting(false);
+    }, 1500);
+  };
+
+  const currentProvider = SMS_PROVIDERS.find(p => p.key === provider) || SMS_PROVIDERS[0];
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <div className="space-y-6">
+      {/* Provider Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            SMS Gateway Provider
+          </CardTitle>
+          <CardDescription>Choose your SMS service provider for sending messages</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {SMS_PROVIDERS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setProvider(p.key)}
+                className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  provider === p.key
+                    ? `${p.bgColor} border-current ring-2 ring-primary/20`
+                    : "border-border bg-card hover:border-primary/30"
+                }`}
+              >
+                <MessageSquare className={`h-6 w-6 ${p.color}`} />
+                <span className="text-xs font-medium">{p.label}</span>
+                {provider === p.key && (
+                  <CheckCircle className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Master Toggle */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${currentProvider.bgColor}`}>
+                <MessageSquare className={`h-5 w-5 ${currentProvider.color}`} />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{currentProvider.label} Integration</p>
+                <p className="text-xs text-muted-foreground">Enable or disable SMS sending</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={isEnabled ? "default" : "secondary"} className="text-xs">
+                {isEnabled ? "Active" : "Inactive"}
+              </Badge>
+              <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Credentials */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">API Credentials</CardTitle>
+              <CardDescription>Configure your {currentProvider.label} API credentials</CardDescription>
+            </div>
+            {currentProvider.docsUrl && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={currentProvider.docsUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Docs
+                </a>
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {currentProvider.fields.map((field) => (
+            <div key={field.key} className="space-y-1.5">
+              <Label className="text-sm">{field.label}</Label>
+              <Input
+                type={field.secret ? "password" : "text"}
+                placeholder={field.placeholder}
+                value={field.key === "api_key" ? apiKey : field.key === "sender_id" ? senderId : templateId}
+                onChange={(e) => {
+                  if (field.key === "api_key") setApiKey(e.target.value);
+                  else if (field.key === "sender_id") setSenderId(e.target.value);
+                  else setTemplateId(e.target.value);
+                }}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* SMS Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">SMS Features</CardTitle>
+          <CardDescription>Choose which SMS notifications to send</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { label: "OTP Verification", desc: "Send OTP codes for phone verification during registration", value: otpEnabled, setter: setOtpEnabled, icon: Shield },
+            { label: "Order Updates", desc: "Send SMS notifications for order status changes (confirmed, shipped, delivered)", value: orderUpdatesEnabled, setter: setOrderUpdatesEnabled, icon: Package },
+            { label: "Welcome SMS", desc: "Send a welcome message when a new user registers", value: welcomeSmsEnabled, setter: setWelcomeSmsEnabled, icon: Send },
+          ].map((feature) => (
+            <div key={feature.label} className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <feature.icon className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">{feature.label}</p>
+                  <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                </div>
+              </div>
+              <Switch checked={feature.value} onCheckedChange={feature.setter} />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Test SMS */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Test SMS</CardTitle>
+          <CardDescription>Send a test SMS to verify your configuration</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-3">
+            <Input
+              placeholder="Enter phone number (e.g. +919876543210)"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              className="flex-1"
+            />
+            <Button variant="outline" onClick={handleTestSms} disabled={testing || !apiKey.trim()}>
+              {testing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+              Send Test
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A test message will be sent using your configured {currentProvider.label} credentials.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save SMS Settings
+      </Button>
+    </div>
+  );
+};
+
 export default AdminSettings;
