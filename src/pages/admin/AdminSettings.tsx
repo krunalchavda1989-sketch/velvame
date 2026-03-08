@@ -112,6 +112,10 @@ const AdminSettings = () => {
           <TabsContent value="membership">
             <MembershipTab />
           </TabsContent>
+
+          <TabsContent value="ordernumber">
+            <OrderNumberTab />
+          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
