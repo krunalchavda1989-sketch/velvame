@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Crown, LayoutDashboard, Users, Wallet, ShoppingBag,
+  Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
   BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, Shield
 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -12,6 +12,7 @@ const menuItems = [
   { icon: Users, label: "My Team", href: "/dashboard/team" },
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
   { icon: BarChart3, label: "Earnings", href: "/dashboard/earnings" },
+  { icon: Package, label: "Orders", href: "/dashboard/orders" },
   { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Link2, label: "Invite Link", href: "/dashboard/invite" },
   { icon: Award, label: "My Title", href: "/dashboard/title" },
