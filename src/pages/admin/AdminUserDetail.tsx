@@ -19,7 +19,7 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -35,6 +35,9 @@ const AdminUserDetail = () => {
   const [awards, setAwards] = useState<any[]>([]);
   const [titleRoadmap, setTitleRoadmap] = useState<any[]>([]);
   const [kycDocs, setKycDocs] = useState<any[]>([]);
+  const [bankDetails, setBankDetails] = useState<any>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Edit state
@@ -71,18 +74,28 @@ const AdminUserDetail = () => {
           subscription_paid: prof.subscription_paid || false,
         });
 
-        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }] = await Promise.all([
+        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("orders").select("*, order_items(*, products(name, image_url))").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("commissions").select("*").eq("beneficiary_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("withdrawal_requests").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("kyc_documents").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
+          supabase.from("bank_details").select("*").eq("user_id", prof.user_id).single(),
+          supabase.from("user_addresses").select("*").eq("user_id", prof.user_id).order("is_default", { ascending: false }),
         ]);
         setWallet(w);
         setOrders(o || []);
         setCommissions(c || []);
         setWithdrawals(wdr || []);
         setKycDocs((kyc as any) || []);
+        setBankDetails(bank);
+        setAddresses(addr || []);
+
+        // Fetch user email via edge function
+        const { data: emailData } = await supabase.functions.invoke("admin-settings", {
+          body: { action: "get_user_email", user_id: prof.user_id },
+        });
+        if (emailData?.email) setUserEmail(emailData.email);
       }
 
       setLoading(false);
@@ -338,8 +351,9 @@ const AdminUserDetail = () => {
         </div>
 
         {/* Quick Info Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
+            { icon: Mail, label: "Email", value: userEmail || "—" },
             { icon: Phone, label: "Phone", value: profile.phone || "—" },
             { icon: Calendar, label: "Joined", value: format(new Date(profile.created_at), "dd MMM yyyy") },
             { icon: Users, label: "Direct Referrals", value: String(profile.direct_referral_count) },
@@ -381,8 +395,9 @@ const AdminUserDetail = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="orders" className="space-y-4">
+        <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
+            <TabsTrigger value="profile" className="gap-1.5"><User className="h-3.5 w-3.5" />Profile</TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5"><ShoppingBag className="h-3.5 w-3.5" />Orders ({orders.length})</TabsTrigger>
             <TabsTrigger value="team" className="gap-1.5"><Users className="h-3.5 w-3.5" />Team ({referrals.length})</TabsTrigger>
             <TabsTrigger value="commissions" className="gap-1.5"><TrendingUp className="h-3.5 w-3.5" />Commissions ({commissions.length})</TabsTrigger>
@@ -390,6 +405,66 @@ const AdminUserDetail = () => {
             <TabsTrigger value="kyc" className="gap-1.5"><Shield className="h-3.5 w-3.5" />KYC ({kycDocs.length})</TabsTrigger>
             <TabsTrigger value="achievements" className="gap-1.5"><Trophy className="h-3.5 w-3.5" />Achievements</TabsTrigger>
           </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Addresses */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" />Addresses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {addresses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">No addresses saved.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {addresses.map((addr) => (
+                        <div key={addr.id} className="rounded-lg border border-border p-3 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">{addr.name}</p>
+                            <Badge variant="outline" className="text-[10px]">{addr.label}</Badge>
+                            {addr.is_default && <Badge className="text-[10px] bg-primary/10 text-primary">Default</Badge>}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}</p>
+                          <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} — {addr.pincode}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{addr.phone}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Bank Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2"><Landmark className="h-4 w-4" />Bank Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!bankDetails ? (
+                    <p className="text-sm text-muted-foreground text-center py-6">No bank details added.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {[
+                        { label: "Account Holder", value: bankDetails.account_holder_name },
+                        { label: "Bank Name", value: bankDetails.bank_name },
+                        { label: "Account Number", value: bankDetails.account_number },
+                        { label: "IFSC Code", value: bankDetails.ifsc_code },
+                        { label: "Branch", value: bankDetails.branch_name },
+                        { label: "UPI ID", value: bankDetails.upi_id },
+                      ].filter(d => d.value).map((d) => (
+                        <div key={d.label} className="flex justify-between items-center py-1.5 border-b border-border last:border-0">
+                          <span className="text-xs text-muted-foreground">{d.label}</span>
+                          <span className="text-sm font-medium text-foreground font-mono">{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Orders Tab */}
           <TabsContent value="orders">

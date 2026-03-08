@@ -108,6 +108,29 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === "get_user_email") {
+      const { user_id: targetUserId } = body;
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: "user_id is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: userData, error: userError } = await serviceClient.auth.admin.getUserById(targetUserId);
+      if (userError || !userData?.user) {
+        return new Response(JSON.stringify({ error: "User not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ email: userData.user.email || "" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "delete_user") {
       const { user_id: targetUserId } = body;
       if (!targetUserId) {
