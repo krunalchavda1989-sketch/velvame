@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +157,7 @@ const PaymentTransactionList = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "paid" | "failed">("all");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 10;
 
@@ -191,17 +192,22 @@ const PaymentTransactionList = () => {
     fetchTransactions();
   }, []);
 
-  const filtered = filter === "all" ? transactions : transactions.filter((t) =>
-    filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")
-  );
+  const searchLower = search.toLowerCase();
+  const filtered = transactions
+    .filter((t) => filter === "all" || (filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")))
+    .filter((t) => !searchLower || t.customer_name.toLowerCase().includes(searchLower) || (t.razorpay_payment_id || "").toLowerCase().includes(searchLower));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const currentPage = Math.min(page, totalPages);
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
-  // Reset to page 1 when filter changes
   const handleFilterChange = (f: "all" | "paid" | "failed") => {
     setFilter(f);
+    setPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
     setPage(1);
   };
 
@@ -232,7 +238,7 @@ const PaymentTransactionList = () => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">Transaction History</CardTitle>
@@ -256,6 +262,15 @@ const PaymentTransactionList = () => {
               ))}
             </div>
           </div>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by customer name or payment ID..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
