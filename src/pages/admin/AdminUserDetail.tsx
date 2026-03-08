@@ -35,6 +35,7 @@ const AdminUserDetail = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [awards, setAwards] = useState<any[]>([]);
   const [titleRoadmap, setTitleRoadmap] = useState<any[]>([]);
+  const [kycDocs, setKycDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit state
