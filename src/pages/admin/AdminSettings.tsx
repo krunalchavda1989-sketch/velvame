@@ -77,6 +77,9 @@ const AdminSettings = () => {
             <TabsTrigger value="captcha" className="gap-2">
               <ShieldCheck className="h-4 w-4" /> reCAPTCHA
             </TabsTrigger>
+            <TabsTrigger value="membership" className="gap-2">
+              <DollarSign className="h-4 w-4" /> Membership
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
@@ -101,6 +104,10 @@ const AdminSettings = () => {
 
           <TabsContent value="captcha">
             <CaptchaTab />
+          </TabsContent>
+
+          <TabsContent value="membership">
+            <MembershipTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1908,6 +1915,116 @@ const CaptchaTab = () => {
       <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
         {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
         Save
+      </Button>
+    </div>
+  );
+};
+
+/* ───────── Membership Tab ───────── */
+const MembershipTab = () => {
+  const [amount, setAmount] = useState<number>(2800);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("pages_content")
+        .select("content")
+        .eq("page_slug", "membership-settings")
+        .maybeSingle();
+      if (data?.content) {
+        const content = data.content as any;
+        setAmount(Number(content.membership_amount) || 2800);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const content = { membership_amount: amount };
+
+      const { data: existing } = await supabase
+        .from("pages_content")
+        .select("id")
+        .eq("page_slug", "membership-settings")
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("pages_content")
+          .update({ content, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("pages_content").insert({
+          page_slug: "membership-settings",
+          title: "Membership Settings",
+          content,
+          is_published: true,
+        });
+      }
+      toast.success("Membership amount updated successfully");
+    } catch {
+      toast.error("Failed to save membership amount");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-10 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            Membership Fee
+          </CardTitle>
+          <CardDescription>
+            Set the one-time membership subscription amount that users must pay to activate their account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-w-sm">
+            <Label htmlFor="membership-amount">Membership Amount (₹)</Label>
+            <Input
+              id="membership-amount"
+              type="number"
+              min={0}
+              step={100}
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              placeholder="2800"
+            />
+            <p className="text-xs text-muted-foreground">
+              This amount is displayed across the website and used for subscription payments.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Preview</p>
+            <p className="text-sm text-muted-foreground">
+              "Lifetime Membership — One-time <span className="font-semibold text-foreground">₹{amount.toLocaleString("en-IN")}</span>"
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save Membership Amount
       </Button>
     </div>
   );

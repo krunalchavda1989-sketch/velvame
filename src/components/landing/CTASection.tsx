@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const CTASection = () => {
+  const { amount: membershipAmount } = useMembershipAmount();
   return (
     <section className="py-24">
       <div className="container px-4">
@@ -17,7 +19,7 @@ const CTASection = () => {
             Ready to Start <span className="text-gradient-gold">Earning?</span>
           </h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            One-time ₹2800 subscription unlocks lifetime access to products, commissions, and your personal network business.
+            One-time ₹{membershipAmount.toLocaleString("en-IN")} subscription unlocks lifetime access to products, commissions, and your personal network business.
           </p>
           <Link to="/register">
             <Button size="lg" className="bg-gradient-gold text-primary-foreground font-semibold text-base px-10 glow-gold hover:opacity-90">

@@ -13,6 +13,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 import { Progress } from "@/components/ui/progress";
 
 const COLORS = [
@@ -25,6 +26,7 @@ const COLORS = [
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [copied, setCopied] = useState(false);
   const [wallet, setWallet] = useState<any>(null);
   const [teamCount, setTeamCount] = useState(0);
@@ -198,7 +200,7 @@ const Dashboard = () => {
         {!profile?.subscription_paid && (
           <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
             <span className="font-semibold text-destructive">⚠ Subscription pending.</span>{" "}
-            <span className="text-muted-foreground">Pay ₹2800 to activate your MLM income and start earning commissions.</span>
+            <span className="text-muted-foreground">Pay ₹{membershipAmount.toLocaleString("en-IN")} to activate your MLM income and start earning commissions.</span>
           </div>
         )}
 

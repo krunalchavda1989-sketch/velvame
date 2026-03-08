@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 import CartDrawer from "@/components/shop/CartDrawer";
 
 const fallbackLinks = [
@@ -23,6 +24,7 @@ const Navbar = () => {
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems, cartOpen, setCartOpen } = useCart();
   const brand = useBrand();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [navLinks, setNavLinks] = useState(fallbackLinks);
 
   useEffect(() => {
@@ -124,7 +126,7 @@ const Navbar = () => {
                 </Link>
                 <Link to="/register">
                   <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
-                    Join Now — ₹2800
+                    Join Now — ₹{membershipAmount.toLocaleString("en-IN")}
                   </Button>
                 </Link>
               </>
@@ -204,7 +206,7 @@ const Navbar = () => {
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground">Login</Button>
                     </Link>
                     <Link to="/register" onClick={() => setOpen(false)}>
-                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹2800</Button>
+                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹{membershipAmount.toLocaleString("en-IN")}</Button>
                     </Link>
                   </>
                 )}

@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, TrendingUp, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const HeroSection = () => {
+  const { amount: membershipAmount } = useMembershipAmount();
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div
@@ -22,7 +24,7 @@ const HeroSection = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold bg-secondary/50 mb-8">
             <span className="h-2 w-2 rounded-full bg-primary animate-pulse-gold" />
-            <span className="text-xs font-medium text-primary">Lifetime Membership — One-time ₹2800</span>
+            <span className="text-xs font-medium text-primary">Lifetime Membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-display font-bold leading-tight mb-6">

@@ -8,11 +8,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const brand = useBrand();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<"form" | "otp">("form");
@@ -118,7 +120,7 @@ const Register = () => {
           {step === "form" ? (
             <>
               <h1 className="text-2xl font-display font-bold text-foreground">Create Your Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Lifetime membership — One-time ₹2800</p>
+              <p className="text-sm text-muted-foreground mt-1">Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}</p>
             </>
           ) : (
             <>
@@ -201,7 +203,7 @@ const Register = () => {
                   Creating account...
                 </>
               ) : (
-                `Join ${brand.brand_name} — ₹2800`
+                `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
               )}
             </Button>
 
