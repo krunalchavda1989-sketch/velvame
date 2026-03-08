@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +70,9 @@ const AdminSettings = () => {
             <TabsTrigger value="shipping" className="gap-2">
               <Truck className="h-4 w-4" /> Shipping
             </TabsTrigger>
+            <TabsTrigger value="pwa" className="gap-2">
+              <MonitorSmartphone className="h-4 w-4" /> PWA
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
@@ -86,6 +89,10 @@ const AdminSettings = () => {
 
           <TabsContent value="shipping">
             <ShippingTab />
+          </TabsContent>
+
+          <TabsContent value="pwa">
+            <PWATab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1328,6 +1335,260 @@ const ShippingTab = () => {
           Test Connection
         </Button>
       </div>
+    </div>
+  );
+};
+
+/* ───────── PWA Tab ───────── */
+const DISPLAY_OPTIONS = ["standalone", "fullscreen", "minimal-ui", "browser"];
+const ORIENTATION_OPTIONS = ["any", "portrait", "landscape"];
+const DIRECTION_OPTIONS = ["auto", "ltr", "rtl"];
+
+interface PWASettings {
+  enabled: boolean;
+  icon_url: string;
+  theme_color: string;
+  background_color: string;
+  status_bar: string;
+  display: string;
+  orientation: string;
+  direction: string;
+}
+
+const DEFAULT_PWA: PWASettings = {
+  enabled: false,
+  icon_url: "",
+  theme_color: "#000000",
+  background_color: "#ffffff",
+  status_bar: "#000000",
+  display: "standalone",
+  orientation: "any",
+  direction: "auto",
+};
+
+const PWATab = () => {
+  const [form, setForm] = useState<PWASettings>(DEFAULT_PWA);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("pages_content")
+        .select("content")
+        .eq("page_slug", "pwa-settings")
+        .maybeSingle();
+      if (data?.content) {
+        setForm({ ...DEFAULT_PWA, ...(data.content as any) });
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleIconUpload = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/png,image/svg+xml";
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Icon must be under 2MB");
+        return;
+      }
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `pwa/icon_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+      if (error) {
+        toast.error("Upload failed");
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      setForm((prev) => ({ ...prev, icon_url: urlData.publicUrl }));
+      setUploading(false);
+      toast.success("Icon uploaded");
+    };
+    input.click();
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const { data: existing } = await supabase
+      .from("pages_content")
+      .select("id")
+      .eq("page_slug", "pwa-settings")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("pages_content")
+        .update({ content: form as any, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("pages_content").insert({
+        page_slug: "pwa-settings",
+        title: "PWA Settings",
+        content: form as any,
+      });
+    }
+    setSaving(false);
+    toast.success("PWA settings saved");
+  };
+
+  if (loading) {
+    return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <MonitorSmartphone className="h-5 w-5 text-primary" />
+            Progressive Web App (PWA)
+          </CardTitle>
+          <CardDescription>Configure installable web app settings for mobile users</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Status */}
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+            <div>
+              <p className="text-sm font-medium text-foreground">Enable PWA</p>
+              <p className="text-xs text-muted-foreground">Allow users to install the app on their home screen</p>
+            </div>
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(v) => setForm((prev) => ({ ...prev, enabled: v }))}
+            />
+          </div>
+
+          <Separator />
+
+          {/* Icon */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">App Icon</Label>
+            <div className="flex items-start gap-4">
+              <Button variant="outline" size="sm" onClick={handleIconUpload} disabled={uploading} className="gap-2">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorSmartphone className="h-4 w-4" />}
+                Browse
+              </Button>
+              <div className="w-24 h-24 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+                {form.icon_url ? (
+                  <img src={form.icon_url} alt="PWA Icon" className="w-full h-full object-contain" />
+                ) : (
+                  <MonitorSmartphone className="h-8 w-8 text-muted-foreground/40" />
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Recommended: 512×512px PNG with transparent background</p>
+          </div>
+
+          <Separator />
+
+          {/* Colors */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm">Theme Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.theme_color}
+                  onChange={(e) => setForm((prev) => ({ ...prev, theme_color: e.target.value }))}
+                  className="w-10 h-10 rounded border border-border cursor-pointer"
+                />
+                <Input
+                  value={form.theme_color}
+                  onChange={(e) => setForm((prev) => ({ ...prev, theme_color: e.target.value }))}
+                  className="flex-1 font-mono text-sm"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Background Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.background_color}
+                  onChange={(e) => setForm((prev) => ({ ...prev, background_color: e.target.value }))}
+                  className="w-10 h-10 rounded border border-border cursor-pointer"
+                />
+                <Input
+                  value={form.background_color}
+                  onChange={(e) => setForm((prev) => ({ ...prev, background_color: e.target.value }))}
+                  className="flex-1 font-mono text-sm"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Status Bar</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.status_bar}
+                  onChange={(e) => setForm((prev) => ({ ...prev, status_bar: e.target.value }))}
+                  className="w-10 h-10 rounded border border-border cursor-pointer"
+                />
+                <Input
+                  value={form.status_bar}
+                  onChange={(e) => setForm((prev) => ({ ...prev, status_bar: e.target.value }))}
+                  className="flex-1 font-mono text-sm"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Display, Orientation, Direction */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm">Display</Label>
+              <Select value={form.display} onValueChange={(v) => setForm((prev) => ({ ...prev, display: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DISPLAY_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o} className="capitalize">{o.replace("-", " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Orientation</Label>
+              <Select value={form.orientation} onValueChange={(v) => setForm((prev) => ({ ...prev, orientation: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ORIENTATION_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o} className="capitalize">{o}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Direction</Label>
+              <Select value={form.direction} onValueChange={(v) => setForm((prev) => ({ ...prev, direction: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DIRECTION_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o} className="uppercase">{o}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save PWA Settings
+      </Button>
     </div>
   );
 };
