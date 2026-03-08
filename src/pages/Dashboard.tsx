@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check } from "lucide-react";
+import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
