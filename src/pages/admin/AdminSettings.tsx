@@ -90,6 +90,10 @@ const AdminSettings = () => {
           <TabsContent value="shipping">
             <ShippingTab />
           </TabsContent>
+
+          <TabsContent value="pwa">
+            <PWATab />
+          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
