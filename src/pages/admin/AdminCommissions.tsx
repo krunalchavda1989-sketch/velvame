@@ -261,7 +261,57 @@ const AdminCommissions = () => {
           </ChartCard>
         </div>
 
-        {/* Filters */}
+        {/* Top Earners Leaderboard */}
+        {topEarners.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" /> Top Earners Leaderboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12 text-center">#</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead className="text-right">Level</TableHead>
+                        <TableHead className="text-right">Repurchase</TableHead>
+                        <TableHead className="text-right">Binary</TableHead>
+                        <TableHead className="text-right">Total Earned</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topEarners.map((earner, i) => (
+                        <TableRow key={earner.id} className="hover:bg-secondary/30">
+                          <TableCell className="text-center">
+                            {i === 0 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/15 text-amber-600 text-xs font-bold">1</span>
+                            ) : i === 1 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">2</span>
+                            ) : i === 2 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/15 text-orange-600 text-xs font-bold">3</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{i + 1}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium text-foreground">{earner.name}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.level.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.repurchase.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.binary.toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-bold text-primary">₹{earner.total.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-xs flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
