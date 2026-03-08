@@ -77,7 +77,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:text-foreground relative"
+              className="text-gray-600 hover:text-gray-900 relative"
               onClick={() => setCartOpen(true)}
             >
               <ShoppingCart className="h-5 w-5" />
