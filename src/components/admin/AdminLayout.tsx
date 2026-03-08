@@ -4,17 +4,32 @@ import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
-  CreditCard, Mail, ShoppingBag
+  CreditCard, Mail, ShoppingBag, ChevronDown
 } from "lucide-react";
 
-const menuItems = [
+interface MenuItem {
+  icon: any;
+  label: string;
+  href: string;
+  children?: { icon: any; label: string; href: string }[];
+}
+
+const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
-  { icon: Package, label: "Products", href: "/admin/products" },
-  { icon: FolderTree, label: "Categories", href: "/admin/categories" },
-  { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
-  { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
-  { icon: ShoppingBag, label: "Manual Order", href: "/admin/manual-order" },
+  {
+    icon: Package, label: "Products", href: "/admin/products",
+    children: [
+      { icon: FolderTree, label: "Categories", href: "/admin/categories" },
+    ],
+  },
+  {
+    icon: ShoppingCart, label: "Orders", href: "/admin/orders",
+    children: [
+      { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
+      { icon: ShoppingBag, label: "Manual Order", href: "/admin/manual-order" },
+    ],
+  },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
@@ -32,6 +47,23 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
+  const isChildActive = (item: MenuItem) =>
+    item.children?.some((c) => location.pathname === c.href) || false;
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    menuItems.forEach((item) => {
+      if (item.children && (location.pathname === item.href || isChildActive(item))) {
+        initial[item.label] = true;
+      }
+    });
+    return initial;
+  });
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside
@@ -44,22 +76,65 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           {!collapsed && <span className="font-display font-bold text-gradient-gold">Admin Panel</span>}
         </div>
 
-        <nav className="flex-1 py-4 space-y-1 px-2">
+        <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
           {menuItems.map((item) => {
             const active = location.pathname === item.href;
+            const hasChildren = item.children && item.children.length > 0;
+            const groupOpen = openGroups[item.label] || false;
+            const childActive = isChildActive(item);
+
             return (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
+              <div key={item.label}>
+                {/* Parent item */}
+                <div className="flex items-center">
+                  <Link
+                    to={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors flex-1 min-w-0 ${
+                      active || childActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                  </Link>
+                  {hasChildren && !collapsed && (
+                    <button
+                      onClick={() => toggleGroup(item.label)}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                          groupOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {/* Children */}
+                {hasChildren && !collapsed && groupOpen && (
+                  <div className="ml-4 pl-3 border-l border-border/50 mt-1 space-y-0.5">
+                    {item.children!.map((child) => {
+                      const childIsActive = location.pathname === child.href;
+                      return (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            childIsActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                          }`}
+                        >
+                          <child.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>{child.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
