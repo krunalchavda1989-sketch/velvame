@@ -216,7 +216,106 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Charts Row */}
+        {/* Binary Income Section */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ArrowLeftRight className="h-4 w-4 text-primary" />
+                Binary Income
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* BV Meters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground">Left Leg BV</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {binaryPosition ? (Number(binaryPosition.total_left_bv) + Number(binaryPosition.carry_forward_left)).toLocaleString() : "0"}
+                    </span>
+                  </div>
+                  {(() => {
+                    const total = binaryPosition
+                      ? Number(binaryPosition.total_left_bv) + Number(binaryPosition.carry_forward_left) + Number(binaryPosition.total_right_bv) + Number(binaryPosition.carry_forward_right)
+                      : 0;
+                    const left = binaryPosition ? Number(binaryPosition.total_left_bv) + Number(binaryPosition.carry_forward_left) : 0;
+                    const pct = total > 0 ? (left / total) * 100 : 0;
+                    return <Progress value={pct} className="h-2" />;
+                  })()}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Carry Forward: ₹{binaryPosition ? Number(binaryPosition.carry_forward_left).toLocaleString() : "0"}
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-muted-foreground">Right Leg BV</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {binaryPosition ? (Number(binaryPosition.total_right_bv) + Number(binaryPosition.carry_forward_right)).toLocaleString() : "0"}
+                    </span>
+                  </div>
+                  {(() => {
+                    const total = binaryPosition
+                      ? Number(binaryPosition.total_left_bv) + Number(binaryPosition.carry_forward_left) + Number(binaryPosition.total_right_bv) + Number(binaryPosition.carry_forward_right)
+                      : 0;
+                    const right = binaryPosition ? Number(binaryPosition.total_right_bv) + Number(binaryPosition.carry_forward_right) : 0;
+                    const pct = total > 0 ? (right / total) * 100 : 0;
+                    return <Progress value={pct} className="h-2" />;
+                  })()}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Carry Forward: ₹{binaryPosition ? Number(binaryPosition.carry_forward_right).toLocaleString() : "0"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Settings info */}
+              {binarySettings && (
+                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <span>Matching: <strong className="text-foreground">{binarySettings.matching_percentage}%</strong></span>
+                  <span>Cap: <strong className="text-foreground">₹{Number(binarySettings.cap_amount).toLocaleString()}</strong></span>
+                  <span>Min BV: <strong className="text-foreground">{Number(binarySettings.min_bv_for_payout).toLocaleString()}</strong></span>
+                  <span>Frequency: <strong className="text-foreground capitalize">{binarySettings.payout_frequency}</strong></span>
+                </div>
+              )}
+
+              {/* Recent Payouts */}
+              {binaryPayouts.length > 0 ? (
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-2">Recent Payouts</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-border text-xs">
+                          <th className="text-left py-2 font-medium">Date</th>
+                          <th className="text-right py-2 font-medium">Weak BV</th>
+                          <th className="text-right py-2 font-medium">Strong BV</th>
+                          <th className="text-right py-2 font-medium">Payout</th>
+                          <th className="text-center py-2 font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {binaryPayouts.map((p) => (
+                          <tr key={p.id} className="border-b border-border/50">
+                            <td className="py-2 text-muted-foreground">{format(new Date(p.created_at), "dd MMM yyyy")}</td>
+                            <td className="py-2 text-right">{Number(p.weak_leg_bv).toLocaleString()}</td>
+                            <td className="py-2 text-right">{Number(p.strong_leg_bv).toLocaleString()}</td>
+                            <td className="py-2 text-right font-semibold text-primary">₹{Number(p.matching_amount).toLocaleString()}</td>
+                            <td className="py-2 text-center">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">{p.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">No binary payouts yet</div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Earnings Trend */}
           <Card>
