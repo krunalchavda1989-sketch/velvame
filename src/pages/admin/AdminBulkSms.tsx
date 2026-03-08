@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   MessageSquare, Plus, Send, Clock, Users, FileText, Trash2,
   Loader2, Search, Filter, Eye, CheckCircle,
-  XCircle, AlertTriangle, Save, Smartphone
+  XCircle, AlertTriangle, Save, Smartphone, Phone
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
