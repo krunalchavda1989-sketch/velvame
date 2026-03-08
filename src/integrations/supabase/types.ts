@@ -392,6 +392,48 @@ export type Database = {
         }
         Relationships: []
       }
+      localization_settings: {
+        Row: {
+          available_currencies: Json
+          available_languages: Json
+          created_at: string
+          currency_symbol: string
+          default_currency: string
+          default_language: string
+          id: string
+          tax_enabled: boolean
+          tax_label: string
+          tax_rate: number
+          updated_at: string
+        }
+        Insert: {
+          available_currencies?: Json
+          available_languages?: Json
+          created_at?: string
+          currency_symbol?: string
+          default_currency?: string
+          default_language?: string
+          id?: string
+          tax_enabled?: boolean
+          tax_label?: string
+          tax_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          available_currencies?: Json
+          available_languages?: Json
+          created_at?: string
+          currency_symbol?: string
+          default_currency?: string
+          default_language?: string
+          id?: string
+          tax_enabled?: boolean
+          tax_label?: string
+          tax_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monthly_offers: {
         Row: {
           created_at: string
