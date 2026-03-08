@@ -118,25 +118,24 @@ const AdminBulkSms = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const recipientCount = getRecipientCount(campaignForm.audience_type);
-      const payload: Record<string, any> = {
+      const payload = {
         name: campaignForm.name.trim(),
         message: campaignForm.message.trim(),
         audience_type: campaignForm.audience_type,
         recipient_count: recipientCount,
         created_by: user.id,
         status: sendNow ? "sending" : campaignForm.schedule ? "scheduled" : "draft",
+        audience_filter: campaignForm.audience_type === "custom"
+          ? { numbers: campaignForm.custom_numbers.split("\n").filter((n) => n.trim()) }
+          : {},
+        scheduled_at: campaignForm.schedule && campaignForm.scheduled_at
+          ? new Date(campaignForm.scheduled_at).toISOString()
+          : null,
+        sent_at: sendNow ? new Date().toISOString() : null,
+        sent_count: sendNow ? recipientCount : 0,
+        failed_count: 0,
       };
-      if (campaignForm.audience_type === "custom") {
-        payload.audience_filter = { numbers: campaignForm.custom_numbers.split("\n").filter((n) => n.trim()) };
-      }
-      if (campaignForm.schedule && campaignForm.scheduled_at) {
-        payload.scheduled_at = new Date(campaignForm.scheduled_at).toISOString();
-      }
       if (sendNow) {
-        payload.sent_at = new Date().toISOString();
-        // In production, this would trigger an edge function to send SMS
-        payload.sent_count = recipientCount;
         payload.status = "sent";
       }
 
