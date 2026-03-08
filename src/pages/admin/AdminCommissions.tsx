@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
-  Layers, RefreshCw, GitBranch, Repeat, BarChart3,
+  Layers, RefreshCw, GitBranch, Repeat, BarChart3, Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -166,6 +166,29 @@ const AdminCommissions = () => {
     return groupByDate(allItems, "created_at", from, to);
   }, [commissions, binaryPayouts, from, to]);
 
+  const topEarners = useMemo(() => {
+    const earnerMap = new Map<string, { level: number; repurchase: number; binary: number; total: number }>();
+    commissions.forEach((c) => {
+      const prev = earnerMap.get(c.beneficiary_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
+      const amt = Number(c.amount);
+      if (c.commission_type === "level") prev.level += amt;
+      else if (c.commission_type === "repurchase") prev.repurchase += amt;
+      prev.total += amt;
+      earnerMap.set(c.beneficiary_id, prev);
+    });
+    binaryPayouts.forEach((b) => {
+      const prev = earnerMap.get(b.user_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
+      const amt = Number(b.matching_amount);
+      prev.binary += amt;
+      prev.total += amt;
+      earnerMap.set(b.user_id, prev);
+    });
+    return Array.from(earnerMap.entries())
+      .map(([id, stats]) => ({ id, name: getName(id), ...stats }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+  }, [commissions, binaryPayouts, profileMap]);
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
@@ -238,7 +261,57 @@ const AdminCommissions = () => {
           </ChartCard>
         </div>
 
-        {/* Filters */}
+        {/* Top Earners Leaderboard */}
+        {topEarners.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" /> Top Earners Leaderboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12 text-center">#</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead className="text-right">Level</TableHead>
+                        <TableHead className="text-right">Repurchase</TableHead>
+                        <TableHead className="text-right">Binary</TableHead>
+                        <TableHead className="text-right">Total Earned</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topEarners.map((earner, i) => (
+                        <TableRow key={earner.id} className="hover:bg-secondary/30">
+                          <TableCell className="text-center">
+                            {i === 0 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500/15 text-amber-600 text-xs font-bold">1</span>
+                            ) : i === 1 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">2</span>
+                            ) : i === 2 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/15 text-orange-600 text-xs font-bold">3</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{i + 1}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium text-foreground">{earner.name}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.level.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.repurchase.toLocaleString()}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">₹{earner.binary.toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-bold text-primary">₹{earner.total.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative max-w-xs flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
