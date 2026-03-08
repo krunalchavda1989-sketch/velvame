@@ -91,6 +91,7 @@ const Login = () => {
             </Link>
           </div>
 
+          <Button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
