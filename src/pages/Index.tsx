@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import CTASection from "@/components/landing/CTASection";
+
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -337,8 +337,6 @@ const Index = () => {
         </section>
       )}
 
-      {/* ===== CTA ===== */}
-      <CTASection />
 
       <Footer />
     </div>
