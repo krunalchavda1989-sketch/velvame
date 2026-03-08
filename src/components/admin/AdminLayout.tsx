@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
-  CreditCard, Mail, ShoppingBag, ChevronDown
+  CreditCard, Mail, ShoppingBag, ChevronDown, LogOut
 } from "lucide-react";
 
 interface MenuItem {
@@ -46,6 +47,12 @@ const menuItems: MenuItem[] = [
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin/login");
+  };
 
   const isChildActive = (item: MenuItem) =>
     item.children?.some((c) => location.pathname === c.href) || false;
@@ -154,6 +161,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             <ArrowLeft className="h-4 w-4 flex-shrink-0" />
             {!collapsed && <span>Back to Dashboard</span>}
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
 
