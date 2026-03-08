@@ -10,7 +10,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HorizontalTreeGraph from "@/components/genealogy/HorizontalTreeGraph";
 
 interface TreeMember {
