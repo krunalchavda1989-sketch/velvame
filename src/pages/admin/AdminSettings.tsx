@@ -105,6 +105,10 @@ const AdminSettings = () => {
           <TabsContent value="captcha">
             <CaptchaTab />
           </TabsContent>
+
+          <TabsContent value="membership">
+            <MembershipTab />
+          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
