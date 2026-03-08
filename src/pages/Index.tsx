@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, ShoppingBag, Star, Plus, Users, TrendingUp, Shield,
-  ChevronRight, Sparkles, Gift, Zap, Heart, Award,
+  ChevronRight, Sparkles, Gift, Zap, Heart, Award, Globe, type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
@@ -18,21 +18,38 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 interface Category { id: string; name: string; image_url: string; }
 interface Testimonial { id: string; name: string; text: string; rating: number; avatar_url: string; }
+interface HeroStat { id: string; label: string; value: string; icon: string; sort_order: number; }
+
+const iconMap: Record<string, { Icon: LucideIcon; gradient: string; color: string }> = {
+  "users":        { Icon: Users,       gradient: "from-blue-500/10 to-purple-500/10",  color: "text-blue-500" },
+  "trending-up":  { Icon: TrendingUp,  gradient: "from-green-500/10 to-emerald-500/10", color: "text-green-500" },
+  "award":        { Icon: Award,       gradient: "from-amber-500/10 to-orange-500/10",  color: "text-amber-500" },
+  "zap":          { Icon: Zap,         gradient: "from-purple-500/10 to-pink-500/10",   color: "text-purple-500" },
+  "shield":       { Icon: Shield,      gradient: "from-sky-500/10 to-blue-500/10",      color: "text-sky-500" },
+  "shopping-bag": { Icon: ShoppingBag, gradient: "from-rose-500/10 to-pink-500/10",     color: "text-rose-500" },
+  "heart":        { Icon: Heart,       gradient: "from-red-500/10 to-rose-500/10",      color: "text-red-500" },
+  "gift":         { Icon: Gift,        gradient: "from-teal-500/10 to-cyan-500/10",     color: "text-teal-500" },
+  "star":         { Icon: Star,        gradient: "from-yellow-500/10 to-amber-500/10",  color: "text-yellow-500" },
+  "globe":        { Icon: Globe,       gradient: "from-indigo-500/10 to-violet-500/10", color: "text-indigo-500" },
+};
 
 const Index = () => {
   const { products, addToCart } = useCart();
   const { currencySymbol } = useLocalization();
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }] = await Promise.all([
         supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
+        supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
+      setHeroStats((stats as unknown as HeroStat[]) || []);
     };
     fetchData();
   }, []);
@@ -111,26 +128,25 @@ const Index = () => {
             {/* Right — Stat Cards */}
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: Users, label: "50,000+", sub: "Happy Customers", gradient: "from-blue-500/10 to-purple-500/10", iconColor: "text-blue-500" },
-                  { icon: TrendingUp, label: `${currencySymbol}12Cr+`, sub: "Rewards Distributed", gradient: "from-green-500/10 to-emerald-500/10", iconColor: "text-green-500" },
-                  { icon: Award, label: "500+", sub: "Premium Products", gradient: "from-amber-500/10 to-orange-500/10", iconColor: "text-amber-500" },
-                  { icon: Zap, label: "24/7", sub: "Customer Support", gradient: "from-purple-500/10 to-pink-500/10", iconColor: "text-purple-500" },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + i * 0.1 }}
-                    className={`p-6 rounded-2xl bg-gradient-to-br ${stat.gradient} border border-border/50 backdrop-blur-sm hover:border-primary/20 transition-all text-center group hover:shadow-lg`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                      <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-                    </div>
-                    <span className="text-2xl font-display font-bold text-foreground block">{stat.label}</span>
-                    <span className="text-xs text-muted-foreground">{stat.sub}</span>
-                  </motion.div>
-                ))}
+                {heroStats.map((stat, i) => {
+                  const mapped = iconMap[stat.icon] || iconMap["users"];
+                  const StatIcon = mapped.Icon;
+                  return (
+                    <motion.div
+                      key={stat.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + i * 0.1 }}
+                      className={`p-6 rounded-2xl bg-gradient-to-br ${mapped.gradient} border border-border/50 backdrop-blur-sm hover:border-primary/20 transition-all text-center group hover:shadow-lg`}
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <StatIcon className={`h-5 w-5 ${mapped.color}`} />
+                      </div>
+                      <span className="text-2xl font-display font-bold text-foreground block">{stat.value}</span>
+                      <span className="text-xs text-muted-foreground">{stat.label}</span>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.div>
           </div>

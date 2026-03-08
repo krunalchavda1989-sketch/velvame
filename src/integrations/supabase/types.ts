@@ -392,6 +392,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_stats: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          value: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          value?: string
+        }
+        Relationships: []
+      }
       localization_settings: {
         Row: {
           available_currencies: Json
