@@ -54,7 +54,7 @@ import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
 import Orders from "./pages/dashboard/Orders";
 import OrderDetail from "./pages/dashboard/OrderDetail";
 import Addresses from "./pages/dashboard/Addresses";
-import KYC from "./pages/dashboard/KYC";
+// KYC is now a tab inside Settings
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 import Offers from "./pages/Offers";
