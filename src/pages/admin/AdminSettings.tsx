@@ -77,6 +77,9 @@ const AdminSettings = () => {
             <TabsTrigger value="captcha" className="gap-2">
               <ShieldCheck className="h-4 w-4" /> reCAPTCHA
             </TabsTrigger>
+            <TabsTrigger value="membership" className="gap-2">
+              <DollarSign className="h-4 w-4" /> Membership
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
