@@ -43,11 +43,13 @@ const Navbar = () => {
   const BrandLogo = () => (
     <>
       {brand.logo_url ? (
-        <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-8 object-contain rounded" />
+        <img src={brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
       ) : (
-        <Crown className="h-7 w-7 text-primary" />
+        <>
+          <Crown className="h-7 w-7 text-primary" />
+          <span className="font-display text-xl font-bold text-gradient-gold">{brand.brand_name}</span>
+        </>
       )}
-      <span className="font-display text-xl font-bold text-gradient-gold">{brand.brand_name}</span>
     </>
   );
 
