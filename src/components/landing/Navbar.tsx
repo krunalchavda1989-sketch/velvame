@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Crown, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
