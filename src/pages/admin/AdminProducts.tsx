@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import SortableImageItem from "@/components/admin/SortableImageItem";
 
 const emptyProduct = {
   name: "",
