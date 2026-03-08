@@ -222,6 +222,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* ===== Monthly Offers Grid ===== */}
+      <MonthlyOffersSection />
+
       {/* ===== MLM Income Structure ===== */}
       <MLMStructure />
 
