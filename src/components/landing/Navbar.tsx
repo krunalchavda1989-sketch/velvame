@@ -139,7 +139,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground relative"
+              className="text-gray-600 relative"
               onClick={() => setCartOpen(true)}
             >
               <ShoppingCart className="h-5 w-5" />
