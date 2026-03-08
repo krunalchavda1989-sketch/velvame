@@ -484,11 +484,19 @@ const PaymentTab = () => {
       .maybeSingle();
     if (data?.content) {
       const saved = data.content as any;
-      setGateways((prev) => ({
-        razorpay: { ...prev.razorpay, ...saved.razorpay, fields: { ...prev.razorpay.fields, ...maskFields(saved.razorpay?.fields) } },
-        phonepe: { ...prev.phonepe, ...saved.phonepe, fields: { ...prev.phonepe.fields, ...maskFields(saved.phonepe?.fields) } },
-        stripe: { ...prev.stripe, ...saved.stripe, fields: { ...prev.stripe.fields, ...maskFields(saved.stripe?.fields) } },
-      }));
+      setGateways((prev) => {
+        const merged = { ...prev } as any;
+        for (const key of Object.keys(prev)) {
+          if (saved[key]) {
+            merged[key] = {
+              ...prev[key as keyof AllGateways],
+              ...saved[key],
+              fields: { ...prev[key as keyof AllGateways].fields, ...maskFields(saved[key]?.fields) },
+            };
+          }
+        }
+        return merged;
+      });
     }
     setLoading(false);
   }, []);
