@@ -53,6 +53,7 @@ const menuItems: MenuItem[] = [
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: TrendingUp, label: "Reports", href: "/admin/reports" },
   { icon: MessageSquare, label: "Bulk Messaging", href: "/admin/bulk-sms" },
+  { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
