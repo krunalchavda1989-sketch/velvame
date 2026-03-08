@@ -1112,6 +1112,51 @@ export type Database = {
           },
         ]
       }
+      sms_settings: {
+        Row: {
+          api_key: string
+          config: Json
+          created_at: string
+          id: string
+          is_enabled: boolean
+          order_updates_enabled: boolean
+          otp_enabled: boolean
+          provider: string
+          sender_id: string
+          template_id: string
+          updated_at: string
+          welcome_sms_enabled: boolean
+        }
+        Insert: {
+          api_key?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          order_updates_enabled?: boolean
+          otp_enabled?: boolean
+          provider?: string
+          sender_id?: string
+          template_id?: string
+          updated_at?: string
+          welcome_sms_enabled?: boolean
+        }
+        Update: {
+          api_key?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          order_updates_enabled?: boolean
+          otp_enabled?: boolean
+          provider?: string
+          sender_id?: string
+          template_id?: string
+          updated_at?: string
+          welcome_sms_enabled?: boolean
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
