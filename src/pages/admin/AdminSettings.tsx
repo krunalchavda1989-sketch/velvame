@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -155,6 +155,8 @@ const GATEWAY_META = [
 const PaymentTab = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, { success: boolean; message?: string; error?: string }>>({});
   const [gateways, setGateways] = useState<AllGateways>(DEFAULT_GATEWAYS);
   const [expandedGateway, setExpandedGateway] = useState<string | null>("razorpay");
 
@@ -245,6 +247,30 @@ const PaymentTab = () => {
       toast.error(err.message || "Failed to save");
     } finally {
       setSaving(null);
+    }
+  };
+
+  const handleTestConnection = async (gwKey: keyof AllGateways) => {
+    setTesting(gwKey);
+    setTestResults((prev) => {
+      const next = { ...prev };
+      delete next[gwKey];
+      return next;
+    });
+    try {
+      const { data, error } = await supabase.functions.invoke("test-payment-gateway", {
+        body: { gateway: gwKey },
+      });
+      if (error) throw error;
+      setTestResults((prev) => ({ ...prev, [gwKey]: data }));
+      if (data.success) toast.success(data.message);
+      else toast.error(data.error || "Test failed");
+    } catch (err: any) {
+      const result = { success: false, error: err.message || "Connection test failed" };
+      setTestResults((prev) => ({ ...prev, [gwKey]: result }));
+      toast.error(result.error);
+    } finally {
+      setTesting(null);
     }
   };
 
@@ -340,7 +366,28 @@ const PaymentTab = () => {
                     {saving === meta.key ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                     Save {meta.label}
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestConnection(meta.key)}
+                    disabled={testing === meta.key}
+                  >
+                    {testing === meta.key ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Shield className="h-4 w-4 mr-2" />}
+                    Test Connection
+                  </Button>
                 </div>
+
+                {/* Test Result */}
+                {testResults[meta.key] && (
+                  <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
+                    testResults[meta.key].success
+                      ? "bg-success/10 text-success border border-success/20"
+                      : "bg-destructive/10 text-destructive border border-destructive/20"
+                  }`}>
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    {testResults[meta.key].success ? testResults[meta.key].message : testResults[meta.key].error}
+                  </div>
+                )}
               </CardContent>
             )}
           </Card>
