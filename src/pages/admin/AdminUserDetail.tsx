@@ -383,6 +383,7 @@ const AdminUserDetail = () => {
             <TabsTrigger value="team" className="gap-1.5"><Users className="h-3.5 w-3.5" />Team ({referrals.length})</TabsTrigger>
             <TabsTrigger value="commissions" className="gap-1.5"><TrendingUp className="h-3.5 w-3.5" />Commissions ({commissions.length})</TabsTrigger>
             <TabsTrigger value="withdrawals" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" />Withdrawals ({withdrawals.length})</TabsTrigger>
+            <TabsTrigger value="kyc" className="gap-1.5"><Shield className="h-3.5 w-3.5" />KYC ({kycDocs.length})</TabsTrigger>
             <TabsTrigger value="achievements" className="gap-1.5"><Trophy className="h-3.5 w-3.5" />Achievements</TabsTrigger>
           </TabsList>
 
