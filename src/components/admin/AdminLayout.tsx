@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
-  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree
+  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText
 } from "lucide-react";
 
 const menuItems = [
@@ -16,6 +16,7 @@ const menuItems = [
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
   { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
+  { icon: FileText, label: "Page Manager", href: "/admin/pages" },
   { icon: Map, label: "Title Roadmap", href: "/admin/title-roadmap" },
   { icon: Layers, label: "Commission Levels", href: "/admin/commission-levels" },
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
