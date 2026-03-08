@@ -5,11 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, User, Users, Crown, Loader2,
-  Shield, Search, X, Eye, ArrowLeft
+  Shield, Search, X, Eye, ArrowLeft, List, GitFork
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import HorizontalTreeGraph from "@/components/genealogy/HorizontalTreeGraph";
 
 interface TreeMember {
   profile_id: string;
