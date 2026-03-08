@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
-  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText
+  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
+  CreditCard, Mail, ShoppingBag
 } from "lucide-react";
 
 const menuItems = [
@@ -12,6 +13,8 @@ const menuItems = [
   { icon: Package, label: "Products", href: "/admin/products" },
   { icon: FolderTree, label: "Categories", href: "/admin/categories" },
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
+  { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
+  { icon: ShoppingBag, label: "Manual Order", href: "/admin/manual-order" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
@@ -22,6 +25,7 @@ const menuItems = [
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
+  { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
