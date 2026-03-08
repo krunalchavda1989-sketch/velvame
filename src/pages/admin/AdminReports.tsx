@@ -437,13 +437,25 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <Badge variant="outline" className={`text-[10px] ${s.class}`}>{s.label}</Badge>;
 };
 
-const ReportTable = ({ columns, rows }: { columns: string[]; rows: React.ReactNode[][] }) => {
+const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[]; rows: React.ReactNode[][]; csvFilename?: string; csvRows?: string[][] }) => {
   if (rows.length === 0) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No data found for the selected period.</CardContent></Card>;
   }
 
   return (
     <Card>
+      {csvFilename && csvRows && (
+        <div className="flex justify-end px-4 pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => exportCsv(columns, csvRows, csvFilename)}
+          >
+            <Download className="h-3.5 w-3.5 mr-1" /> Export CSV
+          </Button>
+        </div>
+      )}
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
