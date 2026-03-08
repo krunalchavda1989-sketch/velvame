@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Settings, Key, CheckCircle, XCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Settings, Key, CheckCircle, Loader2, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,109 +85,262 @@ const AdminSettings = () => {
   );
 };
 
+/* ───────── Gateway Config Type ───────── */
+interface GatewayConfig {
+  enabled: boolean;
+  sandbox: boolean;
+  fields: Record<string, string>;
+}
+
+interface AllGateways {
+  razorpay: GatewayConfig;
+  phonepe: GatewayConfig;
+  stripe: GatewayConfig;
+}
+
+const DEFAULT_GATEWAYS: AllGateways = {
+  razorpay: { enabled: false, sandbox: false, fields: { key_id: "", key_secret: "" } },
+  phonepe: { enabled: false, sandbox: false, fields: { merchant_id: "", salt_key: "", salt_index: "1" } },
+  stripe: { enabled: false, sandbox: false, fields: { publishable_key: "", secret_key: "" } },
+};
+
+const GATEWAY_META = [
+  {
+    key: "razorpay" as const,
+    label: "Razorpay",
+    icon: CreditCard,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10 border-blue-500/20",
+    docsUrl: "https://dashboard.razorpay.com/app/keys",
+    fields: [
+      { key: "key_id", label: "API Key ID", placeholder: "rzp_live_xxxxxxxx", secret: false },
+      { key: "key_secret", label: "API Key Secret", placeholder: "Enter your key secret", secret: true },
+    ],
+  },
+  {
+    key: "phonepe" as const,
+    label: "PhonePe",
+    icon: Smartphone,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10 border-purple-500/20",
+    docsUrl: "https://developer.phonepe.com/docs",
+    fields: [
+      { key: "merchant_id", label: "Merchant ID", placeholder: "MERCHANTUAT", secret: false },
+      { key: "salt_key", label: "Salt Key", placeholder: "Enter your salt key", secret: true },
+      { key: "salt_index", label: "Salt Index", placeholder: "1", secret: false },
+    ],
+  },
+  {
+    key: "stripe" as const,
+    label: "Stripe",
+    icon: Zap,
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-500/10 border-indigo-500/20",
+    docsUrl: "https://dashboard.stripe.com/apikeys",
+    fields: [
+      { key: "publishable_key", label: "Publishable Key", placeholder: "pk_live_xxxxxxxx", secret: false },
+      { key: "secret_key", label: "Secret Key", placeholder: "sk_live_xxxxxxxx", secret: true },
+    ],
+  },
+];
+
 /* ───────── Payment Tab ───────── */
 const PaymentTab = () => {
   const [loading, setLoading] = useState(true);
-  const [testing, setTesting] = useState(false);
-  const [settings, setSettings] = useState<{
-    key_id_masked: string;
-    has_key_id: boolean;
-    has_key_secret: boolean;
-  } | null>(null);
-  const [testResult, setTestResult] = useState<{ success: boolean; message?: string; error?: string } | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [gateways, setGateways] = useState<AllGateways>(DEFAULT_GATEWAYS);
+  const [expandedGateway, setExpandedGateway] = useState<string | null>("razorpay");
 
-  const fetchSettings = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("admin-settings", {
-        body: { action: "get_settings" },
-      });
-      if (error) throw error;
-      setSettings(data);
-    } catch {
-      toast.error("Failed to load settings");
-    } finally {
-      setLoading(false);
+  const loadSettings = useCallback(async () => {
+    const { data } = await supabase
+      .from("pages_content")
+      .select("content")
+      .eq("page_slug", "payment-gateway-settings")
+      .maybeSingle();
+    if (data?.content) {
+      const saved = data.content as any;
+      setGateways((prev) => ({
+        razorpay: { ...prev.razorpay, ...saved.razorpay, fields: { ...prev.razorpay.fields, ...maskFields(saved.razorpay?.fields) } },
+        phonepe: { ...prev.phonepe, ...saved.phonepe, fields: { ...prev.phonepe.fields, ...maskFields(saved.phonepe?.fields) } },
+        stripe: { ...prev.stripe, ...saved.stripe, fields: { ...prev.stripe.fields, ...maskFields(saved.stripe?.fields) } },
+      }));
     }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadSettings(); }, [loadSettings]);
+
+  const maskFields = (fields: Record<string, string> | undefined): Record<string, string> => {
+    if (!fields) return {};
+    const masked: Record<string, string> = {};
+    for (const [k, v] of Object.entries(fields)) {
+      const meta = GATEWAY_META.flatMap((g) => g.fields).find((f) => f.key === k);
+      masked[k] = meta?.secret && v ? "••••••••" : (v || "");
+    }
+    return masked;
   };
 
-  useEffect(() => { fetchSettings(); }, []);
+  const updateGateway = (gw: keyof AllGateways, patch: Partial<GatewayConfig>) => {
+    setGateways((prev) => ({ ...prev, [gw]: { ...prev[gw], ...patch } }));
+  };
 
-  const testConnection = async () => {
-    setTesting(true);
-    setTestResult(null);
+  const updateField = (gw: keyof AllGateways, fieldKey: string, value: string) => {
+    setGateways((prev) => ({
+      ...prev,
+      [gw]: { ...prev[gw], fields: { ...prev[gw].fields, [fieldKey]: value } },
+    }));
+  };
+
+  const handleSave = async (gwKey: keyof AllGateways) => {
+    setSaving(gwKey);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-settings", {
-        body: { action: "test_connection" },
-      });
-      if (error) throw error;
-      setTestResult(data);
-      if (data.success) toast.success("Razorpay connection is working!");
-      else toast.error(data.error || "Connection test failed");
+      // Build payload: only include changed (non-masked) secret fields
+      const gwConfig = gateways[gwKey];
+      const cleanFields: Record<string, string> = {};
+      for (const [k, v] of Object.entries(gwConfig.fields)) {
+        if (v !== "••••••••") cleanFields[k] = v;
+      }
+
+      const payload: any = {
+        enabled: gwConfig.enabled,
+        sandbox: gwConfig.sandbox,
+        fields: cleanFields,
+      };
+
+      // Load existing data to merge
+      const { data: existing } = await supabase
+        .from("pages_content")
+        .select("id, content")
+        .eq("page_slug", "payment-gateway-settings")
+        .maybeSingle();
+
+      const merged = existing?.content
+        ? { ...(existing.content as any), [gwKey]: { ...(existing.content as any)[gwKey], ...payload, fields: { ...((existing.content as any)[gwKey]?.fields || {}), ...cleanFields } } }
+        : { [gwKey]: payload };
+
+      if (existing) {
+        await supabase
+          .from("pages_content")
+          .update({ content: merged, title: "Payment Gateway Settings", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("pages_content").insert({
+          page_slug: "payment-gateway-settings",
+          title: "Payment Gateway Settings",
+          content: merged,
+          is_published: false,
+        });
+      }
+
+      toast.success(`${GATEWAY_META.find((g) => g.key === gwKey)?.label} settings saved!`);
+      await loadSettings();
     } catch (err: any) {
-      toast.error("Connection test failed");
-      setTestResult({ success: false, error: err.message });
+      toast.error(err.message || "Failed to save");
     } finally {
-      setTesting(false);
+      setSaving(null);
     }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-lg"><Key className="h-5 w-5 text-primary" />Razorpay API Keys</CardTitle>
-              <CardDescription className="mt-1">API credentials used for processing payments</CardDescription>
-            </div>
-            <Badge variant={settings?.has_key_id && settings?.has_key_secret ? "default" : "destructive"} className={settings?.has_key_id && settings?.has_key_secret ? "bg-success/10 text-success border-success/20" : ""}>
-              {settings?.has_key_id && settings?.has_key_secret ? "Configured" : "Not Configured"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-            <div><p className="text-sm font-medium text-foreground">API Key ID</p><p className="text-xs text-muted-foreground mt-0.5">{settings?.has_key_id ? settings.key_id_masked : "Not set"}</p></div>
-            {settings?.has_key_id ? <CheckCircle className="h-5 w-5 text-success" /> : <XCircle className="h-5 w-5 text-destructive" />}
-          </div>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-            <div><p className="text-sm font-medium text-foreground">API Key Secret</p><p className="text-xs text-muted-foreground mt-0.5">{settings?.has_key_secret ? "••••••••••••" : "Not set"}</p></div>
-            {settings?.has_key_secret ? <CheckCircle className="h-5 w-5 text-success" /> : <XCircle className="h-5 w-5 text-destructive" />}
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div><p className="text-sm font-medium text-foreground">Test Connection</p><p className="text-xs text-muted-foreground">Verify your Razorpay credentials are working</p></div>
-            <Button variant="outline" size="sm" onClick={testConnection} disabled={testing || !settings?.has_key_id || !settings?.has_key_secret}>
-              {testing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}Test
-            </Button>
-          </div>
-          {testResult && (
-            <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${testResult.success ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}>
-              {testResult.success ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-              {testResult.success ? testResult.message : testResult.error}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      {GATEWAY_META.map((meta) => {
+        const gw = gateways[meta.key];
+        const isExpanded = expandedGateway === meta.key;
+        const IconComp = meta.icon;
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">How to Update Keys</CardTitle>
-          <CardDescription>Razorpay API keys are securely stored as backend secrets</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p><span className="font-medium text-foreground">1.</span> Go to your <a href="https://dashboard.razorpay.com/app/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">Razorpay Dashboard <ExternalLink className="h-3 w-3" /></a></p>
-            <p><span className="font-medium text-foreground">2.</span> Navigate to Settings → API Keys</p>
-            <p><span className="font-medium text-foreground">3.</span> Generate or copy your Key ID and Key Secret</p>
-            <p><span className="font-medium text-foreground">4.</span> Contact your developer to update the backend secrets</p>
-          </div>
-        </CardContent>
-      </Card>
+        return (
+          <Card key={meta.key} className={`transition-all ${gw.enabled ? "border-primary/30" : ""}`}>
+            <CardHeader
+              className="cursor-pointer select-none"
+              onClick={() => setExpandedGateway(isExpanded ? null : meta.key)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg border ${meta.bgColor}`}>
+                    <IconComp className={`h-5 w-5 ${meta.color}`} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{meta.label}</CardTitle>
+                    <CardDescription className="flex items-center gap-2 mt-0.5">
+                      {gw.sandbox && <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-600">Sandbox</Badge>}
+                      {gw.enabled
+                        ? <span className="text-success text-xs flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Active</span>
+                        : <span className="text-muted-foreground text-xs">Disabled</span>}
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                  <Switch
+                    checked={gw.enabled}
+                    onCheckedChange={(v) => updateGateway(meta.key, { enabled: v })}
+                  />
+                </div>
+              </div>
+            </CardHeader>
 
+            {isExpanded && (
+              <CardContent className="space-y-4 pt-0">
+                <Separator />
+
+                {/* Sandbox Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+                  <div>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <ToggleLeft className="h-4 w-4 text-amber-500" />
+                      Sandbox / Test Mode
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Use test credentials for development</p>
+                  </div>
+                  <Switch
+                    checked={gw.sandbox}
+                    onCheckedChange={(v) => updateGateway(meta.key, { sandbox: v })}
+                  />
+                </div>
+
+                {/* Key Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {meta.fields.map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <Label>{field.label}</Label>
+                      <Input
+                        type={field.secret ? "password" : "text"}
+                        value={gw.fields[field.key] || ""}
+                        onChange={(e) => updateField(meta.key, field.key, e.target.value)}
+                        placeholder={field.placeholder}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Docs Link */}
+                <p className="text-xs text-muted-foreground">
+                  Get your API keys from the{" "}
+                  <a href={meta.docsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                    {meta.label} Dashboard <ExternalLink className="h-3 w-3" />
+                  </a>
+                </p>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    onClick={() => handleSave(meta.key)}
+                    disabled={saving === meta.key}
+                    size="sm"
+                    className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                  >
+                    {saving === meta.key ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Save {meta.label}
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
+
+      {/* Payment Stats */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Payment Overview</CardTitle>
