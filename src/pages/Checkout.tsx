@@ -230,7 +230,7 @@ const Checkout = () => {
             navigate("/dashboard/orders");
           } catch { toast.error("Payment verification failed"); }
         },
-        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); } },
+        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
         theme: { color: "#333" },
       };
       const rzp = new window.Razorpay(options);
