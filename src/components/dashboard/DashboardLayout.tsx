@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
-  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard, MapPin
+  BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard, MapPin, Shield
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
@@ -17,6 +17,7 @@ const menuItems = [
   { icon: Package, label: "Orders", href: "/dashboard/orders" },
   { icon: CreditCard, label: "Payment & Subscription", href: "/dashboard/payment" },
   { icon: MapPin, label: "My Addresses", href: "/dashboard/addresses" },
+  { icon: Shield, label: "KYC Verification", href: "/dashboard/kyc" },
   { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Link2, label: "Invite Link", href: "/dashboard/invite" },
   { icon: Award, label: "My Title", href: "/dashboard/title" },

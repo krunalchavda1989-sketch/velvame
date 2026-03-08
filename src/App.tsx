@@ -54,6 +54,7 @@ import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
 import Orders from "./pages/dashboard/Orders";
 import OrderDetail from "./pages/dashboard/OrderDetail";
 import Addresses from "./pages/dashboard/Addresses";
+import KYC from "./pages/dashboard/KYC";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 import Offers from "./pages/Offers";
@@ -183,6 +184,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Addresses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/kyc"
+              element={
+                <ProtectedRoute>
+                  <KYC />
                 </ProtectedRoute>
               }
             />
