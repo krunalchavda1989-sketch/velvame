@@ -153,6 +153,7 @@ const App = () => (
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/brand-settings" element={<AdminRoute><AdminBrandSettings /></AdminRoute>} />
+            <Route path="/admin/pages" element={<AdminRoute><AdminPages /></AdminRoute>} />
             <Route path="/admin/title-roadmap" element={<AdminRoute><AdminTitleRoadmap /></AdminRoute>} />
             <Route path="/admin/commission-levels" element={<AdminRoute><AdminCommissionLevels /></AdminRoute>} />
             <Route path="/admin/awards" element={<AdminRoute><AdminAwards /></AdminRoute>} />
