@@ -52,6 +52,19 @@ const AdminReports = () => {
 
 interface ReportProps { from: Date; to: Date; }
 
+const exportCsv = (columns: string[], rows: string[][], filename: string) => {
+  const csv = [columns, ...rows]
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 /* ─── Stat Card ─── */
 const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null }) => (
   <Card>
