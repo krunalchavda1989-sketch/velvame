@@ -1121,6 +1121,10 @@ export type Database = {
           created_by: string
           failed_count: number
           id: string
+          link_text: string | null
+          link_url: string | null
+          media_type: string | null
+          media_url: string | null
           message: string
           name: string
           recipient_count: number
@@ -1138,6 +1142,10 @@ export type Database = {
           created_by: string
           failed_count?: number
           id?: string
+          link_text?: string | null
+          link_url?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message?: string
           name?: string
           recipient_count?: number
@@ -1155,6 +1163,10 @@ export type Database = {
           created_by?: string
           failed_count?: number
           id?: string
+          link_text?: string | null
+          link_url?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message?: string
           name?: string
           recipient_count?: number
