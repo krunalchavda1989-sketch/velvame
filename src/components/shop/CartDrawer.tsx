@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,11 @@ const CartDrawer = () => {
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
 
+  // Saved addresses state
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -57,6 +63,24 @@ const CartDrawer = () => {
       .single()
       .then(({ data }) => {
         setWalletBalance(data ? Number(data.balance) : 0);
+      });
+    // Fetch saved addresses
+    supabase
+      .from("user_addresses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const addrs = (data as any) || [];
+        setSavedAddresses(addrs);
+        const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+        if (defaultAddr) {
+          setSelectedAddressId(defaultAddr.id);
+          setShowManualForm(false);
+        } else {
+          setShowManualForm(true);
+        }
       });
   }, [user, cartOpen]);
 
@@ -144,9 +168,17 @@ const CartDrawer = () => {
     setStep("address");
   };
 
+  const getShippingAddress = () => {
+    if (showManualForm) return address;
+    const saved = savedAddresses.find((a) => a.id === selectedAddressId);
+    if (!saved) return null;
+    return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
+  };
+
   const handlePayment = async () => {
-    if (!address.name || !address.line1 || !address.city || !address.state || !address.pincode || !address.phone) {
-      toast.error("Please fill all required address fields");
+    const shippingAddr = getShippingAddress();
+    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+      toast.error("Please select or fill an address");
       return;
     }
 
@@ -159,7 +191,7 @@ const CartDrawer = () => {
         .insert({
           user_id: user!.id,
           total_amount: afterTax,
-          shipping_address: address as any,
+          shipping_address: shippingAddr as any,
           payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay",
           status: "pending",
         })
@@ -423,38 +455,81 @@ const CartDrawer = () => {
         {step === "address" && (
           <>
             <div className="flex-1 overflow-y-auto space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Full Name *</Label>
-                <Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Address Line 1 *</Label>
-                <Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Address Line 2</Label>
-                <Input value={address.line2} onChange={(e) => setAddress({ ...address, line2: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>City *</Label>
-                  <Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+              {/* Saved addresses */}
+              {savedAddresses.length > 0 && !showManualForm && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">Select a delivery address</p>
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => setSelectedAddressId(addr.id)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedAddressId === addr.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px]">{addr.label}</Badge>
+                        {addr.is_default && <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px]">Default</Badge>}
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{addr.name}</p>
+                      <p className="text-xs text-muted-foreground">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}, {addr.state} – {addr.pincode}</p>
+                      <p className="text-xs text-muted-foreground">📞 {addr.phone}</p>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" className="text-xs gap-1.5 w-full" onClick={() => { setShowManualForm(true); setSelectedAddressId(null); }}>
+                    <MapPin className="h-3.5 w-3.5" /> Use a different address
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>State *</Label>
-                  <Input value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
+              )}
+
+              {/* Manual form */}
+              {(showManualForm || savedAddresses.length === 0) && (
+                <div className="space-y-4">
+                  {savedAddresses.length > 0 && (
+                    <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={() => {
+                      setShowManualForm(false);
+                      const def = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0];
+                      if (def) setSelectedAddressId(def.id);
+                    }}>
+                      ← Back to saved addresses
+                    </Button>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Full Name *</Label>
+                    <Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} maxLength={100} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address Line 1 *</Label>
+                    <Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} maxLength={200} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address Line 2</Label>
+                    <Input value={address.line2} onChange={(e) => setAddress({ ...address, line2: e.target.value })} maxLength={200} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>City *</Label>
+                      <Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} maxLength={50} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>State *</Label>
+                      <Input value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} maxLength={50} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Pincode *</Label>
+                      <Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value.replace(/\D/g, "").slice(0, 10) })} maxLength={10} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Phone *</Label>
+                      <Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} maxLength={15} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Pincode *</Label>
-                  <Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone *</Label>
-                  <Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} />
-                </div>
-              </div>
+              )}
             </div>
             <div className="border-t border-border pt-4 space-y-3">
               <div className="space-y-1">
