@@ -92,7 +92,7 @@ const Navbar = () => {
             ) : user ? (
               <>
                 <Link to="/dashboard" className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-2">
+                  <Button variant="ghost" size="sm" className="text-gray-700 hover:text-gray-900 gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     {profile?.full_name || "Dashboard"}
                   </Button>
