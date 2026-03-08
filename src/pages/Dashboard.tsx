@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import { motion } from "framer-motion";
 import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowLeftRight } from "lucide-react";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
@@ -171,6 +172,8 @@ const Dashboard = () => {
             {" · "}Title: <span className="text-primary">{profile?.title}</span>
           </p>
         </div>
+
+        <NotificationBanner />
 
         {/* Referral link */}
         <motion.div
