@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
-  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText
+  Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
+  CreditCard, Mail, ShoppingBag
 } from "lucide-react";
 
 const menuItems = [
