@@ -125,6 +125,13 @@ const UserReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Name", "Referral Code", "Title", "Status", "Referrals", "Joined"]}
+        csvFilename="user_report"
+        csvRows={data.map((p) => [
+          p.full_name || "—", p.referral_code, p.title,
+          p.subscription_paid ? "Active" : "Inactive",
+          String(p.direct_referral_count),
+          new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((p) => [
           p.full_name || "—",
           p.referral_code,
