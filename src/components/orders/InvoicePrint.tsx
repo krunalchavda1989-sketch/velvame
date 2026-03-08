@@ -195,7 +195,7 @@ export const useInvoicePrint = (props: InvoiceProps) => {
 
   const { orderId, order, items, payment, customerName, customerPhone } = props;
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingAddr = order.shipping_address || {};
+  const shippingAddr = order?.shipping_address || {};
   const invoiceNo = `INV-${orderId.slice(0, 8).toUpperCase()}`;
 
   const handlePrint = () => {
