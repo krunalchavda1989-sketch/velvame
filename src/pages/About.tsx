@@ -1,0 +1,95 @@
+import { useState, useEffect } from "react";
+import { Loader2, Target, Eye, Heart, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import Navbar from "@/components/landing/Navbar";
+import Footer from "@/components/landing/Footer";
+import { supabase } from "@/integrations/supabase/client";
+
+const About = () => {
+  const [page, setPage] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase.from("pages_content").select("*").eq("page_slug", "about").maybeSingle();
+      setPage(data);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center pt-32"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      </div>
+    );
+  }
+
+  const content = page?.content || {};
+  const values: string[] = content.values || [];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="pt-24 pb-16">
+        {/* Hero */}
+        <section className="py-16 bg-gradient-dark">
+          <div className="container px-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">{page?.title || "About Us"}</h1>
+              <p className="text-lg text-muted-foreground">{page?.subtitle || ""}</p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Mission & Vision */}
+        <section className="py-16">
+          <div className="container px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="p-8 rounded-2xl bg-card border border-border">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="text-xl font-display font-bold text-foreground mb-3">Our Mission</h2>
+                <p className="text-muted-foreground leading-relaxed">{content.mission || ""}</p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="p-8 rounded-2xl bg-card border border-border">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <Eye className="h-6 w-6 text-primary" />
+                </div>
+                <h2 className="text-xl font-display font-bold text-foreground mb-3">Our Vision</h2>
+                <p className="text-muted-foreground leading-relaxed">{content.vision || ""}</p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Values */}
+        {values.length > 0 && (
+          <section className="py-16 bg-secondary/30">
+            <div className="container px-4">
+              <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-3xl font-display font-bold text-center mb-10">
+                Our <span className="text-gradient-gold">Core Values</span>
+              </motion.h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                {values.map((v, i) => (
+                  <motion.div key={v} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border"
+                  >
+                    <CheckCircle className="h-5 w-5 text-primary shrink-0" />
+                    <span className="font-medium text-foreground">{v}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default About;
