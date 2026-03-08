@@ -53,6 +53,16 @@ const AdminProductForm = () => {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
+    // Fetch dynamic categories
+    const fetchCategories = async () => {
+      const { data } = await supabase
+        .from("product_categories")
+        .select("name")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (data) setCategories(data.map((c: any) => c.name));
+    };
+    fetchCategories();
     if (isEditing) {
       loadProduct();
     }
