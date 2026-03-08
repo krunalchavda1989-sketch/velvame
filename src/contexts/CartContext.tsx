@@ -101,7 +101,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     })
     .filter(Boolean) as (Product & { qty: number })[];
 
-  const totalItems = cart.reduce((sum, c) => sum + c.qty, 0);
+  const totalItems = cart.length;
   const totalPrice = cartProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
 
   return (
