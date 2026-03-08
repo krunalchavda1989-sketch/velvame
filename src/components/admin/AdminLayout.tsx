@@ -52,6 +52,7 @@ const menuItems: MenuItem[] = [
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: TrendingUp, label: "Reports", href: "/admin/reports" },
+  { icon: Megaphone, label: "Announcements", href: "/admin/announcements" },
   { icon: MessageSquare, label: "Bulk Messaging", href: "/admin/bulk-sms" },
   { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },

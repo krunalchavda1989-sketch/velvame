@@ -152,6 +152,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       <main className={`flex-1 transition-all duration-300 pt-14 md:pt-0 ${collapsed ? "md:ml-16" : "md:ml-60"}`}>
+        <AnnouncementBar />
         {children}
       </main>
     </div>
