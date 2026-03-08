@@ -34,7 +34,7 @@ const AdminOverview = () => {
       const [profilesRes, productsRes, ordersRes, commissionsRes] = await Promise.all([
         supabase.from("profiles").select("id, created_at", { count: "exact" }),
         supabase.from("products").select("*", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total_amount, status, created_at, user_id"),
+        supabase.from("orders").select("id, total_amount, status, created_at, user_id, order_number"),
         supabase.from("commissions").select("amount, commission_type, created_at"),
       ]);
 
