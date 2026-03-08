@@ -40,13 +40,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           collapsed ? "w-16" : "w-60"
         } hidden md:flex flex-col`}
       >
-        <div className="flex items-center gap-2 px-4 h-16 border-b border-border">
+        <div className="flex items-center justify-center px-4 h-16 border-b border-border">
           {brand.logo_url ? (
-            <img src={brand.logo_url} alt={brand.brand_name} className="h-6 w-6 object-contain rounded flex-shrink-0" />
+            <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-auto object-contain rounded flex-shrink-0" />
           ) : (
             <Crown className="h-6 w-6 text-primary flex-shrink-0" />
           )}
-          {!collapsed && <span className="font-display font-bold text-gradient-gold">{brand.brand_name}</span>}
         </div>
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrand } from "@/contexts/BrandContext";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
@@ -53,6 +54,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const brand = useBrand();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -83,9 +85,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           collapsed ? "w-16" : "w-60"
         } hidden md:flex flex-col`}
       >
-        <div className="flex items-center gap-2 px-4 h-16 border-b border-border">
-          <Crown className="h-6 w-6 text-primary flex-shrink-0" />
-          {!collapsed && <span className="font-display font-bold text-gradient-gold">Admin Panel</span>}
+        <div className="flex items-center justify-center px-4 h-16 border-b border-border">
+          {brand.logo_url ? (
+            <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-auto object-contain rounded flex-shrink-0" />
+          ) : (
+            <Crown className="h-6 w-6 text-primary flex-shrink-0" />
+          )}
         </div>
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
