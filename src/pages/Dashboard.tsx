@@ -32,6 +32,9 @@ const Dashboard = () => {
   const [earningsTrend, setEarningsTrend] = useState<any[]>([]);
   const [commissionBreakdown, setCommissionBreakdown] = useState<any[]>([]);
   const [teamGrowth, setTeamGrowth] = useState<any[]>([]);
+  const [binaryPosition, setBinaryPosition] = useState<any>(null);
+  const [binaryPayouts, setBinaryPayouts] = useState<any[]>([]);
+  const [binarySettings, setBinarySettings] = useState<any>(null);
 
   const referralLink = profile ? `${window.location.origin}/register?ref=${profile.referral_code}` : "";
 
