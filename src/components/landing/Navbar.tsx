@@ -24,6 +24,7 @@ const Navbar = () => {
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems, cartOpen, setCartOpen } = useCart();
   const brand = useBrand();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [navLinks, setNavLinks] = useState(fallbackLinks);
 
   useEffect(() => {
