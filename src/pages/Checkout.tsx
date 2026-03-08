@@ -14,6 +14,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useLocalization, formatPrice, taxAmount } from "@/hooks/useLocalization";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
+import { sendOrderEmail } from "@/lib/orderEmail";
 
 declare global {
   interface Window {
@@ -203,6 +204,7 @@ const Checkout = () => {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
         toast.success("Order placed successfully!");
         clearCart();
+        sendOrderEmail(order.id, "order_success");
         navigate("/dashboard/orders");
         return;
       }
@@ -221,14 +223,15 @@ const Checkout = () => {
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
               body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
             });
-            if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); return; }
+            if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
             await supabase.from("orders").update({ status: "confirmed", payment_method: useWallet ? "wallet+razorpay" : "razorpay" }).eq("id", order.id);
             toast.success("Order placed successfully!");
             clearCart();
+            sendOrderEmail(order.id, "order_success");
             navigate("/dashboard/orders");
           } catch { toast.error("Payment verification failed"); }
         },
-        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); } },
+        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
         theme: { color: "#333" },
       };
       const rzp = new window.Razorpay(options);
