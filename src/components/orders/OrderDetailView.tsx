@@ -77,7 +77,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
 
   const { handlePrint } = useInvoicePrint({
     orderId,
-    order: order || { total_amount: 0, status: "", payment_method: null, shipping_method: null, shipping_address: {}, is_repurchase: false, created_at: "", updated_at: "", user_id: "" },
+    order: order || { id: orderId, total_amount: 0, status: "", payment_method: null, shipping_address: {}, created_at: "", is_repurchase: false },
     items,
     payment,
     customerName: profile?.full_name,
