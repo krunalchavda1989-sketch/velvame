@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check } from "lucide-react";
+import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,6 +92,16 @@ const Dashboard = () => {
             {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
             {copied ? "Copied!" : "Copy"}
           </Button>
+        </motion.div>
+
+        {/* Social sharing */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <SocialShareButtons referralLink={referralLink} referralCode={profile?.referral_code} compact />
         </motion.div>
 
         {/* Subscription status */}
