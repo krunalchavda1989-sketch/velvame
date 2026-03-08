@@ -82,10 +82,6 @@ const KYC = () => {
           .upload(path, file, { upsert: true });
         if (uploadErr) throw uploadErr;
 
-        const { data: urlData } = supabase.storage
-          .from("kyc-documents")
-          .getPublicUrl(path);
-
         const existing = getDoc(docType.key);
         if (existing) {
           const { error } = await supabase
