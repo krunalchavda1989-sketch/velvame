@@ -115,10 +115,10 @@ const InviteLink = () => {
                   {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
-              <Button onClick={handleShare} className="w-full gap-2">
-                <Share2 className="h-4 w-4" />
-                Share Link
-              </Button>
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground mb-3">Share via</p>
+                <SocialShareButtons referralLink={referralLink} referralCode={profile?.referral_code} />
+              </div>
             </CardContent>
           </Card>
         </motion.div>

@@ -94,6 +94,16 @@ const Dashboard = () => {
           </Button>
         </motion.div>
 
+        {/* Social sharing */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <SocialShareButtons referralLink={referralLink} referralCode={profile?.referral_code} compact />
+        </motion.div>
+
         {/* Subscription status */}
         {!profile?.subscription_paid && (
           <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
