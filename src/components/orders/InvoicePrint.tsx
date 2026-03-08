@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InvoiceProps {
@@ -28,30 +28,41 @@ interface InvoiceProps {
 
 const InvoicePrint = ({ orderId, order, items, payment, customerName, customerPhone }: InvoiceProps) => {
   const [brand, setBrand] = useState<any>(null);
-  const printRef = useRef<HTMLDivElement>(null);
+  const [localization, setLocalization] = useState<any>(null);
 
   useEffect(() => {
     supabase.from("brand_settings").select("*").limit(1).single().then(({ data }) => {
       if (data) setBrand(data);
     });
+    supabase.from("localization_settings").select("*").limit(1).single().then(({ data }) => {
+      if (data) setLocalization(data);
+    });
   }, []);
 
+  const sym = localization?.currency_symbol || "₹";
+  const cur = localization?.default_currency || "INR";
+  const taxEnabled = localization?.tax_enabled ?? false;
+  const taxRateVal = Number(localization?.tax_rate) || 0;
+  const taxLbl = localization?.tax_label || "GST";
+
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+    `${sym}${val.toFixed(2)}`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const taxAmt = taxEnabled ? (subtotal * taxRateVal) / 100 : 0;
   const shippingAddr = order.shipping_address || {};
   const invoiceNo = `INV-${orderId.slice(0, 8).toUpperCase()}`;
 
   const handlePrint = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
-
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    const taxRow = taxEnabled
+      ? `<div class="summary-row"><span>${taxLbl} (${taxRateVal}%)</span><span>${formatCurrency(taxAmt)}</span></div>`
+      : "";
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -152,6 +163,7 @@ const InvoicePrint = ({ orderId, order, items, payment, customerName, customerPh
         <div class="summary">
           <div class="summary-table">
             <div class="summary-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
+            ${taxRow}
             <div class="summary-row"><span>Shipping</span><span>Free</span></div>
             <div class="summary-total"><span>Total</span><span>${formatCurrency(order.total_amount)}</span></div>
           </div>
@@ -180,27 +192,40 @@ export default InvoicePrint;
 // Hook version for easy usage
 export const useInvoicePrint = (props: InvoiceProps) => {
   const [brand, setBrand] = useState<any>(null);
+  const [localization, setLocalization] = useState<any>(null);
 
   useEffect(() => {
     supabase.from("brand_settings").select("*").limit(1).single().then(({ data }) => {
       if (data) setBrand(data);
     });
+    supabase.from("localization_settings").select("*").limit(1).single().then(({ data }) => {
+      if (data) setLocalization(data);
+    });
   }, []);
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+  const sym = localization?.currency_symbol || "₹";
+  const taxEnabled = localization?.tax_enabled ?? false;
+  const taxRateVal = Number(localization?.tax_rate) || 0;
+  const taxLbl = localization?.tax_label || "GST";
+
+  const formatCurrency = (val: number) => `${sym}${val.toFixed(2)}`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
   const { orderId, order, items, payment, customerName, customerPhone } = props;
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const taxAmt = taxEnabled ? (subtotal * taxRateVal) / 100 : 0;
   const shippingAddr = order?.shipping_address || {};
   const invoiceNo = `INV-${orderId.slice(0, 8).toUpperCase()}`;
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    const taxRow = taxEnabled
+      ? `<div class="summary-row"><span>${taxLbl} (${taxRateVal}%)</span><span>${formatCurrency(taxAmt)}</span></div>`
+      : "";
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -301,6 +326,7 @@ export const useInvoicePrint = (props: InvoiceProps) => {
         <div class="summary">
           <div class="summary-table">
             <div class="summary-row"><span>Subtotal</span><span>${formatCurrency(subtotal)}</span></div>
+            ${taxRow}
             <div class="summary-row"><span>Shipping</span><span>Free</span></div>
             <div class="summary-total"><span>Total</span><span>${formatCurrency(order.total_amount)}</span></div>
           </div>

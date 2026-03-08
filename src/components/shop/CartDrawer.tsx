@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useLocalization, formatPrice, taxAmount } from "@/hooks/useLocalization";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -30,6 +31,7 @@ interface AppliedCoupon {
 const CartDrawer = () => {
   const { user } = useAuth();
   const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart, getPrice } = useCart();
+  const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "address" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
@@ -46,7 +48,6 @@ const CartDrawer = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
 
-  // Fetch wallet balance when cart opens or user changes
   useEffect(() => {
     if (!user || !cartOpen) return;
     supabase
@@ -58,6 +59,8 @@ const CartDrawer = () => {
         setWalletBalance(data ? Number(data.balance) : 0);
       });
   }, [user, cartOpen]);
+
+  const fc = (val: number) => formatPrice(val, currencySymbol);
 
   const calculateDiscount = (coupon: { discount_type: string; discount_value: number; max_discount_amount: number }, subtotal: number) => {
     if (coupon.discount_type === "percentage") {
@@ -97,7 +100,7 @@ const CartDrawer = () => {
         return;
       }
       if (coupon.min_order_amount > 0 && totalPrice < coupon.min_order_amount) {
-        toast.error(`Minimum order ₹${coupon.min_order_amount} required`);
+        toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`);
         setCouponLoading(false);
         return;
       }
@@ -111,7 +114,7 @@ const CartDrawer = () => {
         max_discount_amount: coupon.max_discount_amount,
         discountAmount,
       });
-      toast.success(`Coupon applied! You save ₹${discountAmount.toFixed(2)}`);
+      toast.success(`Coupon applied! You save ${fc(discountAmount)}`);
     } catch {
       toast.error("Failed to apply coupon");
     }
@@ -125,8 +128,10 @@ const CartDrawer = () => {
 
   const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
   const afterCoupon = Math.max(0, totalPrice - discountAmount);
-  const walletDeduction = useWallet ? Math.min(walletBalance, afterCoupon) : 0;
-  const finalPrice = Math.max(0, afterCoupon - walletDeduction);
+  const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
+  const afterTax = afterCoupon + tax;
+  const walletDeduction = useWallet ? Math.min(walletBalance, afterTax) : 0;
+  const finalPrice = Math.max(0, afterTax - walletDeduction);
   const isFullWalletPayment = useWallet && finalPrice === 0;
 
   const handleCheckout = async () => {
@@ -149,12 +154,11 @@ const CartDrawer = () => {
     setStep("processing");
 
     try {
-      // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user!.id,
-          total_amount: afterCoupon,
+          total_amount: afterTax,
           shipping_address: address as any,
           payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay",
           status: "pending",
@@ -174,12 +178,10 @@ const CartDrawer = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
-      // Increment coupon usage
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: appliedCoupon.id });
       }
 
-      // Deduct wallet balance if used
       if (useWallet && walletDeduction > 0) {
         const { data: wallet } = await supabase
           .from("wallets")
@@ -197,7 +199,6 @@ const CartDrawer = () => {
         }
       }
 
-      // If fully paid by wallet, confirm order directly
       if (isFullWalletPayment) {
         await supabase
           .from("orders")
@@ -215,7 +216,6 @@ const CartDrawer = () => {
         return;
       }
 
-      // Pay remaining via Razorpay
       const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
         body: {
           action: "create_order",
@@ -286,8 +286,6 @@ const CartDrawer = () => {
     }
   };
 
-  const formatCurrency = (val: number) => `₹${val.toFixed(2)}`;
-
   return (
     <Sheet open={cartOpen} onOpenChange={setCartOpen}>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
@@ -315,7 +313,7 @@ const CartDrawer = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-sm font-display font-bold text-primary">₹{getPrice(p)}</p>
+                      <p className="text-sm font-display font-bold text-primary">{fc(getPrice(p))}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateQty(p.id, -1)}>
@@ -342,7 +340,7 @@ const CartDrawer = () => {
                       <CheckCircle className="h-4 w-4 text-primary" />
                       <div>
                         <p className="text-sm font-mono font-bold text-primary">{appliedCoupon.code}</p>
-                        <p className="text-xs text-muted-foreground">-{formatCurrency(discountAmount)} off</p>
+                        <p className="text-xs text-muted-foreground">-{fc(discountAmount)} off</p>
                       </div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={removeCoupon}>
@@ -375,9 +373,9 @@ const CartDrawer = () => {
                       <div>
                         <p className="text-sm font-medium text-foreground">Use Wallet Balance</p>
                         <p className="text-xs text-muted-foreground">
-                          Available: {formatCurrency(walletBalance)}
+                          Available: {fc(walletBalance)}
                           {useWallet && walletDeduction > 0 && (
-                            <span className="text-primary ml-1">(-{formatCurrency(walletDeduction)})</span>
+                            <span className="text-primary ml-1">(-{fc(walletDeduction)})</span>
                           )}
                         </p>
                       </div>
@@ -389,23 +387,29 @@ const CartDrawer = () => {
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">{formatCurrency(totalPrice)}</span>
+                    <span className="text-foreground">{fc(totalPrice)}</span>
                   </div>
                   {appliedCoupon && (
                     <div className="flex justify-between text-sm">
                       <span className="text-primary">Coupon Discount</span>
-                      <span className="text-primary font-medium">-{formatCurrency(discountAmount)}</span>
+                      <span className="text-primary font-medium">-{fc(discountAmount)}</span>
+                    </div>
+                  )}
+                  {taxEnabled && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{taxLabel} ({taxRate}%)</span>
+                      <span className="text-foreground">+{fc(tax)}</span>
                     </div>
                   )}
                   {useWallet && walletDeduction > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-primary">Wallet</span>
-                      <span className="text-primary font-medium">-{formatCurrency(walletDeduction)}</span>
+                      <span className="text-primary font-medium">-{fc(walletDeduction)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm font-bold">
                     <span className="text-foreground">Total</span>
-                    <span className="font-display text-foreground">{formatCurrency(finalPrice)}</span>
+                    <span className="font-display text-foreground">{fc(finalPrice)}</span>
                   </div>
                 </div>
                 <Button className="w-full" onClick={handleCheckout}>
@@ -451,50 +455,45 @@ const CartDrawer = () => {
                   <Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} />
                 </div>
               </div>
-              <Separator />
+            </div>
+            <div className="border-t border-border pt-4 space-y-3">
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground">{formatCurrency(totalPrice)}</span>
+                  <span className="text-foreground">{fc(afterCoupon)}</span>
                 </div>
-                {appliedCoupon && (
+                {taxEnabled && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-primary">Discount ({appliedCoupon.code})</span>
-                    <span className="text-primary">-{formatCurrency(discountAmount)}</span>
+                    <span className="text-muted-foreground">{taxLabel} ({taxRate}%)</span>
+                    <span className="text-foreground">+{fc(tax)}</span>
                   </div>
                 )}
                 {useWallet && walletDeduction > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-primary">Wallet Balance</span>
-                    <span className="text-primary">-{formatCurrency(walletDeduction)}</span>
+                    <span className="text-primary">Wallet</span>
+                    <span className="text-primary font-medium">-{fc(walletDeduction)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm font-bold">
-                  <span className="text-foreground">To Pay</span>
-                  <span className="font-display text-foreground">{formatCurrency(finalPrice)}</span>
+                  <span className="text-foreground">Pay Now</span>
+                  <span className="font-display text-foreground">{fc(finalPrice)}</span>
                 </div>
               </div>
-            </div>
-            <div className="border-t border-border pt-4 space-y-2">
-              <Button className="w-full" onClick={handlePayment} disabled={processing}>
-                {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {isFullWalletPayment
-                  ? "Confirm Order (Wallet)"
-                  : `Pay ${formatCurrency(finalPrice)} with Razorpay`}
-              </Button>
-              <Button variant="ghost" className="w-full" onClick={() => setStep("cart")}>
-                Back to Cart
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={() => setStep("cart")}>Back</Button>
+                <Button className="flex-1" onClick={handlePayment} disabled={processing}>
+                  {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {isFullWalletPayment ? "Confirm Order" : "Pay Now"}
+                </Button>
+              </div>
             </div>
           </>
         )}
 
         {step === "processing" && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-3">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-              <p className="text-sm text-muted-foreground">Setting up your payment...</p>
-            </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-sm text-muted-foreground">Processing your order...</p>
           </div>
         )}
       </SheetContent>
