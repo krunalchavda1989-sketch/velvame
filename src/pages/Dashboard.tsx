@@ -219,7 +219,8 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Binary Income Section */}
+        {/* Binary Income Section - only show if binary module is active */}
+        {binarySettings?.is_active && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card>
             <CardHeader className="pb-3">
