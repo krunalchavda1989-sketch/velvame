@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import { Users, DollarSign, Package, ShoppingCart, Truck, Loader2, Download, TrendingUp, TrendingDown } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,19 @@ const AdminReports = () => {
 };
 
 interface ReportProps { from: Date; to: Date; }
+
+const exportCsv = (columns: string[], rows: string[][], filename: string) => {
+  const csv = [columns, ...rows]
+    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
 /* ─── Stat Card ─── */
 const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null }) => (
@@ -112,6 +125,13 @@ const UserReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Name", "Referral Code", "Title", "Status", "Referrals", "Joined"]}
+        csvFilename="user_report"
+        csvRows={data.map((p) => [
+          p.full_name || "—", p.referral_code, p.title,
+          p.subscription_paid ? "Active" : "Inactive",
+          String(p.direct_referral_count),
+          new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((p) => [
           p.full_name || "—",
           p.referral_code,
@@ -172,6 +192,12 @@ const IncomeReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["User", "Type", "Level", "Amount", "Status", "Date"]}
+        csvFilename="income_report"
+        csvRows={data.map((c) => [
+          c.user_name, c.commission_type, String(c.level),
+          `₹${Number(c.amount).toLocaleString()}`, c.status,
+          new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((c) => [
           c.user_name,
           c.commission_type,
@@ -239,13 +265,15 @@ const ProductReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Product", "Category", "Retail Price", "Stock", "Units Sold", "Revenue", "Status"]}
+        csvFilename="product_report"
+        csvRows={data.map((p) => [
+          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
+          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
+          p.active ? "Active" : "Inactive",
+        ])}
         rows={data.map((p) => [
-          p.name,
-          p.category,
-          `₹${Number(p.retail_price).toLocaleString()}`,
-          String(p.stock),
-          String(p.sold),
-          `₹${p.revenue.toLocaleString()}`,
+          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
+          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
           p.active ? <Badge className="bg-success/15 text-success border-success/30 text-[10px]">Active</Badge> : <Badge variant="secondary" className="text-[10px]">Inactive</Badge>,
         ])}
       />
@@ -302,12 +330,15 @@ const SalesReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Order ID", "Customer", "Amount", "Status", "Payment", "Date"]}
+        csvFilename="sales_report"
+        csvRows={data.map((o) => [
+          o.id.slice(0, 8), o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
+          o.status, o.payment_method || "—",
+          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((o) => [
-          o.id.slice(0, 8) + "...",
-          o.customer,
-          `₹${Number(o.total_amount).toLocaleString()}`,
-          <StatusBadge status={o.status} key={o.id} />,
-          o.payment_method || "—",
+          o.id.slice(0, 8) + "...", o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
+          <StatusBadge status={o.status} key={o.id} />, o.payment_method || "—",
           new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         ])}
       />
@@ -372,11 +403,14 @@ const ShippingReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Order ID", "Customer", "City", "State", "Shipping Method", "Status", "Date"]}
+        csvFilename="shipping_report"
+        csvRows={data.map((o) => [
+          o.id.slice(0, 8), o.customer, o.city, o.state,
+          o.shipping_method || "Free", o.status,
+          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((o) => [
-          o.id.slice(0, 8) + "...",
-          o.customer,
-          o.city,
-          o.state,
+          o.id.slice(0, 8) + "...", o.customer, o.city, o.state,
           o.shipping_method || "Free",
           <StatusBadge status={o.status} key={o.id} />,
           new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
@@ -403,13 +437,25 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <Badge variant="outline" className={`text-[10px] ${s.class}`}>{s.label}</Badge>;
 };
 
-const ReportTable = ({ columns, rows }: { columns: string[]; rows: React.ReactNode[][] }) => {
+const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[]; rows: React.ReactNode[][]; csvFilename?: string; csvRows?: string[][] }) => {
   if (rows.length === 0) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No data found for the selected period.</CardContent></Card>;
   }
 
   return (
     <Card>
+      {csvFilename && csvRows && (
+        <div className="flex justify-end px-4 pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => exportCsv(columns, csvRows, csvFilename)}
+          >
+            <Download className="h-3.5 w-3.5 mr-1" /> Export CSV
+          </Button>
+        </div>
+      )}
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
