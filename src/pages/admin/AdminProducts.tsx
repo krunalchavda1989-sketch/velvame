@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 const emptyProduct = {
@@ -22,6 +22,12 @@ const emptyProduct = {
   active: true,
 };
 
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  sort_order: number;
+}
+
 const AdminProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +36,10 @@ const AdminProducts = () => {
   const [form, setForm] = useState({ ...emptyProduct });
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [additionalImages, setAdditionalImages] = useState<ProductImage[]>([]);
+  const [uploadingAdditional, setUploadingAdditional] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const additionalFileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProducts = async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -40,34 +49,42 @@ const AdminProducts = () => {
 
   useEffect(() => { fetchProducts(); }, []);
 
+  const fetchProductImages = async (productId: string) => {
+    const { data } = await supabase
+      .from("product_images")
+      .select("*")
+      .eq("product_id", productId)
+      .order("sort_order");
+    return (data || []) as ProductImage[];
+  };
+
   const openCreate = () => {
     setEditing(null);
     setForm({ ...emptyProduct });
     setPreviewUrl(null);
+    setAdditionalImages([]);
     setDialogOpen(true);
   };
 
-  const openEdit = (p: any) => {
+  const openEdit = async (p: any) => {
     setEditing(p);
     setForm({ ...p });
     setPreviewUrl(p.image_url || null);
+    const images = await fetchProductImages(p.id);
+    setAdditionalImages(images);
     setDialogOpen(true);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const uploadImage = async (file: File): Promise<string | null> => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
-      return;
+      return null;
     }
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be under 5MB");
-      return;
+      return null;
     }
 
-    setUploading(true);
     const ext = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
 
@@ -77,24 +94,59 @@ const AdminProducts = () => {
 
     if (error) {
       toast.error("Upload failed: " + error.message);
-      setUploading(false);
-      return;
+      return null;
     }
 
     const { data: urlData } = supabase.storage
       .from("product-images")
       .getPublicUrl(fileName);
 
-    setForm({ ...form, image_url: urlData.publicUrl });
-    setPreviewUrl(urlData.publicUrl);
-    setUploading(false);
-    toast.success("Image uploaded");
+    return urlData.publicUrl;
   };
 
-  const removeImage = () => {
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const url = await uploadImage(file);
+    if (url) {
+      setForm({ ...form, image_url: url });
+      setPreviewUrl(url);
+      toast.success("Main image uploaded");
+    }
+    setUploading(false);
+  };
+
+  const handleAdditionalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingAdditional(true);
+
+    const newImages: ProductImage[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const url = await uploadImage(files[i]);
+      if (url) {
+        newImages.push({
+          image_url: url,
+          sort_order: additionalImages.length + newImages.length,
+        });
+      }
+    }
+
+    setAdditionalImages((prev) => [...prev, ...newImages]);
+    setUploadingAdditional(false);
+    if (newImages.length > 0) toast.success(`${newImages.length} image(s) uploaded`);
+    if (additionalFileInputRef.current) additionalFileInputRef.current.value = "";
+  };
+
+  const removeMainImage = () => {
     setForm({ ...form, image_url: "" });
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -115,15 +167,36 @@ const AdminProducts = () => {
       active: form.active,
     };
 
+    let productId: string;
+
     if (editing) {
       const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
-      toast.success("Product updated");
+      productId = editing.id;
     } else {
-      const { error } = await supabase.from("products").insert(payload);
+      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
       if (error) { toast.error(error.message); return; }
-      toast.success("Product created");
+      productId = data.id;
     }
+
+    // Sync additional images
+    // Delete existing images for this product
+    await supabase.from("product_images").delete().eq("product_id", productId);
+
+    // Insert current images
+    if (additionalImages.length > 0) {
+      const imagesToInsert = additionalImages.map((img, i) => ({
+        product_id: productId,
+        image_url: img.image_url,
+        sort_order: i,
+      }));
+      const { error: imgError } = await supabase.from("product_images").insert(imagesToInsert);
+      if (imgError) {
+        toast.error("Failed to save some images: " + imgError.message);
+      }
+    }
+
+    toast.success(editing ? "Product updated" : "Product created");
     setDialogOpen(false);
     fetchProducts();
   };
@@ -170,11 +243,11 @@ const AdminProducts = () => {
                   {products.map((p) => (
                     <tr key={p.id} className="hover:bg-secondary/30 transition-colors">
                       <td className="p-3">
-                        {p.image_url ? (
+                        {p.image_url?.startsWith("http") ? (
                           <img src={p.image_url} alt={p.name} className="w-10 h-10 rounded-md object-cover border border-border" />
                         ) : (
                           <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                            {p.image_url ? <span className="text-lg">{p.image_url}</span> : <ImageIcon className="h-4 w-4 text-muted-foreground" />}
                           </div>
                         )}
                       </td>
@@ -213,21 +286,21 @@ const AdminProducts = () => {
               <DialogTitle className="font-display">{editing ? "Edit Product" : "Add Product"}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
-              {/* Image Upload */}
+              {/* Main Image Upload */}
               <div>
-                <Label>Product Image</Label>
+                <Label>Main Image</Label>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={handleImageUpload}
+                  onChange={handleMainImageUpload}
                 />
                 {previewUrl ? (
                   <div className="relative mt-2 w-full h-40 rounded-lg border border-border overflow-hidden bg-muted">
                     <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
                     <button
-                      onClick={removeImage}
+                      onClick={removeMainImage}
                       className="absolute top-2 right-2 p-1 rounded-full bg-background/80 hover:bg-background border border-border"
                     >
                       <X className="h-4 w-4 text-foreground" />
@@ -244,12 +317,63 @@ const AdminProducts = () => {
                     ) : (
                       <>
                         <Upload className="h-6 w-6 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Click to upload image</span>
+                        <span className="text-sm text-muted-foreground">Click to upload main image</span>
                         <span className="text-xs text-muted-foreground/60">Max 5MB · JPG, PNG, WEBP</span>
                       </>
                     )}
                   </button>
                 )}
+              </div>
+
+              {/* Additional Images */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Additional Images</Label>
+                  <span className="text-xs text-muted-foreground">{additionalImages.length} image(s)</span>
+                </div>
+                <input
+                  ref={additionalFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleAdditionalImageUpload}
+                />
+
+                {/* Image Grid */}
+                {additionalImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    {additionalImages.map((img, index) => (
+                      <div key={index} className="relative aspect-square rounded-lg border border-border overflow-hidden bg-muted group">
+                        <img src={img.image_url} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => removeAdditionalImage(index)}
+                          className="absolute top-1 right-1 p-1 rounded-full bg-background/80 hover:bg-destructive hover:text-destructive-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-background/80 text-[10px] text-muted-foreground">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => additionalFileInputRef.current?.click()}
+                  disabled={uploadingAdditional}
+                  className="w-full h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-muted/30 flex flex-col items-center justify-center gap-1 transition-colors"
+                >
+                  {uploadingAdditional ? (
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Add more images</span>
+                    </>
+                  )}
+                </button>
               </div>
 
               <div>
