@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocalization } from "@/hooks/useLocalization";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
@@ -44,6 +45,7 @@ interface WithdrawalRequest {
 
 const WalletPage = () => {
   const { user } = useAuth();
+  const { currencySymbol } = useLocalization();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
@@ -108,7 +110,7 @@ const WalletPage = () => {
   };
 
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+    `${currencySymbol}${val.toLocaleString("en-IN")}`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
@@ -160,7 +162,7 @@ const WalletPage = () => {
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Label htmlFor="amount">Amount ({currencySymbol})</Label>
                   <Input
                     id="amount"
                     type="number"
