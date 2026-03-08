@@ -45,6 +45,7 @@ interface WithdrawalRequest {
 
 const WalletPage = () => {
   const { user } = useAuth();
+  const { currencySymbol } = useLocalization();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
