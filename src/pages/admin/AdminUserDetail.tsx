@@ -19,7 +19,7 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User
 } from "lucide-react";
 import { format } from "date-fns";
 
