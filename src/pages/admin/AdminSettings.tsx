@@ -63,6 +63,9 @@ const AdminSettings = () => {
             <TabsTrigger value="localization" className="gap-2">
               <Globe className="h-4 w-4" /> Localization
             </TabsTrigger>
+            <TabsTrigger value="smtp" className="gap-2">
+              <Mail className="h-4 w-4" /> SMTP
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
@@ -71,6 +74,10 @@ const AdminSettings = () => {
 
           <TabsContent value="localization">
             <LocalizationTab />
+          </TabsContent>
+
+          <TabsContent value="smtp">
+            <SmtpTab />
           </TabsContent>
         </Tabs>
       </div>
