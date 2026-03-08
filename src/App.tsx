@@ -59,6 +59,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <BrandProvider>
           <CartProvider>
           <Routes>
             <Route path="/" element={<Index />} />
