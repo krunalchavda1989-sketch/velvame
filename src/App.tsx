@@ -23,6 +23,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
+import AdminSettings from "./pages/admin/AdminSettings";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
