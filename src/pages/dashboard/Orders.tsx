@@ -43,6 +43,7 @@ const OrdersPage = () => {
         .from("orders")
         .select("id, total_amount, status, payment_method, shipping_method, is_repurchase, created_at")
         .eq("user_id", user.id)
+        .neq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(50);
 
