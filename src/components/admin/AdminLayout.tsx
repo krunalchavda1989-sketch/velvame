@@ -6,7 +6,8 @@ import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
-  CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop
+  CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
+  TrendingUp
 } from "lucide-react";
 
 interface MenuItem {
@@ -48,6 +49,7 @@ const menuItems: MenuItem[] = [
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
+  { icon: TrendingUp, label: "Reports", href: "/admin/reports" },
   { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
