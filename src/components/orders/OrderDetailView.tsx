@@ -10,6 +10,7 @@ import {
   Copy, ShoppingBag, Printer,
 } from "lucide-react";
 import { useInvoicePrint } from "./InvoicePrint";
+import OrderActivityTimeline from "./OrderActivityTimeline";
 import { toast } from "sonner";
 
 interface OrderDetailData {
@@ -287,6 +288,16 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
               </div>
             </div>
           </div>
+
+          {/* Activity Timeline */}
+          <OrderActivityTimeline
+            orderId={orderId}
+            isAdmin={isAdmin}
+            orderCreatedAt={order.created_at}
+            orderStatus={order.status}
+            orderUpdatedAt={order.updated_at}
+            paymentStatus={payment?.status}
+          />
         </div>
 
         {/* Right Column — Info Cards */}
