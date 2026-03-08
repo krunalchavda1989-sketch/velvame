@@ -110,12 +110,23 @@ const AdminOrders = () => {
   const updateStatus = async (id: string, status: string) => {
     if (status === "cancelled") {
       await handleCancelOrder(id);
+      sendOrderEmail(id, "order_cancelled");
       return;
     }
 
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Order status updated to ${status}`);
+
+    // Send email based on status
+    const emailMap: Record<string, OrderEmailType> = {
+      confirmed: "order_confirmed",
+      shipped: "order_shipped",
+      delivered: "order_delivered",
+    };
+    if (emailMap[status]) {
+      sendOrderEmail(id, emailMap[status]);
+    }
 
     // Auto-process commissions when order is confirmed
     if (status === "confirmed") {
