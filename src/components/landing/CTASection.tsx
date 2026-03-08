@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const CTASection = () => {
+  const { amount: membershipAmount } = useMembershipAmount();
   return (
     <section className="py-24">
       <div className="container px-4">
