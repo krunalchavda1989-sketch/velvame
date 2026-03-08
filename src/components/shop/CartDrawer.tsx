@@ -486,27 +486,33 @@ const CartDrawer = () => {
                 )}
 
                 {/* Shipping Method Selection */}
-                {shippingMethods.length > 1 && (
+                {availableShippingMethods.length > 0 && (
                   <div className="p-3 rounded-lg border border-border space-y-2">
                     <p className="text-sm font-medium text-foreground flex items-center gap-2">
                       <Truck className="h-4 w-4 text-muted-foreground" /> Shipping Method
                     </p>
-                    <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
-                      {shippingMethods.map((m) => (
-                        <div key={m.key} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
-                            <Label htmlFor={`ship-${m.key}`} className="text-sm cursor-pointer">{m.label}</Label>
+                    {availableShippingMethods.length > 1 ? (
+                      <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
+                        {availableShippingMethods.map((m) => (
+                          <div key={m.key} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
+                              <Label htmlFor={`ship-${m.key}`} className="text-sm cursor-pointer">{m.label}</Label>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {m.cost === 0 ? "Free" : `+${fc(m.cost)}`}
+                            </span>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {m.cost === 0 ? "Free" : `+${fc(m.cost)}`}
-                          </span>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    {isFreeShippingEligible && (
-                      <p className="text-xs text-destructive">
-                        Add {fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping
+                        ))}
+                      </RadioGroup>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {availableShippingMethods[0].label} — {availableShippingMethods[0].cost === 0 ? "Free" : `+${fc(availableShippingMethods[0].cost)}`}
+                      </p>
+                    )}
+                    {freeShippingDelta > 0 && (
+                      <p className="text-xs text-primary">
+                        Add {fc(freeShippingDelta)} more to unlock free shipping!
                       </p>
                     )}
                   </div>
