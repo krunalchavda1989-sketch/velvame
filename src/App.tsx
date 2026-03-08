@@ -45,6 +45,8 @@ import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
 import Orders from "./pages/dashboard/Orders";
+import OrderDetail from "./pages/dashboard/OrderDetail";
+import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 
 const queryClient = new QueryClient();
