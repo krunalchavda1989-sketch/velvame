@@ -17,6 +17,7 @@ const menuItems = [
   { icon: Package, label: "Orders", href: "/dashboard/orders" },
   { icon: CreditCard, label: "Payment & Subscription", href: "/dashboard/payment" },
   { icon: MapPin, label: "My Addresses", href: "/dashboard/addresses" },
+  { icon: Shield, label: "KYC Verification", href: "/dashboard/kyc" },
   { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Link2, label: "Invite Link", href: "/dashboard/invite" },
   { icon: Award, label: "My Title", href: "/dashboard/title" },
