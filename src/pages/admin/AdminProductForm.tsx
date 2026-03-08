@@ -40,6 +40,7 @@ const AdminProductForm = () => {
   const isEditing = !!id;
 
   const [form, setForm] = useState({ ...emptyForm });
+  const [categories, setCategories] = useState<string[]>(["General"]);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
