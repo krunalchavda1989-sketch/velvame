@@ -216,6 +216,36 @@ const AdminBulkSms = () => {
     setShowCampaignDialog(true);
   };
 
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const selectedMediaType = WHATSAPP_MEDIA_TYPES.find((m) => m.value === campaignForm.media_type);
+    if (selectedMediaType && selectedMediaType.maxSize > 0 && file.size > selectedMediaType.maxSize) {
+      toast.error(`File too large. Max size: ${(selectedMediaType.maxSize / (1024 * 1024)).toFixed(0)} MB`);
+      return;
+    }
+
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("campaign-media").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("campaign-media").getPublicUrl(path);
+      setCampaignForm((p) => ({ ...p, media_url: publicUrl }));
+      toast.success("Media uploaded successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    }
+    setUploadingMedia(false);
+    if (mediaInputRef.current) mediaInputRef.current.value = "";
+  };
+
+  const removeMedia = () => {
+    setCampaignForm((p) => ({ ...p, media_url: "", media_type: "" }));
+  };
+
   const statusBadge = (status: string) => {
     const map: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
       draft: { variant: "secondary", icon: FileText },
