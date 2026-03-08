@@ -319,6 +319,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </motion.div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Earnings Trend */}
