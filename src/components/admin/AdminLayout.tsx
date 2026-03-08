@@ -159,6 +159,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             <ArrowLeft className="h-4 w-4 flex-shrink-0" />
             {!collapsed && <span>Back to Dashboard</span>}
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
 
