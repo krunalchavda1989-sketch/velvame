@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
-  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft
+  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings
 } from "lucide-react";
 
 const menuItems = [
