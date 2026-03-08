@@ -44,25 +44,18 @@ const AdminUserDetail = () => {
   useEffect(() => {
     if (!userId) return;
     const fetchAll = async () => {
-      const [
-        { data: prof },
-        , , ,
-        { data: refs },
-        ,
-        { data: aw },
-        { data: tr },
-      ] = await Promise.all([
+      // First fetch: profile + static data
+      const [{ data: prof }, { data: refs }, { data: aw }, { data: tr }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", userId).single(),
-        supabase.from("wallets").select("*").eq("user_id", "").limit(1),
-        supabase.from("orders").select("*, order_items(*, products(name, image_url))").order("created_at", { ascending: false }),
-        supabase.from("commissions").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").eq("referred_by", userId).order("created_at", { ascending: false }),
-        supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("awards_rewards").select("*").eq("is_active", true).order("sort_order"),
         supabase.from("title_roadmap").select("*").eq("is_active", true).order("sort_order"),
       ]);
 
       setProfile(prof);
+      setReferrals(refs || []);
+      setAwards(aw || []);
+      setTitleRoadmap(tr || []);
 
       if (prof) {
         setEditForm({
@@ -84,9 +77,6 @@ const AdminUserDetail = () => {
         setWithdrawals(wdr || []);
       }
 
-      setReferrals(refs || []);
-      setAwards(aw || []);
-      setTitleRoadmap(tr || []);
       setLoading(false);
     };
     fetchAll();
