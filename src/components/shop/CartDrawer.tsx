@@ -510,9 +510,30 @@ const CartDrawer = () => {
                         {availableShippingMethods[0].label} — {availableShippingMethods[0].cost === 0 ? "Free" : `+${fc(availableShippingMethods[0].cost)}`}
                       </p>
                     )}
-                    {freeShippingDelta > 0 && (
-                      <p className="text-xs text-primary">
-                        Add {fc(freeShippingDelta)} more to unlock free shipping!
+                    {freeShippingMinAmount > 0 && !freeShippingEligible && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {fc(totalPrice)} / {fc(freeShippingMinAmount)}
+                          </span>
+                          <span className="font-medium text-primary">
+                            Add {fc(freeShippingDelta)} more
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                            style={{ width: `${Math.min((totalPrice / freeShippingMinAmount) * 100, 100)}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">
+                          🚚 Free shipping unlocked at {fc(freeShippingMinAmount)}!
+                        </p>
+                      </div>
+                    )}
+                    {freeShippingMinAmount > 0 && freeShippingEligible && (
+                      <p className="text-xs text-green-600 flex items-center gap-1 pt-1">
+                        <CheckCircle className="h-3 w-3" /> Free shipping unlocked!
                       </p>
                     )}
                   </div>
