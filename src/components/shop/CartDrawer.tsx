@@ -168,7 +168,7 @@ const CartDrawer = () => {
         order_id: order.id,
         product_id: p.id,
         quantity: p.qty,
-        price: p.distributor_price,
+        price: getPrice(p),
       }));
 
       const { error: itemsError } = await supabase.from("order_items").insert(items);
