@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
+import OffersCarousel from "@/components/shop/OffersCarousel";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
@@ -35,6 +36,8 @@ const Shop = () => {
             )}
           </Button>
         </div>
+
+        <OffersCarousel />
 
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {categories.map((cat) => (
