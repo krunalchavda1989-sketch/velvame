@@ -9,6 +9,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useBrand } from "@/contexts/BrandContext";
 
 const Contact = () => {
   const [page, setPage] = useState<any>(null);
