@@ -42,17 +42,7 @@ const InviteLink = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Join NexaMLM",
-        text: `Join me on NexaMLM! Use my referral code: ${profile?.referral_code}`,
-        url: referralLink,
-      });
-    } else {
-      handleCopy();
-    }
-  };
+
 
   if (isLoading) {
     return (
