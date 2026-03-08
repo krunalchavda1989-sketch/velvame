@@ -20,6 +20,7 @@ import InviteLink from "./pages/dashboard/InviteLink";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
