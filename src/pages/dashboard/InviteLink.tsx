@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, Link2, Users, Share2 } from "lucide-react";
+import { Copy, Check, Link2, Users } from "lucide-react";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 
 const InviteLink = () => {
