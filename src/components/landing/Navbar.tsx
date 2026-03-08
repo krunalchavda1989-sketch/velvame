@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart, BadgeCheck, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,11 +87,24 @@ const Navbar = () => {
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : user ? (
               <>
-                <Link to="/dashboard">
+                <Link to="/dashboard" className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     {profile?.full_name || "Dashboard"}
                   </Button>
+                  {profile?.subscription_paid ? (
+                    <Badge className="bg-success/15 text-success border-success/30 text-[10px] px-1.5 py-0 h-5 gap-0.5">
+                      <BadgeCheck className="h-3 w-3" />
+                      Active
+                    </Badge>
+                  ) : (
+                    <Link to="/dashboard/payment" onClick={(e) => e.stopPropagation()}>
+                      <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 hover:bg-amber-500/10 cursor-pointer">
+                        <ShieldAlert className="h-3 w-3" />
+                        Inactive
+                      </Badge>
+                    </Link>
+                  )}
                 </Link>
                 <Button
                   variant="ghost"
@@ -158,10 +172,21 @@ const Navbar = () => {
                 ))}
                 {user ? (
                   <>
-                    <Link to="/dashboard" onClick={() => setOpen(false)}>
+                    <Link to="/dashboard" onClick={() => setOpen(false)} className="w-full">
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground gap-2">
                         <LayoutDashboard className="h-4 w-4" />
                         {profile?.full_name || "Dashboard"}
+                        {profile?.subscription_paid ? (
+                          <Badge className="bg-success/15 text-success border-success/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 ml-auto">
+                            <BadgeCheck className="h-3 w-3" />
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 ml-auto">
+                            <ShieldAlert className="h-3 w-3" />
+                            Inactive
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
                     <Button
