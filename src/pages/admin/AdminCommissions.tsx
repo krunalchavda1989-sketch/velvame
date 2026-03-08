@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,9 +14,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DollarSign, TrendingUp, Clock, Download, Search,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
   Layers, RefreshCw, GitBranch, Repeat, BarChart3,
 } from "lucide-react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { format, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
 import DateRangeFilter from "@/components/admin/reports/DateRangeFilter";
@@ -38,51 +44,32 @@ const groupByDate = (items: any[], dateKey: string, from: Date, to: Date) => {
   const days = differenceInDays(to, from);
   let intervals: Date[];
   let fmt: string;
-  if (days <= 14) {
-    intervals = eachDayOfInterval({ start: from, end: to });
-    fmt = "dd MMM";
-  } else if (days <= 90) {
-    intervals = eachWeekOfInterval({ start: from, end: to });
-    fmt = "dd MMM";
-  } else {
-    intervals = eachMonthOfInterval({ start: from, end: to });
-    fmt = "MMM yyyy";
-  }
+  if (days <= 14) { intervals = eachDayOfInterval({ start: from, end: to }); fmt = "dd MMM"; }
+  else if (days <= 90) { intervals = eachWeekOfInterval({ start: from, end: to }); fmt = "dd MMM"; }
+  else { intervals = eachMonthOfInterval({ start: from, end: to }); fmt = "MMM yyyy"; }
   const buckets = intervals.map((d) => ({ date: d, label: format(d, fmt), count: 0, amount: 0 }));
   items.forEach((item) => {
     const itemDate = new Date(item[dateKey]);
     for (let i = buckets.length - 1; i >= 0; i--) {
-      if (itemDate >= buckets[i].date) {
-        buckets[i].count += 1;
-        buckets[i].amount += Number(item.amount || 0);
-        break;
-      }
+      if (itemDate >= buckets[i].date) { buckets[i].count += 1; buckets[i].amount += Number(item.amount || 0); break; }
     }
   });
   return buckets;
 };
 
 const exportCsv = (columns: string[], rows: string[][], filename: string) => {
-  const csv = [columns, ...rows]
-    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
+  const csv = [columns, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
+  const a = document.createElement("a"); a.href = url;
   a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  a.click(); URL.revokeObjectURL(url);
 };
 
 const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <Card>
-    <CardHeader className="pb-2">
-      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="pt-0">
-      <div className="h-[260px] w-full">{children}</div>
-    </CardContent>
+    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle></CardHeader>
+    <CardContent className="pt-0"><div className="h-[260px] w-full">{children}</div></CardContent>
   </Card>
 );
 
@@ -95,32 +82,53 @@ const AdminCommissions = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
+  const [selectedBin, setSelectedBin] = useState<Set<string>>(new Set());
+  const [bulkDialog, setBulkDialog] = useState<"commission" | "binary" | null>(null);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-
     const [commRes, binaryRes, profilesRes] = await Promise.all([
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("binary_payouts").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
     ]);
-
     const pMap = new Map<string, any>();
-    (profilesRes.data || []).forEach((p) => {
-      pMap.set(p.id, p);
-      pMap.set(p.user_id, p);
-    });
+    (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
     setProfileMap(pMap);
     setCommissions(commRes.data || []);
     setBinaryPayouts(binaryRes.data || []);
+    setSelectedComm(new Set());
+    setSelectedBin(new Set());
     setLoading(false);
   }, [from, to]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Derived data
+  const bulkApproveCommissions = async () => {
+    setBulkUpdating(true);
+    const ids = Array.from(selectedComm);
+    const { error } = await supabase.from("commissions").update({ status: "paid" }).in("id", ids);
+    setBulkUpdating(false);
+    setBulkDialog(null);
+    if (error) { toast.error("Failed to update commissions"); }
+    else { toast.success(`${ids.length} commission(s) marked as paid`); fetchData(); }
+  };
+
+  const bulkApproveBinary = async () => {
+    setBulkUpdating(true);
+    const ids = Array.from(selectedBin);
+    const { error } = await supabase.from("binary_payouts").update({ status: "paid" }).in("id", ids);
+    setBulkUpdating(false);
+    setBulkDialog(null);
+    if (error) { toast.error("Failed to update binary payouts"); }
+    else { toast.success(`${ids.length} binary payout(s) marked as paid`); fetchData(); }
+  };
+
+  // Derived
   const levelCommissions = useMemo(() => commissions.filter((c) => c.commission_type === "level"), [commissions]);
   const repurchaseCommissions = useMemo(() => commissions.filter((c) => c.commission_type === "repurchase"), [commissions]);
 
@@ -142,21 +150,13 @@ const AdminCommissions = () => {
     { icon: TrendingUp, label: "Paid Out", value: `₹${totalPaid.toLocaleString()}`, color: "text-green-500" },
   ];
 
-  // Charts
   const typeDistribution = useMemo(() => [
-    { name: "Level", value: totalLevel },
-    { name: "Repurchase", value: totalRepurchase },
-    { name: "Binary", value: totalBinary },
+    { name: "Level", value: totalLevel }, { name: "Repurchase", value: totalRepurchase }, { name: "Binary", value: totalBinary },
   ].filter((d) => d.value > 0), [totalLevel, totalRepurchase, totalBinary]);
 
-  const statusDistribution = useMemo(() => {
-    const pending = totalPending;
-    const paid = totalPaid;
-    return [
-      { name: "Pending", value: pending },
-      { name: "Paid", value: paid },
-    ].filter((d) => d.value > 0);
-  }, [totalPending, totalPaid]);
+  const statusDistribution = useMemo(() => [
+    { name: "Pending", value: totalPending }, { name: "Paid", value: totalPaid },
+  ].filter((d) => d.value > 0), [totalPending, totalPaid]);
 
   const trendData = useMemo(() => {
     const allItems = [
@@ -166,14 +166,14 @@ const AdminCommissions = () => {
     return groupByDate(allItems, "created_at", from, to);
   }, [commissions, binaryPayouts, from, to]);
 
-  const filterAndSearch = (items: any[], emailField: string) => {
-    return items.filter((c) => {
-      const name = getName(c[emailField])?.toLowerCase() || "";
-      const matchSearch = !search || name.includes(search.toLowerCase());
-      const matchStatus = statusFilter === "all" || c.status === statusFilter;
-      return matchSearch && matchStatus;
+  const filterAndSearch = (items: any[], idField: string) =>
+    items.filter((c) => {
+      const name = getName(c[idField])?.toLowerCase() || "";
+      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter);
     });
-  };
+
+  const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
+  const pendingSelectedBin = Array.from(selectedBin).filter((id) => binaryPayouts.find((b) => b.id === id)?.status === "pending").length;
 
   return (
     <AdminLayout>
@@ -182,32 +182,21 @@ const AdminCommissions = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-primary" />
-              Commission Reports
+              <BarChart3 className="h-6 w-6 text-primary" /> Commission Reports
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Detailed breakdown of all commission types
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Detailed breakdown of all commission types</p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
 
-        {/* Date Range */}
         <DateRangeFilter from={from} to={to} onRangeChange={(f, t) => { setFrom(f); setTo(t); }} />
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {summaryCards.map((c, i) => (
-            <motion.div
-              key={c.label}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="p-4 rounded-xl bg-card border border-border"
-            >
+            <motion.div key={c.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-xl bg-card border border-border">
               <c.icon className={`h-4 w-4 ${c.color} mb-2`} />
               <div className="text-lg font-display font-bold text-foreground">{c.value}</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">{c.label}</div>
@@ -221,8 +210,7 @@ const AdminCommissions = () => {
             <ResponsiveContainer>
               <AreaChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
+                <XAxis dataKey="label" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
                 <Area type="monotone" dataKey="amount" name="Amount" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
@@ -234,8 +222,7 @@ const AdminCommissions = () => {
                 <Pie data={typeDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                   {typeDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
-                <Legend />
+                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend />
               </PieChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -245,8 +232,7 @@ const AdminCommissions = () => {
                 <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                   {statusDistribution.map((_, i) => <Cell key={i} fill={[CHART_COLORS[1], CHART_COLORS[0]][i]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
-                <Legend />
+                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend />
               </PieChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -259,9 +245,7 @@ const AdminCommissions = () => {
             <Input placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
@@ -270,97 +254,107 @@ const AdminCommissions = () => {
           </Select>
         </div>
 
-        {/* Tabs for commission types */}
+        {/* Tabs */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
         ) : (
           <Tabs defaultValue="all" className="space-y-4">
             <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
-              <TabsTrigger value="all" className="gap-1.5 text-xs">
-                <DollarSign className="h-3.5 w-3.5" /> All ({commissions.length + binaryPayouts.length})
-              </TabsTrigger>
-              <TabsTrigger value="level" className="gap-1.5 text-xs">
-                <Layers className="h-3.5 w-3.5" /> Level Income ({levelCommissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="repurchase" className="gap-1.5 text-xs">
-                <Repeat className="h-3.5 w-3.5" /> Repurchase ({repurchaseCommissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="binary" className="gap-1.5 text-xs">
-                <GitBranch className="h-3.5 w-3.5" /> Binary ({binaryPayouts.length})
-              </TabsTrigger>
+              <TabsTrigger value="all" className="gap-1.5 text-xs"><DollarSign className="h-3.5 w-3.5" /> All ({commissions.length + binaryPayouts.length})</TabsTrigger>
+              <TabsTrigger value="level" className="gap-1.5 text-xs"><Layers className="h-3.5 w-3.5" /> Level Income ({levelCommissions.length})</TabsTrigger>
+              <TabsTrigger value="repurchase" className="gap-1.5 text-xs"><Repeat className="h-3.5 w-3.5" /> Repurchase ({repurchaseCommissions.length})</TabsTrigger>
+              <TabsTrigger value="binary" className="gap-1.5 text-xs"><GitBranch className="h-3.5 w-3.5" /> Binary ({binaryPayouts.length})</TabsTrigger>
             </TabsList>
 
-            {/* ALL */}
             <TabsContent value="all">
               <CommissionTable
-                data={filterAndSearch(commissions, "beneficiary_id")}
-                getName={getName}
-                showType
-                csvFilename="all_commissions"
+                data={filterAndSearch(commissions, "beneficiary_id")} getName={getName} showType csvFilename="all_commissions"
+                selected={selectedComm} setSelected={setSelectedComm}
+                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
+                pendingCount={pendingSelectedComm}
               />
             </TabsContent>
-
-            {/* LEVEL */}
             <TabsContent value="level">
-              <LevelBreakdown data={filterAndSearch(levelCommissions, "beneficiary_id")} getName={getName} />
+              <LevelBreakdown
+                data={filterAndSearch(levelCommissions, "beneficiary_id")} getName={getName}
+                selected={selectedComm} setSelected={setSelectedComm}
+                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
+                pendingCount={pendingSelectedComm}
+              />
             </TabsContent>
-
-            {/* REPURCHASE */}
             <TabsContent value="repurchase">
               <CommissionTable
-                data={filterAndSearch(repurchaseCommissions, "beneficiary_id")}
-                getName={getName}
-                showType={false}
-                csvFilename="repurchase_commissions"
+                data={filterAndSearch(repurchaseCommissions, "beneficiary_id")} getName={getName} showType={false} csvFilename="repurchase_commissions"
+                selected={selectedComm} setSelected={setSelectedComm}
+                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
+                pendingCount={pendingSelectedComm}
               />
             </TabsContent>
-
-            {/* BINARY */}
             <TabsContent value="binary">
               <BinaryTable
                 data={binaryPayouts.filter((b) => {
                   const name = getName(b.user_id)?.toLowerCase() || "";
-                  const matchSearch = !search || name.includes(search.toLowerCase());
-                  const matchStatus = statusFilter === "all" || b.status === statusFilter;
-                  return matchSearch && matchStatus;
+                  return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || b.status === statusFilter);
                 })}
                 getName={getName}
+                selected={selectedBin} setSelected={setSelectedBin}
+                onBulkApprove={pendingSelectedBin > 0 ? () => setBulkDialog("binary") : undefined}
+                pendingCount={pendingSelectedBin}
               />
             </TabsContent>
           </Tabs>
         )}
+
+        {/* Bulk Approve Dialog */}
+        <AlertDialog open={!!bulkDialog} onOpenChange={(open) => !open && setBulkDialog(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mark as Paid</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to mark{" "}
+                <span className="font-semibold text-foreground">
+                  {bulkDialog === "commission" ? pendingSelectedComm : pendingSelectedBin}
+                </span>{" "}
+                pending {bulkDialog === "binary" ? "binary payout" : "commission"}(s) as paid? This action will update their status immediately.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={bulkUpdating}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={bulkUpdating}
+                onClick={bulkDialog === "commission" ? bulkApproveCommissions : bulkApproveBinary}
+              >
+                {bulkUpdating ? "Updating..." : "Mark as Paid"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
 };
 
-/* ─── Level Breakdown with per-level stats ─── */
-const LevelBreakdown = ({ data, getName }: { data: any[]; getName: (id: string) => string }) => {
+/* ─── Level Breakdown ─── */
+const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, pendingCount }: {
+  data: any[]; getName: (id: string) => string;
+  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onBulkApprove?: () => void; pendingCount: number;
+}) => {
   const levelStats = useMemo(() => {
     const map = new Map<number, { count: number; total: number; paid: number; pending: number }>();
     data.forEach((c) => {
       const prev = map.get(c.level) || { count: 0, total: 0, paid: 0, pending: 0 };
-      prev.count += 1;
-      prev.total += Number(c.amount);
-      if (c.status === "paid") prev.paid += Number(c.amount);
-      else prev.pending += Number(c.amount);
+      prev.count += 1; prev.total += Number(c.amount);
+      if (c.status === "paid") prev.paid += Number(c.amount); else prev.pending += Number(c.amount);
       map.set(c.level, prev);
     });
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
   }, [data]);
 
-  const barData = levelStats.map(([level, s]) => ({
-    name: `L${level}`,
-    total: s.total,
-    paid: s.paid,
-    pending: s.pending,
-  }));
+  const barData = levelStats.map(([level, s]) => ({ name: `L${level}`, total: s.total, paid: s.paid, pending: s.pending }));
 
   return (
     <div className="space-y-4">
-      {/* Level stats cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {levelStats.map(([level, s]) => (
           <div key={level} className="p-3 rounded-xl bg-card border border-border">
@@ -374,15 +368,12 @@ const LevelBreakdown = ({ data, getName }: { data: any[]; getName: (id: string) 
           </div>
         ))}
       </div>
-
-      {/* Bar chart */}
       {barData.length > 0 && (
         <ChartCard title="Commission by Level">
           <ResponsiveContainer>
             <BarChart data={barData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
               <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
               <Legend />
               <Bar dataKey="paid" name="Paid" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
@@ -391,45 +382,51 @@ const LevelBreakdown = ({ data, getName }: { data: any[]; getName: (id: string) 
           </ResponsiveContainer>
         </ChartCard>
       )}
-
-      <CommissionTable data={data} getName={getName} showType={false} csvFilename="level_commissions" />
+      <CommissionTable data={data} getName={getName} showType={false} csvFilename="level_commissions" selected={selected} setSelected={setSelected} onBulkApprove={onBulkApprove} pendingCount={pendingCount} />
     </div>
   );
 };
 
-/* ─── Commission Table (Level / Repurchase / All) ─── */
+/* ─── Commission Table ─── */
 const CommissionTable = ({
-  data, getName, showType, csvFilename,
+  data, getName, showType, csvFilename, selected, setSelected, onBulkApprove, pendingCount,
 }: {
   data: any[]; getName: (id: string) => string; showType: boolean; csvFilename: string;
+  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onBulkApprove?: () => void; pendingCount: number;
 }) => {
+  const allSelected = data.length > 0 && data.every((c) => selected.has(c.id));
+  const toggleAll = () => {
+    if (allSelected) { setSelected((prev) => { const n = new Set(prev); data.forEach((c) => n.delete(c.id)); return n; }); }
+    else { setSelected((prev) => { const n = new Set(prev); data.forEach((c) => n.add(c.id)); return n; }); }
+  };
+  const toggle = (id: string) => setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
   const handleExport = () => {
     const cols = ["Beneficiary", ...(showType ? ["Type"] : []), "Level", "Rate", "Amount", "Status", "Date"];
-    const rows = data.map((c) => [
-      getName(c.beneficiary_id),
-      ...(showType ? [c.commission_type] : []),
-      String(c.level),
-      `${c.rate}%`,
-      `₹${Number(c.amount).toLocaleString()}`,
-      c.status,
-      format(new Date(c.created_at), "dd MMM yyyy"),
-    ]);
+    const rows = data.map((c) => [getName(c.beneficiary_id), ...(showType ? [c.commission_type] : []), String(c.level), `${c.rate}%`, `₹${Number(c.amount).toLocaleString()}`, c.status, format(new Date(c.created_at), "dd MMM yyyy")]);
     exportCsv(cols, rows, csvFilename);
   };
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{data.length} record(s)</p>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1.5" /> Export CSV
-        </Button>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <p className="text-sm text-muted-foreground">{data.length} record(s){selected.size > 0 && ` · ${selected.size} selected`}</p>
+        <div className="flex items-center gap-2">
+          {onBulkApprove && (
+            <Button size="sm" onClick={onBulkApprove} className="gap-1.5">
+              <CheckCircle className="h-4 w-4" /> Mark as Paid ({pendingCount})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1.5" /> Export CSV</Button>
+        </div>
       </div>
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
                 <TableHead>Beneficiary</TableHead>
                 {showType && <TableHead>Type</TableHead>}
                 <TableHead>Level</TableHead>
@@ -442,32 +439,21 @@ const CommissionTable = ({
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={showType ? 8 : 7} className="text-center py-10 text-muted-foreground">
-                    No commissions found
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={showType ? 9 : 8} className="text-center py-10 text-muted-foreground">No commissions found</TableCell></TableRow>
               ) : (
                 data.map((c) => (
-                  <TableRow key={c.id} className="hover:bg-secondary/30">
+                  <TableRow key={c.id} className={`hover:bg-secondary/30 ${selected.has(c.id) ? "bg-primary/5" : ""}`}>
+                    <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} /></TableCell>
                     <TableCell className="font-medium text-foreground">{getName(c.beneficiary_id)}</TableCell>
                     {showType && (
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize text-[10px]">
-                          {c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}
-                        </Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="outline" className="capitalize text-[10px]">{c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}</Badge></TableCell>
                     )}
-                    <TableCell>
-                      <Badge variant="secondary" className="text-[10px]">L{c.level}</Badge>
-                    </TableCell>
+                    <TableCell><Badge variant="secondary" className="text-[10px]">L{c.level}</Badge></TableCell>
                     <TableCell className="text-muted-foreground">{c.rate}%</TableCell>
                     <TableCell className="font-semibold text-primary">₹{Number(c.amount).toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{getName(c.source_user_id)}</TableCell>
                     <TableCell>
-                      <Badge className={c.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>
-                        {c.status}
-                      </Badge>
+                      <Badge className={c.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>{c.status}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{format(new Date(c.created_at), "dd MMM yyyy")}</TableCell>
                   </TableRow>
@@ -482,33 +468,34 @@ const CommissionTable = ({
 };
 
 /* ─── Binary Payouts Table ─── */
-const BinaryTable = ({ data, getName }: { data: any[]; getName: (id: string) => string }) => {
+const BinaryTable = ({ data, getName, selected, setSelected, onBulkApprove, pendingCount }: {
+  data: any[]; getName: (id: string) => string;
+  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onBulkApprove?: () => void; pendingCount: number;
+}) => {
   const totalMatching = data.reduce((s, b) => s + Number(b.matching_amount), 0);
   const totalWeakBV = data.reduce((s, b) => s + Number(b.weak_leg_bv), 0);
   const totalStrongBV = data.reduce((s, b) => s + Number(b.strong_leg_bv), 0);
 
+  const allSelected = data.length > 0 && data.every((b) => selected.has(b.id));
+  const toggleAll = () => {
+    if (allSelected) { setSelected((prev) => { const n = new Set(prev); data.forEach((b) => n.delete(b.id)); return n; }); }
+    else { setSelected((prev) => { const n = new Set(prev); data.forEach((b) => n.add(b.id)); return n; }); }
+  };
+  const toggle = (id: string) => setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
   const handleExport = () => {
     const cols = ["User", "Weak Leg BV", "Strong Leg BV", "Matching %", "Matching Amount", "Status", "Period", "Date"];
-    const rows = data.map((b) => [
-      getName(b.user_id),
-      String(b.weak_leg_bv),
-      String(b.strong_leg_bv),
-      `${b.payout_percentage}%`,
-      `₹${Number(b.matching_amount).toLocaleString()}`,
-      b.status,
-      b.period_start && b.period_end ? `${format(new Date(b.period_start), "dd MMM")} - ${format(new Date(b.period_end), "dd MMM")}` : "—",
-      format(new Date(b.created_at), "dd MMM yyyy"),
-    ]);
+    const rows = data.map((b) => [getName(b.user_id), String(b.weak_leg_bv), String(b.strong_leg_bv), `${b.payout_percentage}%`, `₹${Number(b.matching_amount).toLocaleString()}`, b.status, b.period_start && b.period_end ? `${format(new Date(b.period_start), "dd MMM")} - ${format(new Date(b.period_end), "dd MMM")}` : "—", format(new Date(b.created_at), "dd MMM yyyy")]);
     exportCsv(cols, rows, "binary_payouts");
   };
 
   return (
     <div className="space-y-4">
-      {/* Binary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-xl bg-card border border-border">
           <div className="text-xs text-muted-foreground mb-1">Total Binary Income</div>
-          <div className="text-lg font-display font-bold text-purple-500">₹{totalMatching.toLocaleString()}</div>
+          <div className="text-lg font-display font-bold text-primary">₹{totalMatching.toLocaleString()}</div>
         </div>
         <div className="p-4 rounded-xl bg-card border border-border">
           <div className="text-xs text-muted-foreground mb-1">Total Weak Leg BV</div>
@@ -524,11 +511,16 @@ const BinaryTable = ({ data, getName }: { data: any[]; getName: (id: string) => 
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{data.length} record(s)</p>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-1.5" /> Export CSV
-        </Button>
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <p className="text-sm text-muted-foreground">{data.length} record(s){selected.size > 0 && ` · ${selected.size} selected`}</p>
+        <div className="flex items-center gap-2">
+          {onBulkApprove && (
+            <Button size="sm" onClick={onBulkApprove} className="gap-1.5">
+              <CheckCircle className="h-4 w-4" /> Mark as Paid ({pendingCount})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1.5" /> Export CSV</Button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -536,6 +528,7 @@ const BinaryTable = ({ data, getName }: { data: any[]; getName: (id: string) => 
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Weak Leg BV</TableHead>
                 <TableHead>Strong Leg BV</TableHead>
@@ -548,28 +541,21 @@ const BinaryTable = ({ data, getName }: { data: any[]; getName: (id: string) => 
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                    No binary payouts found
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No binary payouts found</TableCell></TableRow>
               ) : (
                 data.map((b) => (
-                  <TableRow key={b.id} className="hover:bg-secondary/30">
+                  <TableRow key={b.id} className={`hover:bg-secondary/30 ${selected.has(b.id) ? "bg-primary/5" : ""}`}>
+                    <TableCell><Checkbox checked={selected.has(b.id)} onCheckedChange={() => toggle(b.id)} /></TableCell>
                     <TableCell className="font-medium text-foreground">{getName(b.user_id)}</TableCell>
                     <TableCell className="text-muted-foreground">{Number(b.weak_leg_bv).toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground">{Number(b.strong_leg_bv).toLocaleString()}</TableCell>
                     <TableCell>{b.payout_percentage}%</TableCell>
-                    <TableCell className="font-semibold text-purple-500">₹{Number(b.matching_amount).toLocaleString()}</TableCell>
+                    <TableCell className="font-semibold text-primary">₹{Number(b.matching_amount).toLocaleString()}</TableCell>
                     <TableCell>
-                      <Badge className={b.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>
-                        {b.status}
-                      </Badge>
+                      <Badge className={b.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>{b.status}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {b.period_start && b.period_end
-                        ? `${format(new Date(b.period_start), "dd MMM")} – ${format(new Date(b.period_end), "dd MMM")}`
-                        : "—"}
+                      {b.period_start && b.period_end ? `${format(new Date(b.period_start), "dd MMM")} – ${format(new Date(b.period_end), "dd MMM")}` : "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{format(new Date(b.created_at), "dd MMM yyyy")}</TableCell>
                   </TableRow>
