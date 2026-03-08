@@ -58,6 +58,7 @@ import Addresses from "./pages/dashboard/Addresses";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 import Offers from "./pages/Offers";
+import Checkout from "./pages/Checkout";
 import AdminReports from "./pages/admin/AdminReports";
 
 const queryClient = new QueryClient();
