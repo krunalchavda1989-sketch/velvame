@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import MyTeam from "./pages/dashboard/MyTeam";
+import GenealogyTree from "./pages/dashboard/GenealogyTree";
 import Wallet from "./pages/dashboard/Wallet";
 import Earnings from "./pages/dashboard/Earnings";
 import InviteLink from "./pages/dashboard/InviteLink";
@@ -60,6 +61,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MyTeam />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/genealogy"
+              element={
+                <ProtectedRoute>
+                  <GenealogyTree />
                 </ProtectedRoute>
               }
             />
