@@ -162,7 +162,7 @@ const WalletPage = () => {
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Label htmlFor="amount">Amount ({currencySymbol})</Label>
                   <Input
                     id="amount"
                     type="number"
