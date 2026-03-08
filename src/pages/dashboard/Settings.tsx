@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield } from "lucide-react";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
 
@@ -32,6 +32,15 @@ const Settings = () => {
   const [commissionNotifs, setCommissionNotifs] = useState(true);
   const [teamNotifs, setTeamNotifs] = useState(true);
 
+  // Bank details state
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  const [branchName, setBranchName] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [bankDetailsLoaded, setBankDetailsLoaded] = useState(false);
+
   const { data: profile, isLoading } = useQuery({
     queryKey: ["settings-profile", user?.id],
     queryFn: async () => {
@@ -46,19 +55,39 @@ const Settings = () => {
     enabled: !!user,
   });
 
-  // Sync form state when profile loads
-  useState(() => {
-    if (profile) {
-      setFullName(profile.full_name || "");
-      setPhone(profile.phone || "");
-    }
+  const { data: bankDetails, isLoading: bankLoading } = useQuery({
+    queryKey: ["bank-details", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_details")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
   });
 
-  // Use effect equivalent via query onSuccess
+  // Sync profile form
   const profileLoaded = profile && fullName === "" && phone === "";
   if (profileLoaded) {
     setFullName(profile.full_name || "");
     setPhone(profile.phone || "");
+  }
+
+  // Sync bank details form
+  if (bankDetails && !bankDetailsLoaded) {
+    setAccountHolderName(bankDetails.account_holder_name || "");
+    setBankName(bankDetails.bank_name || "");
+    setAccountNumber(bankDetails.account_number || "");
+    setIfscCode(bankDetails.ifsc_code || "");
+    setBranchName(bankDetails.branch_name || "");
+    setUpiId(bankDetails.upi_id || "");
+    setBankDetailsLoaded(true);
+  }
+  if (!bankDetails && !bankLoading && !bankDetailsLoaded) {
+    setBankDetailsLoaded(true);
   }
 
   const updateProfile = useMutation({
@@ -93,6 +122,41 @@ const Settings = () => {
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const saveBankDetails = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        user_id: user!.id,
+        account_holder_name: accountHolderName.trim(),
+        bank_name: bankName.trim(),
+        account_number: accountNumber.trim(),
+        ifsc_code: ifscCode.trim().toUpperCase(),
+        branch_name: branchName.trim(),
+        upi_id: upiId.trim(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (bankDetails) {
+        const { error } = await supabase
+          .from("bank_details")
+          .update(payload)
+          .eq("user_id", user!.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("bank_details")
+          .insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank-details"] });
+      toast({ title: "Bank details saved", description: "Your bank information has been updated." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save bank details.", variant: "destructive" });
     },
   });
 
@@ -148,6 +212,104 @@ const Settings = () => {
                     {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     Save Changes
                   </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Bank Details Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Landmark className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Bank Details</CardTitle>
+                  </div>
+                  <CardDescription>Add your bank account information for withdrawal payments</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {bankLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                          <Input
+                            id="accountHolderName"
+                            value={accountHolderName}
+                            onChange={(e) => setAccountHolderName(e.target.value)}
+                            placeholder="As per bank records"
+                            maxLength={100}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="bankName">Bank Name</Label>
+                          <Input
+                            id="bankName"
+                            value={bankName}
+                            onChange={(e) => setBankName(e.target.value)}
+                            placeholder="e.g. State Bank of India"
+                            maxLength={100}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="accountNumber">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            value={accountNumber}
+                            onChange={(e) => setAccountNumber(e.target.value)}
+                            placeholder="Your bank account number"
+                            maxLength={20}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ifscCode">IFSC Code</Label>
+                          <Input
+                            id="ifscCode"
+                            value={ifscCode}
+                            onChange={(e) => setIfscCode(e.target.value)}
+                            placeholder="e.g. SBIN0001234"
+                            maxLength={11}
+                            className="uppercase"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="branchName">Branch Name</Label>
+                          <Input
+                            id="branchName"
+                            value={branchName}
+                            onChange={(e) => setBranchName(e.target.value)}
+                            placeholder="Branch name"
+                            maxLength={100}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="upiId">UPI ID (Optional)</Label>
+                          <Input
+                            id="upiId"
+                            value={upiId}
+                            onChange={(e) => setUpiId(e.target.value)}
+                            placeholder="e.g. name@upi"
+                            maxLength={50}
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => saveBankDetails.mutate()}
+                        disabled={saveBankDetails.isPending || (!accountHolderName.trim() && !bankName.trim() && !accountNumber.trim())}
+                        className="gap-2"
+                      >
+                        {saveBankDetails.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {bankDetails ? "Update Bank Details" : "Save Bank Details"}
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
