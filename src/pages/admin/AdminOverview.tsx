@@ -323,7 +323,7 @@ const AdminOverview = () => {
                   <tbody>
                     {recentOrders.map((o) => (
                       <tr key={o.id} className="border-b border-border/50 hover:bg-secondary/30">
-                        <td className="py-2 font-mono text-xs">{o.id.slice(0, 8)}…</td>
+                        <td className="py-2 font-mono text-xs">{o.order_number || o.id.slice(0, 8)}</td>
                         <td className="py-2">₹{Number(o.total_amount).toLocaleString()}</td>
                         <td className="py-2">
                           <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">{o.status}</span>
