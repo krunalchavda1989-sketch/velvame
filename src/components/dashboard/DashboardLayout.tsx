@@ -10,6 +10,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "My Team", href: "/dashboard/team" },
+  { icon: GitBranch, label: "Genealogy", href: "/dashboard/genealogy" },
   { icon: Wallet, label: "Wallet", href: "/dashboard/wallet" },
   { icon: BarChart3, label: "Earnings", href: "/dashboard/earnings" },
   { icon: Package, label: "Orders", href: "/dashboard/orders" },
