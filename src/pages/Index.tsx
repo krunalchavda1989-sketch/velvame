@@ -358,14 +358,22 @@ const Index = () => {
                 Get the latest product updates, exclusive offers, and wellness tips delivered to your inbox.
               </p>
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   const form = e.target as HTMLFormElement;
-                  const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-                  if (email) {
+                  const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
+                  if (!email) return;
+                  const { error } = await supabase.from("newsletter_subscribers").insert({ email } as any);
+                  if (error) {
+                    if (error.code === "23505") {
+                      toast.info("You're already subscribed!");
+                    } else {
+                      toast.error("Something went wrong. Please try again.");
+                    }
+                  } else {
                     toast.success("Thanks for subscribing!");
-                    form.reset();
                   }
+                  form.reset();
                 }}
                 className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
               >
