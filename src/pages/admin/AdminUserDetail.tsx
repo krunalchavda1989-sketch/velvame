@@ -652,7 +652,7 @@ const STATUS_MAP: Record<string, { icon: any; label: string; cls: string }> = {
   rejected: { icon: XCircle, label: "Rejected", cls: "bg-destructive/15 text-destructive border-destructive/30" },
 };
 
-const KycAdminTab = ({ docs, onUpdate, userId }: { docs: any[]; onUpdate: (d: any[]) => void; userId: string }) => {
+const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => void; userId: string }) => {
   const { toast } = useToast();
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
