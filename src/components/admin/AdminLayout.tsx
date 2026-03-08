@@ -46,6 +46,7 @@ const menuItems: MenuItem[] = [
   { icon: Layers, label: "Commission Levels", href: "/admin/commission-levels" },
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
+  { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
 ];
