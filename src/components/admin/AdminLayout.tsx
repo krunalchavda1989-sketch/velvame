@@ -25,6 +25,7 @@ const menuItems = [
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
+  { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
