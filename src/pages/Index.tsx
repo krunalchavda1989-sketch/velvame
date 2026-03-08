@@ -17,18 +17,24 @@ import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
 interface Category { id: string; name: string; image_url: string; }
+interface Testimonial { id: string; name: string; text: string; rating: number; avatar_url: string; }
 
 const Index = () => {
   const { products, addToCart } = useCart();
   const { currencySymbol } = useLocalization();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
-    const fetchCats = async () => {
-      const { data } = await supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6);
-      setCategories((data as unknown as Category[]) || []);
+    const fetchData = async () => {
+      const [{ data: cats }, { data: reviews }] = await Promise.all([
+        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
+        supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
+      ]);
+      setCategories((cats as unknown as Category[]) || []);
+      setTestimonials((reviews as unknown as Testimonial[]) || []);
     };
-    fetchCats();
+    fetchData();
   }, []);
 
   const featuredProducts = products.slice(0, 8);
@@ -273,40 +279,47 @@ const Index = () => {
       </section>
 
       {/* ===== Testimonials / Social Proof ===== */}
-      <section className="py-16 bg-secondary/30">
-        <div className="container px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3">
-              Loved by <span className="text-gradient-gold">Thousands</span>
-            </h2>
-            <p className="text-muted-foreground">See what our community has to say</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { name: "Priya S.", text: "The product quality is outstanding! I've been using their wellness range for 6 months and the results speak for themselves.", rating: 5 },
-              { name: "Rahul M.", text: "Not only great products, but the rewards program is incredible. I've earned back more than I've spent!", rating: 5 },
-              { name: "Anjali K.", text: "Best customer support and fastest delivery. The whole experience from ordering to receiving is seamless.", rating: 5 },
-            ].map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all"
-              >
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 text-primary fill-primary" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t.text}"</p>
-                <p className="text-sm font-semibold text-foreground">{t.name}</p>
-              </motion.div>
-            ))}
+      {testimonials.length > 0 && (
+        <section className="py-16 bg-secondary/30">
+          <div className="container px-4">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-display font-bold mb-3">
+                Loved by <span className="text-gradient-gold">Thousands</span>
+              </h2>
+              <p className="text-muted-foreground">See what our community has to say</p>
+            </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {testimonials.map((t, i) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-6 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all"
+                >
+                  <div className="flex gap-0.5 mb-3">
+                    {Array.from({ length: t.rating }).map((_, j) => (
+                      <Star key={j} className="h-4 w-4 text-primary fill-primary" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t.text}"</p>
+                  <div className="flex items-center gap-2">
+                    {t.avatar_url ? (
+                      <img src={t.avatar_url} alt={t.name} className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        {t.name[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ===== CTA ===== */}
       <CTASection />

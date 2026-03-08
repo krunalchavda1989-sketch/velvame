@@ -42,6 +42,7 @@ import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminManualOrder from "./pages/admin/AdminManualOrder";
 import AdminMenus from "./pages/admin/AdminMenus";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -193,6 +194,7 @@ const App = () => (
             <Route path="/admin/awards" element={<AdminRoute><AdminAwards /></AdminRoute>} />
             <Route path="/admin/offers" element={<AdminRoute><AdminOffers /></AdminRoute>} />
             <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
+            <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/smtp-settings" element={<AdminRoute><AdminSmtpSettings /></AdminRoute>} />
             <Route path="/admin/menus" element={<AdminRoute><AdminMenus /></AdminRoute>} />
