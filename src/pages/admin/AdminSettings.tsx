@@ -157,6 +157,7 @@ const PaymentTransactionList = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "paid" | "failed">("all");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 10;
 
@@ -191,9 +192,10 @@ const PaymentTransactionList = () => {
     fetchTransactions();
   }, []);
 
-  const filtered = filter === "all" ? transactions : transactions.filter((t) =>
-    filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")
-  );
+  const searchLower = search.toLowerCase();
+  const filtered = transactions
+    .filter((t) => filter === "all" || (filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")))
+    .filter((t) => !searchLower || t.customer_name.toLowerCase().includes(searchLower) || (t.razorpay_payment_id || "").toLowerCase().includes(searchLower));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const currentPage = Math.min(page, totalPages);
