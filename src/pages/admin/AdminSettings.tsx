@@ -48,6 +48,7 @@ const SETTINGS_TABS = [
   { key: "localization", label: "Localization", icon: Globe },
   { key: "smtp", label: "SMTP", icon: Mail },
   { key: "sms", label: "SMS", icon: MessageSquare },
+  { key: "whatsapp", label: "WhatsApp", icon: Phone },
   { key: "shipping", label: "Shipping", icon: Truck },
   { key: "pwa", label: "PWA", icon: MonitorSmartphone },
   { key: "captcha", label: "reCAPTCHA", icon: ShieldCheck },
