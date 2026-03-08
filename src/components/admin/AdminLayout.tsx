@@ -34,7 +34,6 @@ const menuItems: MenuItem[] = [
   },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
-  { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
   { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
   { icon: PanelTop, label: "Hero Stats", href: "/admin/hero-stats" },
   {
@@ -50,6 +49,7 @@ const menuItems: MenuItem[] = [
   { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
+  { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
