@@ -62,6 +62,7 @@ import Checkout from "./pages/Checkout";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminBulkSms from "./pages/admin/AdminBulkSms";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 
 const queryClient = new QueryClient();
 
@@ -224,6 +225,7 @@ const App = () => (
             <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
             <Route path="/admin/bulk-sms" element={<AdminRoute><AdminBulkSms /></AdminRoute>} />
             <Route path="/admin/newsletter" element={<AdminRoute><AdminNewsletter /></AdminRoute>} />
+            <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>
