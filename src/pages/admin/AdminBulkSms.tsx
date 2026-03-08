@@ -44,6 +44,12 @@ const PLACEHOLDERS = [
   { tag: "{{brand}}", desc: "Brand name" },
 ];
 
+const CHANNEL_OPTIONS = [
+  { value: "sms", label: "SMS", icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20" },
+  { value: "whatsapp", label: "WhatsApp", icon: Phone, color: "text-green-600", bg: "bg-green-500/10 border-green-500/20" },
+  { value: "both", label: "Both", icon: Send, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+];
+
 const AdminBulkSms = () => {
   const [activeTab, setActiveTab] = useState("campaigns");
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -51,6 +57,7 @@ const AdminBulkSms = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [channelFilter, setChannelFilter] = useState("all");
 
   // Campaign form
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
@@ -61,6 +68,7 @@ const AdminBulkSms = () => {
     custom_numbers: "",
     schedule: false,
     scheduled_at: "",
+    channel: "sms" as string,
   });
   const [savingCampaign, setSavingCampaign] = useState(false);
 
