@@ -11,8 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import KYCSection from "@/components/dashboard/KYCSection";
 
 const Settings = () => {
   const { user } = useAuth();
