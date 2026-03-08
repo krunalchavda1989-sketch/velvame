@@ -70,6 +70,9 @@ const AdminSettings = () => {
             <TabsTrigger value="shipping" className="gap-2">
               <Truck className="h-4 w-4" /> Shipping
             </TabsTrigger>
+            <TabsTrigger value="pwa" className="gap-2">
+              <MonitorSmartphone className="h-4 w-4" /> PWA
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
