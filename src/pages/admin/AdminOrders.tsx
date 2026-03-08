@@ -14,6 +14,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
