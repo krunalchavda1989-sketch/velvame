@@ -157,6 +157,8 @@ const PaymentTransactionList = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "paid" | "failed">("all");
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -164,7 +166,7 @@ const PaymentTransactionList = () => {
         .from("payments")
         .select("id, amount, status, created_at, user_id, purpose, razorpay_payment_id, currency")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (data) {
         const userIds = [...new Set(data.map((p) => p.user_id))];
@@ -193,6 +195,16 @@ const PaymentTransactionList = () => {
     filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")
   );
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  // Reset to page 1 when filter changes
+  const handleFilterChange = (f: "all" | "paid" | "failed") => {
+    setFilter(f);
+    setPage(1);
+  };
+
   if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
 
   return (
@@ -209,7 +221,7 @@ const PaymentTransactionList = () => {
                 key={f}
                 variant={filter === f ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter(f)}
+                onClick={() => handleFilterChange(f)}
                 className="text-xs capitalize"
               >
                 {f === "paid" ? "Success" : f === "failed" ? "Failed" : "All"}
@@ -218,67 +230,118 @@ const PaymentTransactionList = () => {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">No transactions found.</p>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Payment Gateway</TableHead>
-                  <TableHead>Customer Name</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Date / Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Failed Reason</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-sm">{t.gateway}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">{t.customer_name}</TableCell>
-                    <TableCell className="text-sm font-mono">
-                      {t.currency === "INR" ? "₹" : t.currency} {Number(t.amount).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}{" "}
-                      {new Date(t.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={t.status === "paid" ? "default" : "destructive"} className={`text-[10px] ${t.status === "paid" ? "bg-success/15 text-success border-success/30" : ""}`}>
-                        {t.status === "paid" ? (
-                          <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Success</span>
-                        ) : (
-                          <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> {t.status === "created" ? "Incomplete" : "Failed"}</span>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {t.status !== "paid" ? (
-                        <span className="flex items-center gap-1 text-destructive/80">
-                          <AlertTriangle className="h-3 w-3 shrink-0" />
-                          {t.failed_reason}
-                        </span>
-                      ) : "—"}
-                    </TableCell>
+          <>
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Payment Gateway</TableHead>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date / Time</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Failed Reason</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {paginated.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm">{t.gateway}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">{t.customer_name}</TableCell>
+                      <TableCell className="text-sm font-mono">
+                        {t.currency === "INR" ? "₹" : t.currency} {Number(t.amount).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}{" "}
+                        {new Date(t.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={t.status === "paid" ? "default" : "destructive"} className={`text-[10px] ${t.status === "paid" ? "bg-success/15 text-success border-success/30" : ""}`}>
+                          {t.status === "paid" ? (
+                            <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Success</span>
+                          ) : (
+                            <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> {t.status === "created" ? "Incomplete" : "Failed"}</span>
+                          )}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {t.status !== "paid" ? (
+                          <span className="flex items-center gap-1 text-destructive/80">
+                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                            {t.failed_reason}
+                          </span>
+                        ) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                Showing {(currentPage - 1) * perPage + 1}–{Math.min(currentPage * perPage, filtered.length)} of {filtered.length} transactions
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="icon"
+                      className="h-8 w-8 text-xs"
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
   );
 };
-
 /* ───────── Payment Tab ───────── */
 const PaymentTab = () => {
   const [loading, setLoading] = useState(true);
