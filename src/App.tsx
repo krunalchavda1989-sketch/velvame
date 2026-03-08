@@ -38,7 +38,7 @@ import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminPages from "./pages/admin/AdminPages";
 import AdminLogin from "./pages/admin/AdminLogin";
-import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
+
 import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminManualOrder from "./pages/admin/AdminManualOrder";
 import AdminMenus from "./pages/admin/AdminMenus";
