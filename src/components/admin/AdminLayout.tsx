@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
-  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
+  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, Mail, ShoppingBag, ChevronDown, LogOut
 } from "lucide-react";
@@ -164,13 +164,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             {!collapsed && <span>Collapse</span>}
           </button>
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary"
-          >
-            <ArrowLeft className="h-4 w-4 flex-shrink-0" />
-            {!collapsed && <span>Back to Dashboard</span>}
-          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 w-full"
