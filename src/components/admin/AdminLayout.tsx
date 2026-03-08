@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
-  CreditCard, Mail, ShoppingBag, ChevronDown
+  CreditCard, Mail, ShoppingBag, ChevronDown, LogOut
 } from "lucide-react";
 
 interface MenuItem {
