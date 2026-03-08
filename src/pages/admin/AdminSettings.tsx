@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -205,6 +205,29 @@ const PaymentTransactionList = () => {
     setPage(1);
   };
 
+  const exportCSV = () => {
+    const headers = ["Payment Gateway", "Customer Name", "Amount", "Currency", "Date/Time", "Status", "Purpose", "Razorpay Payment ID", "Failed Reason"];
+    const rows = filtered.map((t) => [
+      t.gateway,
+      t.customer_name,
+      Number(t.amount).toFixed(2),
+      t.currency,
+      new Date(t.created_at).toLocaleString("en-IN"),
+      t.status === "paid" ? "Success" : t.status === "created" ? "Incomplete" : "Failed",
+      t.purpose,
+      t.razorpay_payment_id || "",
+      t.status !== "paid" ? t.failed_reason : "",
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c: string) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transactions_${filter}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
 
   return (
@@ -215,18 +238,23 @@ const PaymentTransactionList = () => {
             <CardTitle className="text-lg">Transaction History</CardTitle>
             <CardDescription>Recent payment transactions across all gateways</CardDescription>
           </div>
-          <div className="flex gap-1">
-            {(["all", "paid", "failed"] as const).map((f) => (
-              <Button
-                key={f}
-                variant={filter === f ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleFilterChange(f)}
-                className="text-xs capitalize"
-              >
-                {f === "paid" ? "Success" : f === "failed" ? "Failed" : "All"}
-              </Button>
-            ))}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="text-xs" onClick={exportCSV} disabled={filtered.length === 0}>
+              <Download className="h-3.5 w-3.5 mr-1" /> Export CSV
+            </Button>
+            <div className="flex gap-1">
+              {(["all", "paid", "failed"] as const).map((f) => (
+                <Button
+                  key={f}
+                  variant={filter === f ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleFilterChange(f)}
+                  className="text-xs capitalize"
+                >
+                  {f === "paid" ? "Success" : f === "failed" ? "Failed" : "All"}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </CardHeader>
