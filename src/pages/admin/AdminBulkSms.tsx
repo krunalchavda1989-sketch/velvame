@@ -50,6 +50,14 @@ const CHANNEL_OPTIONS = [
   { value: "both", label: "Both", icon: Send, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
 ];
 
+const channelBadge = (channel: string) => {
+  if (channel === "whatsapp") return <Badge variant="outline" className="text-[10px] gap-1 border-green-500/30 text-green-600"><Phone className="h-2.5 w-2.5" />WhatsApp</Badge>;
+  if (channel === "both") return <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary"><Send className="h-2.5 w-2.5" />Both</Badge>;
+  return <Badge variant="outline" className="text-[10px] gap-1 border-blue-500/30 text-blue-500"><MessageSquare className="h-2.5 w-2.5" />SMS</Badge>;
+};
+
+const defaultForm = { name: "", message: "", audience_type: "all", custom_numbers: "", schedule: false, scheduled_at: "", channel: "sms" };
+
 const AdminBulkSms = () => {
   const [activeTab, setActiveTab] = useState("campaigns");
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -59,36 +67,22 @@ const AdminBulkSms = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
 
-  // Campaign form
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
-  const [campaignForm, setCampaignForm] = useState({
-    name: "",
-    message: "",
-    audience_type: "all",
-    custom_numbers: "",
-    schedule: false,
-    scheduled_at: "",
-    channel: "sms" as string,
-  });
+  const [campaignForm, setCampaignForm] = useState({ ...defaultForm });
   const [savingCampaign, setSavingCampaign] = useState(false);
 
-  // Template form
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [templateForm, setTemplateForm] = useState({ name: "", content: "", category: "general" });
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);
 
-  // Preview
   const [previewDialog, setPreviewDialog] = useState(false);
   const [previewCampaign, setPreviewCampaign] = useState<any>(null);
 
-  // Stats
   const [userCount, setUserCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -116,11 +110,15 @@ const AdminBulkSms = () => {
     }
   };
 
+  const maxChars = campaignForm.channel === "whatsapp" ? 1024 : campaignForm.channel === "both" ? 160 : 160;
+
   const handleCreateCampaign = async (sendNow: boolean) => {
     if (!campaignForm.name.trim()) { toast.error("Campaign name is required"); return; }
     if (!campaignForm.message.trim()) { toast.error("Message content is required"); return; }
-    if (campaignForm.channel === "sms" && campaignForm.message.length > 160) { toast.error("SMS message should be within 160 characters"); return; }
-    if (campaignForm.channel === "whatsapp" && campaignForm.message.length > 1024) { toast.error("WhatsApp message should be within 1024 characters"); return; }
+    if (campaignForm.message.length > maxChars) {
+      toast.error(`Message should be within ${maxChars} characters`);
+      return;
+    }
 
     setSavingCampaign(true);
     try {
@@ -132,9 +130,10 @@ const AdminBulkSms = () => {
         name: campaignForm.name.trim(),
         message: campaignForm.message.trim(),
         audience_type: campaignForm.audience_type,
+        channel: campaignForm.channel,
         recipient_count: recipientCount,
         created_by: user.id,
-        status: sendNow ? "sending" : campaignForm.schedule ? "scheduled" : "draft",
+        status: sendNow ? "sent" : campaignForm.schedule ? "scheduled" : "draft",
         audience_filter: campaignForm.audience_type === "custom"
           ? { numbers: campaignForm.custom_numbers.split("\n").filter((n) => n.trim()) }
           : {},
@@ -145,14 +144,11 @@ const AdminBulkSms = () => {
         sent_count: sendNow ? recipientCount : 0,
         failed_count: 0,
       };
-      if (sendNow) {
-        payload.status = "sent";
-      }
 
       await supabase.from("sms_campaigns").insert(payload);
       toast.success(sendNow ? "Campaign sent successfully!" : "Campaign saved!");
       setShowCampaignDialog(false);
-      setCampaignForm({ name: "", message: "", audience_type: "all", custom_numbers: "", schedule: false, scheduled_at: "" });
+      setCampaignForm({ ...defaultForm });
       fetchAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to create campaign");
@@ -230,10 +226,12 @@ const AdminBulkSms = () => {
 
   const filteredCampaigns = campaigns
     .filter((c) => statusFilter === "all" || c.status === statusFilter)
+    .filter((c) => channelFilter === "all" || c.channel === channelFilter)
     .filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()));
 
   const totalSent = campaigns.reduce((a, c) => a + (c.sent_count || 0), 0);
   const totalFailed = campaigns.reduce((a, c) => a + (c.failed_count || 0), 0);
+  const whatsappCampaigns = campaigns.filter((c) => c.channel === "whatsapp" || c.channel === "both").length;
 
   if (loading) {
     return (
@@ -253,9 +251,9 @@ const AdminBulkSms = () => {
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
               <MessageSquare className="h-6 w-6 text-primary" />
-              Bulk SMS Marketing
+              Bulk Messaging
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">Create and manage SMS campaigns for your users</p>
+            <p className="text-sm text-muted-foreground mt-1">Create and manage SMS & WhatsApp campaigns</p>
           </div>
           <Button onClick={() => setShowCampaignDialog(true)} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
             <Plus className="h-4 w-4 mr-2" /> New Campaign
@@ -263,11 +261,12 @@ const AdminBulkSms = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
             { label: "Total Campaigns", value: campaigns.length, icon: MessageSquare, color: "text-primary" },
             { label: "Messages Sent", value: totalSent, icon: Send, color: "text-green-500" },
             { label: "Failed", value: totalFailed, icon: AlertTriangle, color: "text-destructive" },
+            { label: "WhatsApp Campaigns", value: whatsappCampaigns, icon: Phone, color: "text-green-600" },
             { label: "Total Users", value: userCount, icon: Users, color: "text-blue-500" },
           ].map((s) => (
             <Card key={s.label}>
@@ -304,6 +303,17 @@ const AdminBulkSms = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search campaigns..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
               </div>
+              <Select value={channelFilter} onValueChange={setChannelFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Channels</SelectItem>
+                  <SelectItem value="sms">SMS Only</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp Only</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-40">
                   <Filter className="h-3.5 w-3.5 mr-2" />
@@ -334,6 +344,7 @@ const AdminBulkSms = () => {
                       <TableHeader>
                         <TableRow className="bg-muted/50">
                           <TableHead>Campaign</TableHead>
+                          <TableHead>Channel</TableHead>
                           <TableHead>Audience</TableHead>
                           <TableHead>Recipients</TableHead>
                           <TableHead>Sent</TableHead>
@@ -351,6 +362,7 @@ const AdminBulkSms = () => {
                                 <p className="text-xs text-muted-foreground truncate max-w-[200px]">{c.message}</p>
                               </div>
                             </TableCell>
+                            <TableCell>{channelBadge(c.channel || "sms")}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs capitalize">{c.audience_type}</Badge>
                             </TableCell>
@@ -365,21 +377,11 @@ const AdminBulkSms = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => { setPreviewCampaign(c); setPreviewDialog(true); }}
-                                >
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewCampaign(c); setPreviewDialog(true); }}>
                                   <Eye className="h-3.5 w-3.5" />
                                 </Button>
                                 {c.status === "draft" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive"
-                                    onClick={() => handleDeleteCampaign(c.id)}
-                                  >
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteCampaign(c.id)}>
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 )}
@@ -414,7 +416,7 @@ const AdminBulkSms = () => {
               <Card>
                 <CardContent className="py-12 text-center">
                   <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No templates yet. Create reusable SMS templates!</p>
+                  <p className="text-muted-foreground">No templates yet. Create reusable message templates!</p>
                 </CardContent>
               </Card>
             ) : (
@@ -451,7 +453,7 @@ const AdminBulkSms = () => {
                         {t.content}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-muted-foreground">{t.content.length}/160 chars</span>
+                        <span className="text-[10px] text-muted-foreground">{t.content.length} chars</span>
                         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => useTemplate(t)}>
                           <Send className="h-3 w-3 mr-1" /> Use in Campaign
                         </Button>
@@ -471,12 +473,39 @@ const AdminBulkSms = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" />
-              Create SMS Campaign
+              Create Campaign
             </DialogTitle>
-            <DialogDescription>Compose and send bulk SMS to your users</DialogDescription>
+            <DialogDescription>Compose and send bulk messages via SMS, WhatsApp, or both</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Channel Selector */}
+            <div className="space-y-1.5">
+              <Label>Channel</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {CHANNEL_OPTIONS.map((ch) => {
+                  const Icon = ch.icon;
+                  const selected = campaignForm.channel === ch.value;
+                  return (
+                    <button
+                      key={ch.value}
+                      type="button"
+                      onClick={() => setCampaignForm((p) => ({ ...p, channel: ch.value }))}
+                      className={`relative flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+                        selected
+                          ? `${ch.bg} border-current ring-2 ring-primary/20`
+                          : "border-border bg-card hover:border-primary/30"
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 ${ch.color}`} />
+                      {ch.label}
+                      {selected && <CheckCircle className="absolute top-1 right-1 h-3 w-3 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label>Campaign Name</Label>
               <Input
@@ -526,29 +555,23 @@ const AdminBulkSms = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>Message</Label>
-                <span className={`text-xs ${campaignForm.message.length > 160 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {campaignForm.message.length}/160
+                <span className={`text-xs ${campaignForm.message.length > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
+                  {campaignForm.message.length}/{maxChars}
                 </span>
               </div>
               <Textarea
-                placeholder="Type your SMS message here..."
+                placeholder={campaignForm.channel === "whatsapp" ? "Type your WhatsApp message here..." : "Type your message here..."}
                 value={campaignForm.message}
                 onChange={(e) => setCampaignForm((p) => ({ ...p, message: e.target.value }))}
                 rows={4}
                 className="resize-none"
               />
-              {/* Placeholder tags */}
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {PLACEHOLDERS.map((p) => (
                   <button
                     key={p.tag}
                     type="button"
-                    onClick={() =>
-                      setCampaignForm((prev) => ({
-                        ...prev,
-                        message: prev.message + p.tag,
-                      }))
-                    }
+                    onClick={() => setCampaignForm((prev) => ({ ...prev, message: prev.message + p.tag }))}
                     className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/50 hover:bg-primary/10 hover:border-primary/30 transition-colors text-muted-foreground hover:text-foreground"
                     title={p.desc}
                   >
@@ -558,12 +581,22 @@ const AdminBulkSms = () => {
               </div>
             </div>
 
-            {/* Phone preview */}
+            {/* Preview */}
             <div className="rounded-xl border border-border bg-muted/30 p-4">
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                <Smartphone className="h-3.5 w-3.5" /> Message Preview
+                {campaignForm.channel === "whatsapp" ? (
+                  <><Phone className="h-3.5 w-3.5 text-green-600" /> WhatsApp Preview</>
+                ) : campaignForm.channel === "both" ? (
+                  <><Send className="h-3.5 w-3.5" /> Message Preview (SMS + WhatsApp)</>
+                ) : (
+                  <><Smartphone className="h-3.5 w-3.5" /> SMS Preview</>
+                )}
               </p>
-              <div className="bg-card rounded-lg p-3 border border-border text-sm leading-relaxed whitespace-pre-wrap min-h-[60px]">
+              <div className={`rounded-lg p-3 border text-sm leading-relaxed whitespace-pre-wrap min-h-[60px] ${
+                campaignForm.channel === "whatsapp"
+                  ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+                  : "bg-card border-border"
+              }`}>
                 {campaignForm.message || <span className="text-muted-foreground italic">Your message will appear here...</span>}
               </div>
             </div>
@@ -612,7 +645,7 @@ const AdminBulkSms = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingTemplate ? "Edit Template" : "Create Template"}</DialogTitle>
-            <DialogDescription>Save reusable SMS message templates</DialogDescription>
+            <DialogDescription>Save reusable message templates for SMS & WhatsApp</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -626,9 +659,7 @@ const AdminBulkSms = () => {
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Select value={templateForm.category} onValueChange={(v) => setTemplateForm((p) => ({ ...p, category: v }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TEMPLATE_CATEGORIES.map((c) => (
                     <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
@@ -639,9 +670,7 @@ const AdminBulkSms = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>Content</Label>
-                <span className={`text-xs ${templateForm.content.length > 160 ? "text-destructive" : "text-muted-foreground"}`}>
-                  {templateForm.content.length}/160
-                </span>
+                <span className="text-xs text-muted-foreground">{templateForm.content.length} chars</span>
               </div>
               <Textarea
                 placeholder="Type template content..."
@@ -686,6 +715,10 @@ const AdminBulkSms = () => {
                   <p className="font-medium">{previewCampaign.name}</p>
                 </div>
                 <div>
+                  <p className="text-muted-foreground text-xs">Channel</p>
+                  {channelBadge(previewCampaign.channel || "sms")}
+                </div>
+                <div>
                   <p className="text-muted-foreground text-xs">Status</p>
                   {statusBadge(previewCampaign.status)}
                 </div>
@@ -698,18 +731,22 @@ const AdminBulkSms = () => {
                   <p>{previewCampaign.recipient_count}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Sent</p>
-                  <p className="text-green-600">{previewCampaign.sent_count || 0}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Failed</p>
-                  <p className="text-destructive">{previewCampaign.failed_count || 0}</p>
+                  <p className="text-muted-foreground text-xs">Sent / Failed</p>
+                  <p>
+                    <span className="text-green-600">{previewCampaign.sent_count || 0}</span>
+                    {" / "}
+                    <span className="text-destructive">{previewCampaign.failed_count || 0}</span>
+                  </p>
                 </div>
               </div>
               <Separator />
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Message</p>
-                <div className="bg-muted/30 rounded-lg p-3 border border-border text-sm whitespace-pre-wrap">
+                <div className={`rounded-lg p-3 border text-sm whitespace-pre-wrap ${
+                  (previewCampaign.channel || "sms") === "whatsapp"
+                    ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+                    : "bg-muted/30 border-border"
+                }`}>
                   {previewCampaign.message}
                 </div>
               </div>
