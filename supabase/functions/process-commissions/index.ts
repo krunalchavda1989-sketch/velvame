@@ -103,6 +103,19 @@ Deno.serve(async (req: Request) => {
     const rates = isRepurchase ? REPURCHASE_RATES : LEVEL_RATES;
     const commissionType = isRepurchase ? "repurchase" : "level";
 
+    // Fetch dynamic min monthly purchase from settings
+    let minMonthlyPurchase = 1000; // fallback default
+    if (isRepurchase) {
+      const { data: bSettings } = await supabase
+        .from("binary_settings")
+        .select("min_monthly_purchase")
+        .limit(1)
+        .single();
+      if (bSettings?.min_monthly_purchase != null) {
+        minMonthlyPurchase = Number(bSettings.min_monthly_purchase);
+      }
+    }
+
     // Helper: get total purchase amount for a user in the current month
     const getMonthlyPurchase = async (userId: string): Promise<number> => {
       const now = new Date();
@@ -119,13 +132,13 @@ Deno.serve(async (req: Request) => {
     };
 
     // For repurchase income, verify the buyer (source) meets minimum monthly purchase
-    if (isRepurchase) {
+    if (isRepurchase && minMonthlyPurchase > 0) {
       const buyerMonthlyTotal = await getMonthlyPurchase(order.user_id);
-      if (buyerMonthlyTotal < MIN_MONTHLY_PURCHASE) {
+      if (buyerMonthlyTotal < minMonthlyPurchase) {
         return new Response(
           JSON.stringify({
             success: true,
-            message: `Buyer monthly purchase ₹${buyerMonthlyTotal} is below minimum ₹${MIN_MONTHLY_PURCHASE} — no repurchase commissions`,
+            message: `Buyer monthly purchase ₹${buyerMonthlyTotal} is below minimum ₹${minMonthlyPurchase} — no repurchase commissions`,
             commissions_distributed: 0,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
