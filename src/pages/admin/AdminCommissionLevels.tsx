@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Pencil, Loader2, Save, IndianRupee, ArrowLeftRight } from "lucide-react";
+import { BarChart3, Pencil, Loader2, Save, IndianRupee, ArrowLeftRight, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,8 +38,11 @@ const AdminCommissionLevels = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CommLevel | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [addType, setAddType] = useState<"level" | "repurchase">("level");
   const [form, setForm] = useState({ rate: 0, min_referrals: 0, is_active: true });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Repurchase settings
   const [minMonthlyPurchase, setMinMonthlyPurchase] = useState(1000);
@@ -76,17 +79,57 @@ const AdminCommissionLevels = () => {
 
   const openEdit = (l: CommLevel) => {
     setEditing(l);
+    setIsAdding(false);
     setForm({ rate: l.rate, min_referrals: l.min_referrals, is_active: l.is_active });
     setDialogOpen(true);
   };
 
+  const openAdd = (type: "level" | "repurchase") => {
+    setEditing(null);
+    setIsAdding(true);
+    setAddType(type);
+    setForm({ rate: 0, min_referrals: 0, is_active: true });
+    setDialogOpen(true);
+  };
+
   const handleSave = async () => {
-    if (!editing) return;
     setSaving(true);
-    const { error } = await supabase.from("commission_levels").update(form as any).eq("id", editing.id);
-    if (error) toast.error("Failed to update"); else toast.success("Commission level updated!");
+
+    if (isAdding) {
+      // Determine next level number
+      const existingOfType = levels.filter((l) =>
+        addType === "level" ? l.commission_type === "level" : l.commission_type === "repurchase"
+      );
+      const maxLevel = existingOfType.reduce((max, l) => Math.max(max, l.level), 0);
+      const nextLevel = addType === "repurchase" ? (existingOfType.length === 0 ? 101 : maxLevel + 1) : maxLevel + 1;
+
+      const { error } = await supabase.from("commission_levels").insert({
+        level: nextLevel,
+        commission_type: addType,
+        rate: form.rate,
+        min_referrals: form.min_referrals,
+        is_active: form.is_active,
+      } as any);
+
+      if (error) toast.error("Failed to add level");
+      else toast.success(`Level ${addType === "repurchase" ? nextLevel - 100 : nextLevel} added!`);
+    } else if (editing) {
+      const { error } = await supabase.from("commission_levels").update(form as any).eq("id", editing.id);
+      if (error) toast.error("Failed to update");
+      else toast.success("Commission level updated!");
+    }
+
     setSaving(false);
     setDialogOpen(false);
+    fetchLevels();
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id);
+    const { error } = await supabase.from("commission_levels").delete().eq("id", id);
+    if (error) toast.error("Failed to delete");
+    else toast.success("Commission level deleted!");
+    setDeleting(null);
     fetchLevels();
   };
 
@@ -121,7 +164,7 @@ const AdminCommissionLevels = () => {
   const levelItems = levels.filter((l) => l.commission_type === "level");
   const repurchaseItems = levels.filter((l) => l.commission_type === "repurchase");
 
-  const renderTable = (items: CommLevel[]) => (
+  const renderTable = (items: CommLevel[], type: "level" | "repurchase") => (
     <div className="space-y-2">
       {items.map((l) => (
         <Card key={l.id} className={!l.is_active ? "opacity-50" : ""}>
@@ -138,10 +181,23 @@ const AdminCommissionLevels = () => {
             <div className="flex items-center gap-2">
               <Badge variant={l.is_active ? "default" : "secondary"}>{l.is_active ? "Active" : "Off"}</Badge>
               <Button variant="ghost" size="icon" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive"
+                disabled={deleting === l.id}
+                onClick={() => handleDelete(l.id)}
+              >
+                {deleting === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </Button>
             </div>
           </CardContent>
         </Card>
       ))}
+
+      <Button variant="outline" className="w-full mt-3 gap-2 border-dashed" onClick={() => openAdd(type)}>
+        <Plus className="h-4 w-4" /> Add Level {type === "level" ? levelItems.length + 1 : repurchaseItems.length + 1}
+      </Button>
     </div>
   );
 
@@ -166,7 +222,7 @@ const AdminCommissionLevels = () => {
               <TabsTrigger value="binary" className="gap-1.5"><ArrowLeftRight className="h-3.5 w-3.5" />Binary Income</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="level">{renderTable(levelItems)}</TabsContent>
+            <TabsContent value="level">{renderTable(levelItems, "level")}</TabsContent>
 
             <TabsContent value="repurchase">
               <Card className="mb-4 border-primary/20">
@@ -191,13 +247,12 @@ const AdminCommissionLevels = () => {
                   </div>
                 </CardContent>
               </Card>
-              {renderTable(repurchaseItems)}
+              {renderTable(repurchaseItems, "repurchase")}
             </TabsContent>
 
             <TabsContent value="binary">
               {binarySettings && (
                 <div className="space-y-6">
-                  {/* Enable/Disable */}
                   <Card className={!binarySettings.is_active ? "border-destructive/30" : "border-primary/20"}>
                     <CardContent className="flex items-center justify-between p-5">
                       <div>
@@ -220,7 +275,6 @@ const AdminCommissionLevels = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Settings (shown regardless, but visually muted when disabled) */}
                   <div className={!binarySettings.is_active ? "opacity-50 pointer-events-none" : ""}>
                     <Card>
                       <CardHeader>
@@ -291,7 +345,6 @@ const AdminCommissionLevels = () => {
 
                         <Separator />
 
-                        {/* Preview */}
                         <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-1">
                           <p className="text-xs font-medium text-foreground">Payout Preview</p>
                           <p className="text-xs text-muted-foreground">
@@ -328,14 +381,19 @@ const AdminCommissionLevels = () => {
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Edit Commission Level</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{isAdding ? `Add ${addType === "level" ? "Level" : "Repurchase"} Commission` : "Edit Commission Level"}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Commission Rate (%)</Label><Input type="number" step="0.5" min={0} max={100} value={form.rate} onChange={(e) => setForm({ ...form, rate: parseFloat(e.target.value) || 0 })} /></div>
               <div className="space-y-2"><Label>Min Direct Referrals</Label><Input type="number" min={0} value={form.min_referrals} onChange={(e) => setForm({ ...form, min_referrals: parseInt(e.target.value) || 0 })} /></div>
               <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /><Label>Active</Label></div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}Update</Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : isAdding ? <Plus className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  {isAdding ? "Add Level" : "Update"}
+                </Button>
               </div>
             </div>
           </DialogContent>
