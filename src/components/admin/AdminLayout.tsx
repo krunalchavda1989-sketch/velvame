@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
-  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
+  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, Mail, ShoppingBag, ChevronDown, LogOut
 } from "lucide-react";
