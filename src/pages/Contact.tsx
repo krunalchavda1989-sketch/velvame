@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
@@ -54,14 +55,10 @@ const Contact = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16">
-        <section className="py-16 bg-gradient-dark">
-          <div className="container px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">{page?.title || "Contact Us"}</h1>
-              <p className="text-lg text-muted-foreground">{page?.subtitle || ""}</p>
-            </motion.div>
-          </div>
-        </section>
+        <PageBreadcrumb
+          title={page?.title || "Contact Us"}
+          subtitle={page?.subtitle || "Get in Touch"}
+        />
 
         <section className="py-16">
           <div className="container px-4">

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Loader2, Target, Eye, Heart, CheckCircle } from "lucide-react";
+import { Loader2, Target, Eye, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 
 const About = () => {
@@ -34,15 +35,10 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16">
-        {/* Hero */}
-        <section className="py-16 bg-gradient-dark">
-          <div className="container px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">{page?.title || "About Us"}</h1>
-              <p className="text-lg text-muted-foreground">{page?.subtitle || ""}</p>
-            </motion.div>
-          </div>
-        </section>
+        <PageBreadcrumb
+          title={page?.title || "About Us"}
+          subtitle={page?.subtitle || "Learn more about our mission and values"}
+        />
 
         {/* Mission & Vision */}
         <section className="py-16">

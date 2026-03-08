@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 
 interface FAQ {
@@ -40,18 +41,15 @@ const FAQPage = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-16">
-        <section className="py-16 bg-gradient-dark">
-          <div className="container px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4">Frequently Asked Questions</h1>
-              <p className="text-lg text-muted-foreground mb-8">Everything you need to know about our platform</p>
-              <div className="relative max-w-md mx-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search questions..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-card border-border" />
-              </div>
-            </motion.div>
+        <PageBreadcrumb
+          title="Frequently Asked Questions"
+          subtitle="Everything you need to know about our platform"
+        >
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search questions..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-background border-border" />
           </div>
-        </section>
+        </PageBreadcrumb>
 
         <section className="py-16">
           <div className="container px-4">
