@@ -191,7 +191,7 @@ const CartDrawer = () => {
         .insert({
           user_id: user!.id,
           total_amount: afterTax,
-          shipping_address: address as any,
+          shipping_address: shippingAddr as any,
           payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay",
           status: "pending",
         })
