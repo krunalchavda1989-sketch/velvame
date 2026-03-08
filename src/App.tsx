@@ -38,7 +38,7 @@ import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminPages from "./pages/admin/AdminPages";
 import AdminLogin from "./pages/admin/AdminLogin";
-import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
+
 import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminManualOrder from "./pages/admin/AdminManualOrder";
 import AdminMenus from "./pages/admin/AdminMenus";
@@ -198,7 +198,7 @@ const App = () => (
             <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
             <Route path="/admin/hero-stats" element={<AdminRoute><AdminHeroStats /></AdminRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/smtp-settings" element={<AdminRoute><AdminSmtpSettings /></AdminRoute>} />
+            
             <Route path="/admin/menus" element={<AdminRoute><AdminMenus /></AdminRoute>} />
             <Route path="/admin/transactions" element={<AdminRoute><AdminTransactions /></AdminRoute>} />
             <Route path="/admin/manual-order" element={<AdminRoute><AdminManualOrder /></AdminRoute>} />
