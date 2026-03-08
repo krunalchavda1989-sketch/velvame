@@ -403,11 +403,14 @@ const ShippingReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Order ID", "Customer", "City", "State", "Shipping Method", "Status", "Date"]}
+        csvFilename="shipping_report"
+        csvRows={data.map((o) => [
+          o.id.slice(0, 8), o.customer, o.city, o.state,
+          o.shipping_method || "Free", o.status,
+          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((o) => [
-          o.id.slice(0, 8) + "...",
-          o.customer,
-          o.city,
-          o.state,
+          o.id.slice(0, 8) + "...", o.customer, o.city, o.state,
           o.shipping_method || "Free",
           <StatusBadge status={o.status} key={o.id} />,
           new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
