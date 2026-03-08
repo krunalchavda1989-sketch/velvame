@@ -206,7 +206,7 @@ const Navbar = () => {
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground">Login</Button>
                     </Link>
                     <Link to="/register" onClick={() => setOpen(false)}>
-                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹2800</Button>
+                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹{membershipAmount.toLocaleString("en-IN")}</Button>
                     </Link>
                   </>
                 )}

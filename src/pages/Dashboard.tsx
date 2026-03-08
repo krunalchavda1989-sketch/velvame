@@ -200,7 +200,7 @@ const Dashboard = () => {
         {!profile?.subscription_paid && (
           <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
             <span className="font-semibold text-destructive">⚠ Subscription pending.</span>{" "}
-            <span className="text-muted-foreground">Pay ₹2800 to activate your MLM income and start earning commissions.</span>
+            <span className="text-muted-foreground">Pay ₹{membershipAmount.toLocaleString("en-IN")} to activate your MLM income and start earning commissions.</span>
           </div>
         )}
 

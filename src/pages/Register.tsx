@@ -203,7 +203,7 @@ const Register = () => {
                   Creating account...
                 </>
               ) : (
-                `Join ${brand.brand_name} — ₹2800`
+                `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
               )}
             </Button>
 
