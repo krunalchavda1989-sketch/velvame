@@ -118,15 +118,15 @@ const Earnings = () => {
   const avgMonthly = monthlyData.reduce((s, m) => s + m.total, 0) / monthlyData.length || 0;
 
   const stats = [
-    { label: "Total Earned", value: `₹${totalEarned.toLocaleString()}`, icon: DollarSign, color: "text-primary" },
-    { label: "This Month", value: `₹${thisMonth.toLocaleString()}`, icon: Calendar, color: "text-green-500" },
+    { label: "Total Earned", value: `${currencySymbol}${totalEarned.toLocaleString()}`, icon: DollarSign, color: "text-primary" },
+    { label: "This Month", value: `${currencySymbol}${thisMonth.toLocaleString()}`, icon: Calendar, color: "text-green-500" },
     {
       label: "Growth",
       value: `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%`,
       icon: growth >= 0 ? TrendingUp : TrendingDown,
       color: growth >= 0 ? "text-green-500" : "text-red-500",
     },
-    { label: "Avg / Month", value: `₹${avgMonthly.toFixed(0)}`, icon: BarChart3, color: "text-blue-500" },
+    { label: "Avg / Month", value: `${currencySymbol}${avgMonthly.toFixed(0)}`, icon: BarChart3, color: "text-blue-500" },
   ];
 
   if (isLoading) {
