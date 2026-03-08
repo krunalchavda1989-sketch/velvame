@@ -32,6 +32,7 @@ import AdminCommissionLevels from "./pages/admin/AdminCommissionLevels";
 import AdminAwards from "./pages/admin/AdminAwards";
 import AdminOffers from "./pages/admin/AdminOffers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminCategories from "./pages/admin/AdminCategories";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
