@@ -168,9 +168,17 @@ const CartDrawer = () => {
     setStep("address");
   };
 
+  const getShippingAddress = () => {
+    if (showManualForm) return address;
+    const saved = savedAddresses.find((a) => a.id === selectedAddressId);
+    if (!saved) return null;
+    return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
+  };
+
   const handlePayment = async () => {
-    if (!address.name || !address.line1 || !address.city || !address.state || !address.pincode || !address.phone) {
-      toast.error("Please fill all required address fields");
+    const shippingAddr = getShippingAddress();
+    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+      toast.error("Please select or fill an address");
       return;
     }
 
