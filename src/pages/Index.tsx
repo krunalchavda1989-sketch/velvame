@@ -338,6 +338,54 @@ const Index = () => {
       )}
 
 
+      {/* ===== Newsletter / Contact ===== */}
+      <section className="py-16">
+        <div className="container px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-2xl mx-auto text-center"
+          >
+            <div className="p-8 sm:p-12 rounded-2xl bg-card border border-border">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">
+                Stay in the Loop
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                Get the latest product updates, exclusive offers, and wellness tips delivered to your inbox.
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+                  if (email) {
+                    toast.success("Thanks for subscribing!");
+                    form.reset();
+                  }
+                }}
+                className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+              >
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="Enter your email"
+                  className="flex-1 h-11 px-4 rounded-lg border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                />
+                <Button type="submit" className="bg-gradient-gold text-primary-foreground font-semibold h-11 px-6 glow-gold hover:opacity-90">
+                  Subscribe <ArrowRight className="h-4 w-4 ml-1.5" />
+                </Button>
+              </form>
+              <p className="text-xs text-muted-foreground mt-4">No spam, unsubscribe anytime.</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
