@@ -39,6 +39,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminManualOrder from "./pages/admin/AdminManualOrder";
+import AdminMenus from "./pages/admin/AdminMenus";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQPage from "./pages/FAQ";
