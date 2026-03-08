@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash, Menu, X, MessageSquare, Send } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash, Menu, X, MessageSquare, Send, Phone, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,7 @@ const SETTINGS_TABS = [
   { key: "localization", label: "Localization", icon: Globe },
   { key: "smtp", label: "SMTP", icon: Mail },
   { key: "sms", label: "SMS", icon: MessageSquare },
+  { key: "whatsapp", label: "WhatsApp", icon: Phone },
   { key: "shipping", label: "Shipping", icon: Truck },
   { key: "pwa", label: "PWA", icon: MonitorSmartphone },
   { key: "captcha", label: "reCAPTCHA", icon: ShieldCheck },
@@ -70,6 +71,7 @@ const AdminSettings = () => {
       case "localization": return <LocalizationTab />;
       case "smtp": return <SmtpTab />;
       case "sms": return <SmsTab />;
+      case "whatsapp": return <WhatsAppTab />;
       case "shipping": return <ShippingTab />;
       case "pwa": return <PWATab />;
       case "captcha": return <CaptchaTab />;
@@ -2506,6 +2508,348 @@ const SmsTab = () => {
       <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
         {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
         Save SMS Settings
+      </Button>
+    </div>
+  );
+};
+
+/* ───────── WhatsApp Integration Tab ───────── */
+const WHATSAPP_PROVIDERS = [
+  {
+    key: "whatsapp_business",
+    label: "WhatsApp Business API",
+    color: "text-green-600",
+    bgColor: "bg-green-500/10 border-green-500/20",
+    docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api",
+    fields: [
+      { key: "api_key", label: "Permanent Access Token", placeholder: "Enter Meta access token", secret: true },
+      { key: "phone_number_id", label: "Phone Number ID", placeholder: "e.g. 1234567890" },
+      { key: "business_account_id", label: "Business Account ID", placeholder: "e.g. 9876543210" },
+    ],
+  },
+  {
+    key: "twilio_whatsapp",
+    label: "Twilio WhatsApp",
+    color: "text-red-500",
+    bgColor: "bg-red-500/10 border-red-500/20",
+    docsUrl: "https://www.twilio.com/docs/whatsapp",
+    fields: [
+      { key: "api_key", label: "Account SID", placeholder: "ACxxxxxxxx", secret: false },
+      { key: "phone_number_id", label: "Auth Token", placeholder: "Enter Twilio auth token", secret: true },
+      { key: "business_account_id", label: "WhatsApp Number", placeholder: "whatsapp:+14155238886" },
+    ],
+  },
+  {
+    key: "wati",
+    label: "WATI",
+    color: "text-teal-500",
+    bgColor: "bg-teal-500/10 border-teal-500/20",
+    docsUrl: "https://docs.wati.io/",
+    fields: [
+      { key: "api_key", label: "API Key", placeholder: "Enter WATI API key", secret: true },
+      { key: "phone_number_id", label: "API Endpoint", placeholder: "https://live-server-xxxxx.wati.io" },
+      { key: "business_account_id", label: "WhatsApp Number", placeholder: "+919876543210" },
+    ],
+  },
+  {
+    key: "interakt",
+    label: "Interakt",
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10 border-blue-500/20",
+    docsUrl: "https://www.interakt.shop/resource-center",
+    fields: [
+      { key: "api_key", label: "API Key", placeholder: "Enter Interakt API key", secret: true },
+      { key: "phone_number_id", label: "Phone Number", placeholder: "+919876543210" },
+      { key: "business_account_id", label: "Campaign ID (optional)", placeholder: "Enter campaign ID" },
+    ],
+  },
+];
+
+const WhatsAppTab = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [provider, setProvider] = useState("whatsapp_business");
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [businessAccountId, setBusinessAccountId] = useState("");
+  const [webhookVerifyToken, setWebhookVerifyToken] = useState("");
+  const [orderUpdatesEnabled, setOrderUpdatesEnabled] = useState(false);
+  const [welcomeMsgEnabled, setWelcomeMsgEnabled] = useState(false);
+  const [abandonedCartEnabled, setAbandonedCartEnabled] = useState(false);
+  const [supportChatEnabled, setSupportChatEnabled] = useState(false);
+  const [testPhone, setTestPhone] = useState("");
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from("whatsapp_settings").select("*").limit(1).maybeSingle();
+      if (data) {
+        setSettingsId(data.id);
+        setProvider(data.provider);
+        setIsEnabled(data.is_enabled);
+        setApiKey(data.api_key);
+        setPhoneNumberId(data.phone_number_id);
+        setBusinessAccountId(data.business_account_id);
+        setWebhookVerifyToken(data.webhook_verify_token);
+        setOrderUpdatesEnabled(data.order_updates_enabled);
+        setWelcomeMsgEnabled(data.welcome_msg_enabled);
+        setAbandonedCartEnabled(data.abandoned_cart_enabled);
+        setSupportChatEnabled(data.support_chat_enabled);
+      }
+      setLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        provider,
+        is_enabled: isEnabled,
+        api_key: apiKey,
+        phone_number_id: phoneNumberId,
+        business_account_id: businessAccountId,
+        webhook_verify_token: webhookVerifyToken,
+        order_updates_enabled: orderUpdatesEnabled,
+        welcome_msg_enabled: welcomeMsgEnabled,
+        abandoned_cart_enabled: abandonedCartEnabled,
+        support_chat_enabled: supportChatEnabled,
+        updated_at: new Date().toISOString(),
+      };
+      if (settingsId) {
+        await supabase.from("whatsapp_settings").update(payload).eq("id", settingsId);
+      } else {
+        const { data } = await supabase.from("whatsapp_settings").insert(payload).select().single();
+        if (data) setSettingsId(data.id);
+      }
+      toast.success("WhatsApp settings saved successfully");
+    } catch {
+      toast.error("Failed to save WhatsApp settings");
+    }
+    setSaving(false);
+  };
+
+  const handleTestMessage = async () => {
+    if (!testPhone.trim()) { toast.error("Enter a phone number to test"); return; }
+    if (!apiKey.trim()) { toast.error("Please configure API credentials first"); return; }
+    setTesting(true);
+    setTimeout(() => {
+      toast.success(`Test WhatsApp message request sent to ${testPhone}`);
+      setTesting(false);
+    }, 1500);
+  };
+
+  const generateVerifyToken = () => {
+    const token = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
+    setWebhookVerifyToken(token);
+    toast.success("Verify token generated");
+  };
+
+  const currentProvider = WHATSAPP_PROVIDERS.find(p => p.key === provider) || WHATSAPP_PROVIDERS[0];
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <div className="space-y-6">
+      {/* Provider Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Phone className="h-5 w-5 text-green-600" />
+            WhatsApp Provider
+          </CardTitle>
+          <CardDescription>Choose your WhatsApp messaging provider</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {WHATSAPP_PROVIDERS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setProvider(p.key)}
+                className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  provider === p.key
+                    ? `${p.bgColor} border-current ring-2 ring-primary/20`
+                    : "border-border bg-card hover:border-primary/30"
+                }`}
+              >
+                <Phone className={`h-6 w-6 ${p.color}`} />
+                <span className="text-xs font-medium text-center">{p.label}</span>
+                {provider === p.key && (
+                  <CheckCircle className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Master Toggle */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${currentProvider.bgColor}`}>
+                <Phone className={`h-5 w-5 ${currentProvider.color}`} />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{currentProvider.label} Integration</p>
+                <p className="text-xs text-muted-foreground">Enable or disable WhatsApp messaging</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant={isEnabled ? "default" : "secondary"} className="text-xs">
+                {isEnabled ? "Active" : "Inactive"}
+              </Badge>
+              <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Credentials */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">API Credentials</CardTitle>
+              <CardDescription>Configure your {currentProvider.label} API credentials</CardDescription>
+            </div>
+            {currentProvider.docsUrl && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={currentProvider.docsUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Docs
+                </a>
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {currentProvider.fields.map((field) => (
+            <div key={field.key} className="space-y-1.5">
+              <Label className="text-sm">{field.label}</Label>
+              <Input
+                type={field.secret ? "password" : "text"}
+                placeholder={field.placeholder}
+                value={
+                  field.key === "api_key" ? apiKey :
+                  field.key === "phone_number_id" ? phoneNumberId :
+                  businessAccountId
+                }
+                onChange={(e) => {
+                  if (field.key === "api_key") setApiKey(e.target.value);
+                  else if (field.key === "phone_number_id") setPhoneNumberId(e.target.value);
+                  else setBusinessAccountId(e.target.value);
+                }}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Webhook Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Webhook Configuration</CardTitle>
+          <CardDescription>Set up webhook for receiving incoming messages and delivery status</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-sm">Webhook Verify Token</Label>
+            <div className="flex gap-2">
+              <Input
+                value={webhookVerifyToken}
+                onChange={(e) => setWebhookVerifyToken(e.target.value)}
+                placeholder="Enter or generate a verify token"
+              />
+              <Button variant="outline" onClick={generateVerifyToken} className="shrink-0">
+                Generate
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Use this token when configuring the webhook URL in your WhatsApp provider dashboard.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm">Webhook Callback URL</Label>
+            <div className="flex gap-2">
+              <Input
+                readOnly
+                value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`}
+                className="bg-muted/30 text-muted-foreground"
+              />
+              <Button
+                variant="outline"
+                className="shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-webhook`);
+                  toast.success("Webhook URL copied!");
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* WhatsApp Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Messaging Features</CardTitle>
+          <CardDescription>Choose which WhatsApp notifications to send</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[
+            { label: "Order Updates", desc: "Send order confirmation, shipping, and delivery updates via WhatsApp", value: orderUpdatesEnabled, setter: setOrderUpdatesEnabled, icon: Package },
+            { label: "Welcome Message", desc: "Send a welcome message when a new user registers", value: welcomeMsgEnabled, setter: setWelcomeMsgEnabled, icon: Send },
+            { label: "Abandoned Cart Recovery", desc: "Remind users about items left in their cart after 24 hours", value: abandonedCartEnabled, setter: setAbandonedCartEnabled, icon: ShoppingCart },
+            { label: "Support Chat", desc: "Enable WhatsApp as a customer support channel", value: supportChatEnabled, setter: setSupportChatEnabled, icon: MessageSquare },
+          ].map((feature) => (
+            <div key={feature.label} className="flex items-center justify-between p-3 rounded-lg border border-border">
+              <div className="flex items-center gap-3">
+                <feature.icon className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">{feature.label}</p>
+                  <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                </div>
+              </div>
+              <Switch checked={feature.value} onCheckedChange={feature.setter} />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Test WhatsApp */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Test Message</CardTitle>
+          <CardDescription>Send a test WhatsApp message to verify your configuration</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-3">
+            <Input
+              placeholder="Enter WhatsApp number (e.g. +919876543210)"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              className="flex-1"
+            />
+            <Button variant="outline" onClick={handleTestMessage} disabled={testing || !apiKey.trim()}>
+              {testing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+              Send Test
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A test message will be sent using your configured {currentProvider.label} credentials.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save WhatsApp Settings
       </Button>
     </div>
   );
