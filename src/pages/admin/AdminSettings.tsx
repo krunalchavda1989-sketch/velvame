@@ -80,6 +80,9 @@ const AdminSettings = () => {
             <TabsTrigger value="membership" className="gap-2">
               <DollarSign className="h-4 w-4" /> Membership
             </TabsTrigger>
+            <TabsTrigger value="ordernumber" className="gap-2">
+              <Hash className="h-4 w-4" /> Order Number
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
