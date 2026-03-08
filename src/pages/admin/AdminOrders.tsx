@@ -200,7 +200,7 @@ const AdminOrders = () => {
                 <thead>
                   <tr className="border-b border-border bg-secondary/50">
                      <th className="text-left p-3 text-muted-foreground font-medium"></th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Order ID</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
@@ -218,7 +218,7 @@ const AdminOrders = () => {
                           <Eye className="w-3 h-3" /> View
                         </Button>
                       </td>
-                      <td className="p-3 font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}…</td>
+                      <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
                       <td className="p-3">

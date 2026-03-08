@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +80,9 @@ const AdminSettings = () => {
             <TabsTrigger value="membership" className="gap-2">
               <DollarSign className="h-4 w-4" /> Membership
             </TabsTrigger>
+            <TabsTrigger value="ordernumber" className="gap-2">
+              <Hash className="h-4 w-4" /> Order Number
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
@@ -108,6 +111,10 @@ const AdminSettings = () => {
 
           <TabsContent value="membership">
             <MembershipTab />
+          </TabsContent>
+
+          <TabsContent value="ordernumber">
+            <OrderNumberTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -2093,6 +2100,126 @@ const MembershipTab = () => {
       <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
         {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
         Save Membership Amount
+      </Button>
+    </div>
+  );
+};
+
+/* ───────── Order Number Tab ───────── */
+const OrderNumberTab = () => {
+  const [prefix, setPrefix] = useState("ORD");
+  const [nextNumber, setNextNumber] = useState(1);
+  const [padding, setPadding] = useState(4);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("order_number_settings" as any)
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setPrefix((data as any).prefix || "ORD");
+        setNextNumber((data as any).next_number || 1);
+        setPadding((data as any).padding || 4);
+        setSettingsId((data as any).id);
+      }
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const preview = prefix + String(nextNumber).padStart(padding, "0");
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = { prefix: prefix.toUpperCase().trim(), next_number: nextNumber, padding, updated_at: new Date().toISOString() };
+    
+    let error;
+    if (settingsId) {
+      ({ error } = await supabase.from("order_number_settings" as any).update(payload as any).eq("id", settingsId));
+    } else {
+      ({ error } = await supabase.from("order_number_settings" as any).insert(payload as any));
+    }
+    
+    if (error) toast.error(error.message);
+    else toast.success("Order number settings saved");
+    setSaving(false);
+  };
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Hash className="h-5 w-5 text-primary" />
+            Order Number Format
+          </CardTitle>
+          <CardDescription>
+            Configure the prefix and starting number for auto-generated order numbers
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Prefix</Label>
+              <Input
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value.replace(/[^A-Za-z0-9-_]/g, "").slice(0, 10))}
+                placeholder="e.g. VEL, ORD"
+                className="uppercase"
+              />
+              <p className="text-xs text-muted-foreground">Letters, numbers, hyphens allowed</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Next Number</Label>
+              <Input
+                type="number"
+                min={1}
+                value={nextNumber}
+                onChange={(e) => setNextNumber(Math.max(1, parseInt(e.target.value) || 1))}
+              />
+              <p className="text-xs text-muted-foreground">The next order will use this number</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Number Padding</Label>
+              <Select value={String(padding)} onValueChange={(v) => setPadding(Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[3, 4, 5, 6, 7, 8].map((p) => (
+                    <SelectItem key={p} value={String(p)}>{p} digits (e.g. {String(1).padStart(p, "0")})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Zero-pad the number portion</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground mb-2">Preview</p>
+            <div className="flex items-center gap-3">
+              <div className="text-lg font-mono font-bold text-primary">{preview}</div>
+              <span className="text-xs text-muted-foreground">→ Next: {prefix.toUpperCase().trim() + String(nextNumber + 1).padStart(padding, "0")}</span>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Changing the prefix or next number will only affect <strong>future</strong> orders. Existing orders keep their assigned numbers.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving || !prefix.trim()} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save Order Number Settings
       </Button>
     </div>
   );

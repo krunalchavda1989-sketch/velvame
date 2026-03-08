@@ -701,11 +701,39 @@ export type Database = {
           },
         ]
       }
+      order_number_settings: {
+        Row: {
+          created_at: string
+          id: string
+          next_number: number
+          padding: number
+          prefix: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          next_number?: number
+          padding?: number
+          prefix?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          next_number?: number
+          padding?: number
+          prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
           id: string
           is_repurchase: boolean
+          order_number: string | null
           payment_method: string | null
           shipping_address: Json | null
           shipping_method: string | null
@@ -718,6 +746,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_repurchase?: boolean
+          order_number?: string | null
           payment_method?: string | null
           shipping_address?: Json | null
           shipping_method?: string | null
@@ -730,6 +759,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_repurchase?: boolean
+          order_number?: string | null
           payment_method?: string | null
           shipping_address?: Json | null
           shipping_method?: string | null

@@ -41,7 +41,7 @@ const OrdersPage = () => {
       setLoading(true);
       const { data } = await supabase
         .from("orders")
-        .select("id, total_amount, status, payment_method, shipping_method, is_repurchase, created_at")
+        .select("id, total_amount, status, payment_method, shipping_method, is_repurchase, created_at, order_number")
         .eq("user_id", user.id)
         .neq("status", "pending")
         .order("created_at", { ascending: false })
@@ -137,6 +137,7 @@ const OrdersPage = () => {
                       {sc.icon}
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs text-primary">{(order as any).order_number || order.id.slice(0, 8)}</span>
                           {formatCurrency(order.total_amount)}
                           {order.is_repurchase && (
                             <Badge variant="outline" className="text-[10px] bg-accent/10 text-accent-foreground border-accent/20">Repurchase</Badge>
