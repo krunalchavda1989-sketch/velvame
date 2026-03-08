@@ -47,8 +47,12 @@ const menuItems: MenuItem[] = [
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isChildActive = (item: MenuItem) =>
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin/login");
+  };
     item.children?.some((c) => location.pathname === c.href) || false;
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
