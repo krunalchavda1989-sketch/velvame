@@ -6,6 +6,10 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, Search, Trash2, Download, RefreshCw, Users } from "lucide-react";
