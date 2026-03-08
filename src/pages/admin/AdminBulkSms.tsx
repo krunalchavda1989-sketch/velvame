@@ -57,7 +57,14 @@ const channelBadge = (channel: string) => {
   return <Badge variant="outline" className="text-[10px] gap-1 border-blue-500/30 text-blue-500"><MessageSquare className="h-2.5 w-2.5" />SMS</Badge>;
 };
 
-const defaultForm = { name: "", message: "", audience_type: "all", custom_numbers: "", schedule: false, scheduled_at: "", channel: "sms" };
+const defaultForm = { name: "", message: "", audience_type: "all", custom_numbers: "", schedule: false, scheduled_at: "", channel: "sms", media_url: "", media_type: "", link_url: "", link_text: "" };
+
+const WHATSAPP_MEDIA_TYPES = [
+  { value: "", label: "No Media", icon: MessageSquare, accept: "", maxSize: 0 },
+  { value: "image", label: "Image", icon: Image, accept: "image/jpeg,image/png,image/webp", maxSize: 5 * 1024 * 1024, hint: "JPG, PNG, WebP · Max 5 MB" },
+  { value: "video", label: "Video", icon: Video, accept: "video/mp4,video/3gpp", maxSize: 16 * 1024 * 1024, hint: "MP4, 3GP · Max 16 MB" },
+  { value: "document", label: "Document", icon: Paperclip, accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt", maxSize: 100 * 1024 * 1024, hint: "PDF, DOC, XLS, PPT · Max 100 MB" },
+];
 
 const AdminBulkSms = () => {
   const [activeTab, setActiveTab] = useState("campaigns");
