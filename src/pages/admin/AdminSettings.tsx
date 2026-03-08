@@ -152,6 +152,133 @@ const GATEWAY_META = [
   },
 ];
 
+/* ───────── Payment Transaction List ───────── */
+const PaymentTransactionList = () => {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "paid" | "failed">("all");
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("id, amount, status, created_at, user_id, purpose, razorpay_payment_id, currency")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (data) {
+        const userIds = [...new Set(data.map((p) => p.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", userIds);
+
+        const profileMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
+
+        setTransactions(
+          data.map((t) => ({
+            ...t,
+            customer_name: profileMap.get(t.user_id) || "Unknown",
+            gateway: t.razorpay_payment_id ? "Razorpay" : "—",
+            failed_reason: t.status === "failed" ? "Payment declined or cancelled" : t.status === "created" ? "Payment not completed" : "—",
+          }))
+        );
+      }
+      setLoading(false);
+    };
+    fetchTransactions();
+  }, []);
+
+  const filtered = filter === "all" ? transactions : transactions.filter((t) =>
+    filter === "paid" ? t.status === "paid" : (t.status === "failed" || t.status === "created")
+  );
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">Transaction History</CardTitle>
+            <CardDescription>Recent payment transactions across all gateways</CardDescription>
+          </div>
+          <div className="flex gap-1">
+            {(["all", "paid", "failed"] as const).map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(f)}
+                className="text-xs capitalize"
+              >
+                {f === "paid" ? "Success" : f === "failed" ? "Failed" : "All"}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">No transactions found.</p>
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Payment Gateway</TableHead>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Date / Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Failed Reason</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-sm">{t.gateway}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">{t.customer_name}</TableCell>
+                    <TableCell className="text-sm font-mono">
+                      {t.currency === "INR" ? "₹" : t.currency} {Number(t.amount).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}{" "}
+                      {new Date(t.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={t.status === "paid" ? "default" : "destructive"} className={`text-[10px] ${t.status === "paid" ? "bg-success/15 text-success border-success/30" : ""}`}>
+                        {t.status === "paid" ? (
+                          <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Success</span>
+                        ) : (
+                          <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> {t.status === "created" ? "Incomplete" : "Failed"}</span>
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                      {t.status !== "paid" ? (
+                        <span className="flex items-center gap-1 text-destructive/80">
+                          <AlertTriangle className="h-3 w-3 shrink-0" />
+                          {t.failed_reason}
+                        </span>
+                      ) : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 /* ───────── Payment Tab ───────── */
 const PaymentTab = () => {
   const [loading, setLoading] = useState(true);
