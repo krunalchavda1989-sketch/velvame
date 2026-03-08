@@ -12,12 +12,15 @@ import { toast } from "sonner";
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<any>(null);
+  const [recommended, setRecommended] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
+      setLoading(true);
+      setQty(1);
       const { data, error } = await supabase
         .from("products")
         .select("*")
@@ -28,8 +31,34 @@ const ProductDetail = () => {
       }
       setProduct(data);
       setLoading(false);
+
+      // Fetch recommended products (same category, exclude current)
+      if (data) {
+        const { data: rec } = await supabase
+          .from("products")
+          .select("*")
+          .eq("active", true)
+          .eq("category", data.category)
+          .neq("id", id)
+          .limit(4);
+        
+        let items = rec || [];
+        // If not enough from same category, fill with other products
+        if (items.length < 4) {
+          const excludeIds = [id, ...items.map((p: any) => p.id)];
+          const { data: more } = await supabase
+            .from("products")
+            .select("*")
+            .eq("active", true)
+            .not("id", "in", `(${excludeIds.join(",")})`)
+            .limit(4 - items.length);
+          items = [...items, ...(more || [])];
+        }
+        setRecommended(items);
+      }
     };
     fetchProduct();
+    window.scrollTo(0, 0);
   }, [id]);
 
   const savings = product ? product.retail_price - product.distributor_price : 0;
@@ -66,132 +95,180 @@ const ProductDetail = () => {
             </Link>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-10"
-          >
-            {/* Image */}
-            <div className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center min-h-[320px] lg:min-h-[450px]">
-              {isImageUrl(product.image_url) ? (
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-contain max-h-[450px]"
-                />
-              ) : (
-                <span className="text-8xl">{product.image_url || "📦"}</span>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="outline" className="text-muted-foreground border-border">
-                  {product.category}
-                </Badge>
-                {product.stock > 0 ? (
-                  <Badge className="bg-success/10 text-success border-success/20">In Stock</Badge>
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-10"
+            >
+              {/* Image */}
+              <div className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center min-h-[320px] lg:min-h-[450px]">
+                {isImageUrl(product.image_url) ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-contain max-h-[450px]"
+                  />
                 ) : (
-                  <Badge variant="destructive">Out of Stock</Badge>
+                  <span className="text-8xl">{product.image_url || "📦"}</span>
                 )}
               </div>
 
-              <h1 className="text-3xl font-display font-bold text-foreground mb-4">
-                {product.name}
-              </h1>
-
-              {product.rating > 0 && (
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < Math.round(product.rating)
-                            ? "text-primary fill-primary"
-                            : "text-muted-foreground/30"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">{product.rating} / 5</span>
+              {/* Details */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline" className="text-muted-foreground border-border">
+                    {product.category}
+                  </Badge>
+                  {product.stock > 0 ? (
+                    <Badge className="bg-success/10 text-success border-success/20">In Stock</Badge>
+                  ) : (
+                    <Badge variant="destructive">Out of Stock</Badge>
+                  )}
                 </div>
-              )}
 
-              {/* Pricing */}
-              <div className="rounded-xl border border-border bg-card p-5 mb-6">
-                <div className="flex items-end gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Distributor Price</p>
-                    <span className="text-3xl font-display font-bold text-primary">
-                      ₹{product.distributor_price}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
-                    <span className="text-xl text-muted-foreground line-through">
-                      ₹{product.retail_price}
-                    </span>
-                  </div>
-                </div>
-                {savings > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-success" />
-                    <span className="text-sm font-medium text-success">
-                      You save ₹{savings} ({savingsPercent}% off)
-                    </span>
+                <h1 className="text-3xl font-display font-bold text-foreground mb-4">
+                  {product.name}
+                </h1>
+
+                {product.rating > 0 && (
+                  <div className="flex items-center gap-2 mb-5">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.round(product.rating)
+                              ? "text-primary fill-primary"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">{product.rating} / 5</span>
                   </div>
                 )}
-              </div>
 
-              {/* Description */}
-              {product.description && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {product.description}
-                  </p>
+                {/* Pricing */}
+                <div className="rounded-xl border border-border bg-card p-5 mb-6">
+                  <div className="flex items-end gap-4 mb-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Distributor Price</p>
+                      <span className="text-3xl font-display font-bold text-primary">
+                        ₹{product.distributor_price}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
+                      <span className="text-xl text-muted-foreground line-through">
+                        ₹{product.retail_price}
+                      </span>
+                    </div>
+                  </div>
+                  {savings > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-success" />
+                      <span className="text-sm font-medium text-success">
+                        You save ₹{savings} ({savingsPercent}% off)
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Quantity & Add to Cart */}
-              <div className="flex items-center gap-4 mt-auto pt-4">
-                <div className="flex items-center border border-border rounded-lg">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="p-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                {/* Description */}
+                {product.description && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {product.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Quantity & Add to Cart */}
+                <div className="flex items-center gap-4 mt-auto pt-4">
+                  <div className="flex items-center border border-border rounded-lg">
+                    <button
+                      onClick={() => setQty((q) => Math.max(1, q - 1))}
+                      className="p-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-10 text-center text-sm font-medium text-foreground">{qty}</span>
+                    <button
+                      onClick={() => setQty((q) => q + 1)}
+                      className="p-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Button
+                    className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
+                    disabled={product.stock <= 0}
+                    onClick={() => {
+                      toast.success(`Added ${qty}x ${product.name} to cart`);
+                    }}
                   >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-10 text-center text-sm font-medium text-foreground">{qty}</span>
-                  <button
-                    onClick={() => setQty((q) => q + 1)}
-                    className="p-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Add to Cart
+                  </Button>
                 </div>
-                <Button
-                  className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
-                  disabled={product.stock <= 0}
-                  onClick={() => {
-                    toast.success(`Added ${qty}x ${product.name} to cart`);
-                  }}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
-              </div>
 
-              {/* Stock info */}
-              <p className="text-xs text-muted-foreground mt-4">
-                {product.stock > 0
-                  ? `${product.stock} units available`
-                  : "Currently out of stock"}
-              </p>
-            </div>
-          </motion.div>
+                {/* Stock info */}
+                <p className="text-xs text-muted-foreground mt-4">
+                  {product.stock > 0
+                    ? `${product.stock} units available`
+                    : "Currently out of stock"}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Recommended Products */}
+            {recommended.length > 0 && (
+              <div className="mt-16">
+                <h2 className="text-2xl font-display font-bold text-foreground mb-6">
+                  Recommended Products
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {recommended.map((item, i) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Link
+                        to={`/product/${item.id}`}
+                        className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
+                      >
+                        <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
+                          {isImageUrl(item.image_url) ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                          ) : (
+                            item.image_url || "📦"
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="text-xs text-muted-foreground mb-1">{item.category}</div>
+                          <h3 className="font-display font-semibold text-foreground text-sm mb-2 line-clamp-1">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-display font-bold text-primary">
+                              ₹{item.distributor_price}
+                            </span>
+                            <span className="text-xs text-muted-foreground line-through">
+                              ₹{item.retail_price}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
       <Footer />
