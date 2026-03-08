@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,23 @@ const CartDrawer = () => {
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Wallet state
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
+
+  // Fetch wallet balance when cart opens or user changes
+  useEffect(() => {
+    if (!user || !cartOpen) return;
+    supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        setWalletBalance(data ? Number(data.balance) : 0);
+      });
+  }, [user, cartOpen]);
 
   const calculateDiscount = (coupon: { discount_type: string; discount_value: number; max_discount_amount: number }, subtotal: number) => {
     if (coupon.discount_type === "percentage") {
@@ -106,7 +124,10 @@ const CartDrawer = () => {
   };
 
   const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
-  const finalPrice = Math.max(0, totalPrice - discountAmount);
+  const afterCoupon = Math.max(0, totalPrice - discountAmount);
+  const walletDeduction = useWallet ? Math.min(walletBalance, afterCoupon) : 0;
+  const finalPrice = Math.max(0, afterCoupon - walletDeduction);
+  const isFullWalletPayment = useWallet && finalPrice === 0;
 
   const handleCheckout = async () => {
     if (!user) {
@@ -128,13 +149,14 @@ const CartDrawer = () => {
     setStep("processing");
 
     try {
+      // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user!.id,
-          total_amount: finalPrice,
+          total_amount: afterCoupon,
           shipping_address: address as any,
-          payment_method: "razorpay",
+          payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay",
           status: "pending",
         })
         .select()
@@ -152,11 +174,48 @@ const CartDrawer = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
-      // Increment coupon used_count
+      // Increment coupon usage
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: appliedCoupon.id });
       }
 
+      // Deduct wallet balance if used
+      if (useWallet && walletDeduction > 0) {
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("balance")
+          .eq("user_id", user!.id)
+          .single();
+
+        if (wallet) {
+          const newBalance = Math.max(0, Number(wallet.balance) - walletDeduction);
+          await supabase
+            .from("wallets")
+            .update({ balance: newBalance })
+            .eq("user_id", user!.id);
+          setWalletBalance(newBalance);
+        }
+      }
+
+      // If fully paid by wallet, confirm order directly
+      if (isFullWalletPayment) {
+        await supabase
+          .from("orders")
+          .update({ status: "confirmed", payment_method: "wallet" })
+          .eq("id", order.id);
+
+        toast.success("Order placed successfully using wallet balance!");
+        clearCart();
+        setAppliedCoupon(null);
+        setCouponCode("");
+        setUseWallet(false);
+        setStep("cart");
+        setCartOpen(false);
+        setProcessing(false);
+        return;
+      }
+
+      // Pay remaining via Razorpay
       const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
         body: {
           action: "create_order",
@@ -193,13 +252,14 @@ const CartDrawer = () => {
 
             await supabase
               .from("orders")
-              .update({ status: "confirmed", payment_method: "razorpay" })
+              .update({ status: "confirmed", payment_method: useWallet ? "wallet+razorpay" : "razorpay" })
               .eq("id", order.id);
 
             toast.success("Order placed successfully!");
             clearCart();
             setAppliedCoupon(null);
             setCouponCode("");
+            setUseWallet(false);
             setStep("cart");
             setCartOpen(false);
           } catch {
@@ -225,6 +285,8 @@ const CartDrawer = () => {
       setProcessing(false);
     }
   };
+
+  const formatCurrency = (val: number) => `₹${val.toFixed(2)}`;
 
   return (
     <Sheet open={cartOpen} onOpenChange={setCartOpen}>
@@ -280,7 +342,7 @@ const CartDrawer = () => {
                       <CheckCircle className="h-4 w-4 text-primary" />
                       <div>
                         <p className="text-sm font-mono font-bold text-primary">{appliedCoupon.code}</p>
-                        <p className="text-xs text-muted-foreground">-₹{discountAmount.toFixed(2)} off</p>
+                        <p className="text-xs text-muted-foreground">-{formatCurrency(discountAmount)} off</p>
                       </div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={removeCoupon}>
@@ -305,24 +367,49 @@ const CartDrawer = () => {
                   </div>
                 )}
 
+                {/* Wallet Section */}
+                {user && walletBalance > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/5 border border-accent/20">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-accent-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Use Wallet Balance</p>
+                        <p className="text-xs text-muted-foreground">
+                          Available: {formatCurrency(walletBalance)}
+                          {useWallet && walletDeduction > 0 && (
+                            <span className="text-primary ml-1">(-{formatCurrency(walletDeduction)})</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch checked={useWallet} onCheckedChange={setUseWallet} />
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">₹{totalPrice.toFixed(2)}</span>
+                    <span className="text-foreground">{formatCurrency(totalPrice)}</span>
                   </div>
                   {appliedCoupon && (
                     <div className="flex justify-between text-sm">
                       <span className="text-primary">Coupon Discount</span>
-                      <span className="text-primary font-medium">-₹{discountAmount.toFixed(2)}</span>
+                      <span className="text-primary font-medium">-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  )}
+                  {useWallet && walletDeduction > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-primary">Wallet</span>
+                      <span className="text-primary font-medium">-{formatCurrency(walletDeduction)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm font-bold">
                     <span className="text-foreground">Total</span>
-                    <span className="font-display text-foreground">₹{finalPrice.toFixed(2)}</span>
+                    <span className="font-display text-foreground">{formatCurrency(finalPrice)}</span>
                   </div>
                 </div>
                 <Button className="w-full" onClick={handleCheckout}>
-                  Proceed to Checkout
+                  {isFullWalletPayment ? "Place Order (Wallet)" : "Proceed to Checkout"}
                 </Button>
               </div>
             )}
@@ -368,24 +455,32 @@ const CartDrawer = () => {
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground">₹{totalPrice.toFixed(2)}</span>
+                  <span className="text-foreground">{formatCurrency(totalPrice)}</span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm">
                     <span className="text-primary">Discount ({appliedCoupon.code})</span>
-                    <span className="text-primary">-₹{discountAmount.toFixed(2)}</span>
+                    <span className="text-primary">-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
+                {useWallet && walletDeduction > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-primary">Wallet Balance</span>
+                    <span className="text-primary">-{formatCurrency(walletDeduction)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm font-bold">
-                  <span className="text-foreground">Total</span>
-                  <span className="font-display text-foreground">₹{finalPrice.toFixed(2)}</span>
+                  <span className="text-foreground">To Pay</span>
+                  <span className="font-display text-foreground">{formatCurrency(finalPrice)}</span>
                 </div>
               </div>
             </div>
             <div className="border-t border-border pt-4 space-y-2">
               <Button className="w-full" onClick={handlePayment} disabled={processing}>
                 {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Pay ₹{finalPrice.toFixed(2)} with Razorpay
+                {isFullWalletPayment
+                  ? "Confirm Order (Wallet)"
+                  : `Pay ${formatCurrency(finalPrice)} with Razorpay`}
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setStep("cart")}>
                 Back to Cart
