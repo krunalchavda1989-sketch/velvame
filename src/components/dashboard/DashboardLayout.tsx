@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
   BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard, MapPin,
@@ -116,14 +117,29 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 bg-card border-r border-border flex flex-col animate-in slide-in-from-left duration-200">
-            {sidebarContent(true)}
-          </aside>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="absolute left-0 top-0 h-full w-64 bg-card border-r border-border flex flex-col"
+            >
+              {sidebarContent(true)}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
       <aside
