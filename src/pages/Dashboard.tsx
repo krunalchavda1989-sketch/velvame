@@ -173,6 +173,8 @@ const Dashboard = () => {
           </p>
         </div>
 
+        <NotificationBanner />
+
         {/* Referral link */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
