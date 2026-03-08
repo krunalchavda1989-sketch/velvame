@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
   BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard, MapPin,
