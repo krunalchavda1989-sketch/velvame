@@ -94,14 +94,14 @@ const AdminOverview = () => {
       });
       setCommissionBreakdown(Object.entries(typeMap).map(([name, value]) => ({ name, value: Math.round(value) })));
 
-      // Order status distribution
+      // Order status distribution (show all for context)
       const statusMap: Record<string, number> = {};
-      orders.forEach((o) => {
+      allOrders.forEach((o) => {
         statusMap[o.status] = (statusMap[o.status] || 0) + 1;
       });
       setOrderStatusData(Object.entries(statusMap).map(([name, value]) => ({ name, value })));
 
-      // Recent orders
+      // Recent orders (successful only)
       setRecentOrders(
         orders
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
