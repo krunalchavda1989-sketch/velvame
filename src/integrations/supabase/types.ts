@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          bg_color: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          link_text: string | null
+          link_url: string | null
+          message: string
+          sort_order: number
+          starts_at: string
+          text_color: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          sort_order?: number
+          starts_at?: string
+          text_color?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          sort_order?: number
+          starts_at?: string
+          text_color?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       awards_rewards: {
         Row: {
           cash_amount: number | null
