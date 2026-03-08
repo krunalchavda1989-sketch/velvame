@@ -35,7 +35,12 @@ const menuItems: MenuItem[] = [
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
   { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
-  { icon: FileText, label: "Page Manager", href: "/admin/pages" },
+  {
+    icon: FileText, label: "Page Manager", href: "/admin/pages",
+    children: [
+      { icon: Layers, label: "Menu Management", href: "/admin/menus" },
+    ],
+  },
   { icon: Map, label: "Title Roadmap", href: "/admin/title-roadmap" },
   { icon: Layers, label: "Commission Levels", href: "/admin/commission-levels" },
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },

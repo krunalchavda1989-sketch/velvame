@@ -179,6 +179,7 @@ const App = () => (
             <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/smtp-settings" element={<AdminRoute><AdminSmtpSettings /></AdminRoute>} />
+            <Route path="/admin/menus" element={<AdminRoute><AdminMenus /></AdminRoute>} />
             <Route path="/admin/transactions" element={<AdminRoute><AdminTransactions /></AdminRoute>} />
             <Route path="/admin/manual-order" element={<AdminRoute><AdminManualOrder /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
