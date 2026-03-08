@@ -85,7 +85,7 @@ const RazorpaySettings = () => {
         amount: orderData.amount,
         currency: orderData.currency,
         name: "NexaMLM",
-        description: "Lifetime Subscription - ₹2,800",
+        description: `Lifetime Subscription - ₹${SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")}`,
         order_id: orderData.order_id,
         prefill: {
           name: profile?.full_name || "",
