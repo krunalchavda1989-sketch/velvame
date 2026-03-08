@@ -22,6 +22,20 @@ const Navbar = () => {
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems, cartOpen, setCartOpen } = useCart();
   const brand = useBrand();
+  const [navLinks, setNavLinks] = useState(fallbackLinks);
+
+  useEffect(() => {
+    supabase
+      .from("nav_menus")
+      .select("label, href, sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setNavLinks(data.map((d) => ({ label: d.label, href: d.href })));
+        }
+      });
+  }, []);
 
   const BrandLogo = () => (
     <>
