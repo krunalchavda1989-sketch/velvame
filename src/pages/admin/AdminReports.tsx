@@ -192,6 +192,12 @@ const IncomeReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["User", "Type", "Level", "Amount", "Status", "Date"]}
+        csvFilename="income_report"
+        csvRows={data.map((c) => [
+          c.user_name, c.commission_type, String(c.level),
+          `₹${Number(c.amount).toLocaleString()}`, c.status,
+          new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((c) => [
           c.user_name,
           c.commission_type,
