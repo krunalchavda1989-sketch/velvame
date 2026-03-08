@@ -69,8 +69,12 @@ const AdminUsers = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.map((u) => (
-                    <tr key={u.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="p-3 font-medium text-foreground">{u.full_name || "—"}</td>
+                    <tr key={u.id} className="hover:bg-secondary/30 transition-colors cursor-pointer">
+                      <td className="p-3 font-medium text-foreground">
+                        <Link to={`/admin/users/${u.id}`} className="text-primary hover:underline">
+                          {u.full_name || "—"}
+                        </Link>
+                      </td>
                       <td className="p-3 font-mono text-primary text-xs">{u.referral_code}</td>
                       <td className="p-3 text-muted-foreground">{u.title}</td>
                       <td className="p-3 text-muted-foreground">{u.phone || "—"}</td>
