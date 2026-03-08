@@ -119,7 +119,8 @@ const AdminBulkSms = () => {
   const handleCreateCampaign = async (sendNow: boolean) => {
     if (!campaignForm.name.trim()) { toast.error("Campaign name is required"); return; }
     if (!campaignForm.message.trim()) { toast.error("Message content is required"); return; }
-    if (campaignForm.message.length > 160) { toast.error("SMS message should be within 160 characters"); return; }
+    if (campaignForm.channel === "sms" && campaignForm.message.length > 160) { toast.error("SMS message should be within 160 characters"); return; }
+    if (campaignForm.channel === "whatsapp" && campaignForm.message.length > 1024) { toast.error("WhatsApp message should be within 1024 characters"); return; }
 
     setSavingCampaign(true);
     try {
