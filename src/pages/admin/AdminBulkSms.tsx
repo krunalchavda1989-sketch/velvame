@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import {
   MessageSquare, Plus, Send, Clock, Users, FileText, Trash2,
-  Loader2, Search, Filter, Eye, Copy, Calendar, CheckCircle,
-  XCircle, AlertTriangle, BarChart3, RefreshCw, Save, X, Smartphone
+  Loader2, Search, Filter, Eye, CheckCircle,
+  XCircle, AlertTriangle, Save, Smartphone
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
