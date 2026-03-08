@@ -11,10 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import KYCSection from "@/components/dashboard/KYCSection";
 
 const Settings = () => {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "profile";
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -110,119 +114,132 @@ const Settings = () => {
           <p className="text-muted-foreground text-sm mt-1">Manage your account preferences</p>
         </motion.div>
 
-        {/* Profile Section */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Profile Information</CardTitle>
-              </div>
-              <CardDescription>Update your personal details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 234 567 8900" />
-              </div>
-              <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending} className="gap-2">
-                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save Changes
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Tabs defaultValue={defaultTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> Profile</TabsTrigger>
+            <TabsTrigger value="kyc" className="gap-2"><Shield className="h-4 w-4" /> KYC</TabsTrigger>
+          </TabsList>
 
-        {/* Password Section */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Change Password</CardTitle>
-              </div>
-              <CardDescription>Update your account password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" />
-              </div>
-              <Button onClick={() => changePassword.mutate()} disabled={changePassword.isPending} variant="outline" className="gap-2">
-                {changePassword.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                Update Password
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Notifications Section */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Notification Preferences</CardTitle>
-              </div>
-              <CardDescription>Choose what updates you receive</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Email Notifications</p>
-                  <p className="text-xs text-muted-foreground">Receive general updates via email</p>
-                </div>
-                <Switch checked={emailNotifs} onCheckedChange={setEmailNotifs} />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Commission Alerts</p>
-                  <p className="text-xs text-muted-foreground">Get notified when you earn commissions</p>
-                </div>
-                <Switch checked={commissionNotifs} onCheckedChange={setCommissionNotifs} />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Team Updates</p>
-                  <p className="text-xs text-muted-foreground">Notifications about new team members</p>
-                </div>
-                <Switch checked={teamNotifs} onCheckedChange={setTeamNotifs} />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Razorpay / Payments */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Link to="/dashboard/settings/razorpay">
-            <Card className="hover:border-primary/30 transition-colors cursor-pointer">
-              <CardContent className="flex items-center justify-between py-5">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Payment & Subscription</p>
-                    <p className="text-xs text-muted-foreground">Manage Razorpay payments and subscription status</p>
+          <TabsContent value="profile" className="space-y-6">
+            {/* Profile Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Profile Information</CardTitle>
                   </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </Link>
-        </motion.div>
+                  <CardDescription>Update your personal details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 234 567 8900" />
+                  </div>
+                  <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending} className="gap-2">
+                    {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Save Changes
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Password Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Change Password</CardTitle>
+                  </div>
+                  <CardDescription>Update your account password</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" />
+                  </div>
+                  <Button onClick={() => changePassword.mutate()} disabled={changePassword.isPending} variant="outline" className="gap-2">
+                    {changePassword.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                    Update Password
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Notifications Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Notification Preferences</CardTitle>
+                  </div>
+                  <CardDescription>Choose what updates you receive</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Email Notifications</p>
+                      <p className="text-xs text-muted-foreground">Receive general updates via email</p>
+                    </div>
+                    <Switch checked={emailNotifs} onCheckedChange={setEmailNotifs} />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Commission Alerts</p>
+                      <p className="text-xs text-muted-foreground">Get notified when you earn commissions</p>
+                    </div>
+                    <Switch checked={commissionNotifs} onCheckedChange={setCommissionNotifs} />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Team Updates</p>
+                      <p className="text-xs text-muted-foreground">Notifications about new team members</p>
+                    </div>
+                    <Switch checked={teamNotifs} onCheckedChange={setTeamNotifs} />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Razorpay / Payments */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <Link to="/dashboard/settings/razorpay">
+                <Card className="hover:border-primary/30 transition-colors cursor-pointer">
+                  <CardContent className="flex items-center justify-between py-5">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Payment & Subscription</p>
+                        <p className="text-xs text-muted-foreground">Manage Razorpay payments and subscription status</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="kyc">
+            <KYCSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
