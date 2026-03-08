@@ -53,6 +53,45 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_details: {
+        Row: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          branch_name: string
+          created_at: string
+          id: string
+          ifsc_code: string
+          updated_at: string
+          upi_id: string
+          user_id: string
+        }
+        Insert: {
+          account_holder_name?: string
+          account_number?: string
+          bank_name?: string
+          branch_name?: string
+          created_at?: string
+          id?: string
+          ifsc_code?: string
+          updated_at?: string
+          upi_id?: string
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string
+          bank_name?: string
+          branch_name?: string
+          created_at?: string
+          id?: string
+          ifsc_code?: string
+          updated_at?: string
+          upi_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       binary_payouts: {
         Row: {
           created_at: string
