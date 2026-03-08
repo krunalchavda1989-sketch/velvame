@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
-  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings
+  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
+  Store, Map, Trophy, Megaphone, Ticket, Layers
 } from "lucide-react";
 
 const menuItems = [
@@ -12,7 +13,13 @@ const menuItems = [
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
-  { icon: Settings, label: "Settings", href: "/admin/settings" },
+  { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
+  { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
+  { icon: Map, label: "Title Roadmap", href: "/admin/title-roadmap" },
+  { icon: Layers, label: "Commission Levels", href: "/admin/commission-levels" },
+  { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
+  { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
+  { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
