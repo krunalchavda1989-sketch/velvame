@@ -1,19 +1,66 @@
-import { useState, useEffect, useCallback } from "react";
-import { startOfMonth } from "date-fns";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { startOfMonth, format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
 import { Users, DollarSign, Package, ShoppingCart, Truck, Loader2, Download, TrendingUp, TrendingDown } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import DateRangeFilter from "@/components/admin/reports/DateRangeFilter";
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--chart-2, 173 58% 39%))",
+  "hsl(var(--chart-3, 43 74% 66%))",
+  "hsl(var(--chart-4, 12 76% 61%))",
+  "hsl(var(--chart-5, 280 65% 60%))",
+];
+
+// ─── Helpers ───
+const toEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+const groupByDate = (items: any[], dateKey: string, from: Date, to: Date) => {
+  const days = differenceInDays(to, from);
+  let intervals: Date[];
+  let fmt: string;
+
+  if (days <= 14) {
+    intervals = eachDayOfInterval({ start: from, end: to });
+    fmt = "dd MMM";
+  } else if (days <= 90) {
+    intervals = eachWeekOfInterval({ start: from, end: to });
+    fmt = "dd MMM";
+  } else {
+    intervals = eachMonthOfInterval({ start: from, end: to });
+    fmt = "MMM yyyy";
+  }
+
+  const buckets = intervals.map((d) => ({ date: d, label: format(d, fmt), count: 0, amount: 0 }));
+
+  items.forEach((item) => {
+    const itemDate = new Date(item[dateKey]);
+    for (let i = buckets.length - 1; i >= 0; i--) {
+      if (itemDate >= buckets[i].date) {
+        buckets[i].count += 1;
+        buckets[i].amount += Number(item.amount || item.total_amount || 0);
+        break;
+      }
+    }
+  });
+
+  return buckets;
+};
+
+// ─── Main ───
 const AdminReports = () => {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(new Date());
-
   const handleRangeChange = (f: Date, t: Date) => { setFrom(f); setTo(t); };
 
   return (
@@ -82,7 +129,21 @@ const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: s
   </Card>
 );
 
-/* ─── User Report ─── */
+/* ─── Chart Card wrapper ─── */
+const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Card>
+    <CardHeader className="pb-2">
+      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="pt-0">
+      <div className="h-[260px] w-full">{children}</div>
+    </CardContent>
+  </Card>
+);
+
+/* ═══════════════════════════════════════
+   USER REPORT
+   ═══════════════════════════════════════ */
 const UserReport = ({ from, to }: ReportProps) => {
   const [data, setData] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
@@ -91,28 +152,26 @@ const UserReport = ({ from, to }: ReportProps) => {
   const fetch = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
-    const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59).toISOString();
-
+    const toStr = toEnd(to).toISOString();
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, referral_code, title, subscription_paid, created_at, direct_referral_count")
-      .gte("created_at", fromStr)
-      .lte("created_at", toStr)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+      .gte("created_at", fromStr).lte("created_at", toStr)
+      .order("created_at", { ascending: false }).limit(200);
     if (profiles) {
       setData(profiles);
-      setStats({
-        total: profiles.length,
-        active: profiles.filter((p) => p.subscription_paid).length,
-        inactive: profiles.filter((p) => !p.subscription_paid).length,
-      });
+      setStats({ total: profiles.length, active: profiles.filter((p) => p.subscription_paid).length, inactive: profiles.filter((p) => !p.subscription_paid).length });
     }
     setLoading(false);
   }, [from, to]);
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  const trendData = useMemo(() => groupByDate(data, "created_at", from, to), [data, from, to]);
+  const pieData = useMemo(() => [
+    { name: "Active", value: stats.active },
+    { name: "Inactive", value: stats.inactive },
+  ].filter((d) => d.value > 0), [stats]);
 
   if (loading) return <LoadingState />;
 
@@ -123,19 +182,38 @@ const UserReport = ({ from, to }: ReportProps) => {
         <StatCard label="Active (Subscribed)" value={stats.active} icon={Users} trend="up" />
         <StatCard label="Inactive" value={stats.inactive} icon={Users} trend="down" />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="New User Registrations">
+          <ResponsiveContainer>
+            <AreaChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Area type="monotone" dataKey="count" name="Users" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="User Status Distribution">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
       <ReportTable
         columns={["Name", "Referral Code", "Title", "Status", "Referrals", "Joined"]}
         csvFilename="user_report"
-        csvRows={data.map((p) => [
-          p.full_name || "—", p.referral_code, p.title,
-          p.subscription_paid ? "Active" : "Inactive",
-          String(p.direct_referral_count),
-          new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-        ])}
+        csvRows={data.map((p) => [p.full_name || "—", p.referral_code, p.title, p.subscription_paid ? "Active" : "Inactive", String(p.direct_referral_count), new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })])}
         rows={data.map((p) => [
-          p.full_name || "—",
-          p.referral_code,
-          p.title,
+          p.full_name || "—", p.referral_code, p.title,
           p.subscription_paid ? <Badge className="bg-success/15 text-success border-success/30 text-[10px]">Active</Badge> : <Badge variant="secondary" className="text-[10px]">Inactive</Badge>,
           String(p.direct_referral_count),
           new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
@@ -145,7 +223,9 @@ const UserReport = ({ from, to }: ReportProps) => {
   );
 };
 
-/* ─── Income Report ─── */
+/* ═══════════════════════════════════════
+   INCOME REPORT
+   ═══════════════════════════════════════ */
 const IncomeReport = ({ from, to }: ReportProps) => {
   const [data, setData] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalCommissions: 0, totalWithdrawals: 0, pending: 0 });
@@ -154,21 +234,16 @@ const IncomeReport = ({ from, to }: ReportProps) => {
   const fetch = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
-    const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59).toISOString();
-
+    const toStr = toEnd(to).toISOString();
     const { data: commissions } = await supabase
       .from("commissions")
       .select("id, amount, commission_type, level, status, created_at, beneficiary_id")
-      .gte("created_at", fromStr)
-      .lte("created_at", toStr)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+      .gte("created_at", fromStr).lte("created_at", toStr)
+      .order("created_at", { ascending: false }).limit(200);
     if (commissions) {
       const userIds = [...new Set(commissions.map((c) => c.beneficiary_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const nameMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
-
       setData(commissions.map((c) => ({ ...c, user_name: nameMap.get(c.beneficiary_id) || "Unknown" })));
       setStats({
         totalCommissions: commissions.reduce((s, c) => s + Number(c.amount), 0),
@@ -181,6 +256,13 @@ const IncomeReport = ({ from, to }: ReportProps) => {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  const trendData = useMemo(() => groupByDate(data, "created_at", from, to), [data, from, to]);
+  const typeData = useMemo(() => {
+    const map = new Map<string, number>();
+    data.forEach((c) => map.set(c.commission_type, (map.get(c.commission_type) || 0) + Number(c.amount)));
+    return Array.from(map, ([name, value]) => ({ name, value }));
+  }, [data]);
+
   if (loading) return <LoadingState />;
 
   return (
@@ -190,19 +272,38 @@ const IncomeReport = ({ from, to }: ReportProps) => {
         <StatCard label="Paid Out" value={`₹${stats.totalWithdrawals.toLocaleString()}`} icon={DollarSign} trend="up" />
         <StatCard label="Pending" value={`₹${stats.pending.toLocaleString()}`} icon={DollarSign} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Commission Earnings Over Time">
+          <ResponsiveContainer>
+            <AreaChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
+              <Area type="monotone" dataKey="amount" name="Amount" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Commission by Type">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {typeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
       <ReportTable
         columns={["User", "Type", "Level", "Amount", "Status", "Date"]}
         csvFilename="income_report"
-        csvRows={data.map((c) => [
-          c.user_name, c.commission_type, String(c.level),
-          `₹${Number(c.amount).toLocaleString()}`, c.status,
-          new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-        ])}
+        csvRows={data.map((c) => [c.user_name, c.commission_type, String(c.level), `₹${Number(c.amount).toLocaleString()}`, c.status, new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })])}
         rows={data.map((c) => [
-          c.user_name,
-          c.commission_type,
-          String(c.level),
-          `₹${Number(c.amount).toLocaleString()}`,
+          c.user_name, c.commission_type, String(c.level), `₹${Number(c.amount).toLocaleString()}`,
           c.status === "paid" ? <Badge className="bg-success/15 text-success border-success/30 text-[10px]">Paid</Badge> : <Badge variant="outline" className="text-[10px]">{c.status}</Badge>,
           new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         ])}
@@ -211,7 +312,9 @@ const IncomeReport = ({ from, to }: ReportProps) => {
   );
 };
 
-/* ─── Product Report ─── */
+/* ═══════════════════════════════════════
+   PRODUCT REPORT
+   ═══════════════════════════════════════ */
 const ProductReport = ({ from, to }: ReportProps) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,39 +325,40 @@ const ProductReport = ({ from, to }: ReportProps) => {
       .from("products")
       .select("id, name, category, retail_price, distributor_price, stock, active, created_at")
       .order("created_at", { ascending: false });
-
-    // Get order items in range to calculate sales per product
     const fromStr = from.toISOString();
-    const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59).toISOString();
-
+    const toStr = toEnd(to).toISOString();
     const { data: orderItems } = await supabase
       .from("order_items")
       .select("product_id, quantity, price, created_at")
-      .gte("created_at", fromStr)
-      .lte("created_at", toStr);
-
+      .gte("created_at", fromStr).lte("created_at", toStr);
     const salesMap = new Map<string, { qty: number; revenue: number }>();
     orderItems?.forEach((item) => {
       const prev = salesMap.get(item.product_id) || { qty: 0, revenue: 0 };
       salesMap.set(item.product_id, { qty: prev.qty + item.quantity, revenue: prev.revenue + Number(item.price) * item.quantity });
     });
-
     if (products) {
-      setData(products.map((p) => ({
-        ...p,
-        sold: salesMap.get(p.id)?.qty || 0,
-        revenue: salesMap.get(p.id)?.revenue || 0,
-      })));
+      setData(products.map((p) => ({ ...p, sold: salesMap.get(p.id)?.qty || 0, revenue: salesMap.get(p.id)?.revenue || 0 })));
     }
     setLoading(false);
   }, [from, to]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  if (loading) return <LoadingState />;
-
   const totalRevenue = data.reduce((s, p) => s + p.revenue, 0);
   const totalSold = data.reduce((s, p) => s + p.sold, 0);
+
+  const topProducts = useMemo(() =>
+    [...data].sort((a, b) => b.sold - a.sold).slice(0, 8).map((p) => ({ name: p.name.length > 14 ? p.name.slice(0, 14) + "…" : p.name, sold: p.sold, revenue: p.revenue })),
+    [data]
+  );
+
+  const categoryData = useMemo(() => {
+    const map = new Map<string, number>();
+    data.forEach((p) => map.set(p.category, (map.get(p.category) || 0) + p.revenue));
+    return Array.from(map, ([name, value]) => ({ name, value }));
+  }, [data]);
+
+  if (loading) return <LoadingState />;
 
   return (
     <div className="space-y-4">
@@ -263,17 +367,38 @@ const ProductReport = ({ from, to }: ReportProps) => {
         <StatCard label="Units Sold (Period)" value={totalSold} icon={ShoppingCart} trend="up" />
         <StatCard label="Revenue (Period)" value={`₹${totalRevenue.toLocaleString()}`} icon={DollarSign} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Top Selling Products">
+          <ResponsiveContainer>
+            <BarChart data={topProducts} layout="vertical" margin={{ left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Bar dataKey="sold" name="Units Sold" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Revenue by Category">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
       <ReportTable
         columns={["Product", "Category", "Retail Price", "Stock", "Units Sold", "Revenue", "Status"]}
         csvFilename="product_report"
-        csvRows={data.map((p) => [
-          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
-          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
-          p.active ? "Active" : "Inactive",
-        ])}
+        csvRows={data.map((p) => [p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`, String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`, p.active ? "Active" : "Inactive"])}
         rows={data.map((p) => [
-          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
-          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
+          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`, String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
           p.active ? <Badge className="bg-success/15 text-success border-success/30 text-[10px]">Active</Badge> : <Badge variant="secondary" className="text-[10px]">Inactive</Badge>,
         ])}
       />
@@ -281,7 +406,9 @@ const ProductReport = ({ from, to }: ReportProps) => {
   );
 };
 
-/* ─── Sales Report ─── */
+/* ═══════════════════════════════════════
+   SALES REPORT
+   ═══════════════════════════════════════ */
 const SalesReport = ({ from, to }: ReportProps) => {
   const [data, setData] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, revenue: 0, confirmed: 0, pending: 0 });
@@ -290,21 +417,16 @@ const SalesReport = ({ from, to }: ReportProps) => {
   const fetch = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
-    const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59).toISOString();
-
+    const toStr = toEnd(to).toISOString();
     const { data: orders } = await supabase
       .from("orders")
       .select("id, user_id, total_amount, status, payment_method, shipping_method, created_at")
-      .gte("created_at", fromStr)
-      .lte("created_at", toStr)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+      .gte("created_at", fromStr).lte("created_at", toStr)
+      .order("created_at", { ascending: false }).limit(200);
     if (orders) {
       const userIds = [...new Set(orders.map((o) => o.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const nameMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
-
       setData(orders.map((o) => ({ ...o, customer: nameMap.get(o.user_id) || "Unknown" })));
       setStats({
         total: orders.length,
@@ -318,6 +440,13 @@ const SalesReport = ({ from, to }: ReportProps) => {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  const trendData = useMemo(() => groupByDate(data, "created_at", from, to), [data, from, to]);
+  const statusData = useMemo(() => {
+    const map = new Map<string, number>();
+    data.forEach((o) => map.set(o.status, (map.get(o.status) || 0) + 1));
+    return Array.from(map, ([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
+  }, [data]);
+
   if (loading) return <LoadingState />;
 
   return (
@@ -328,14 +457,36 @@ const SalesReport = ({ from, to }: ReportProps) => {
         <StatCard label="Confirmed" value={stats.confirmed} icon={ShoppingCart} />
         <StatCard label="Pending" value={stats.pending} icon={ShoppingCart} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Sales Revenue Trend">
+          <ResponsiveContainer>
+            <AreaChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} />
+              <Area type="monotone" dataKey="amount" name="Revenue" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Order Status Distribution">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {statusData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
       <ReportTable
         columns={["Order ID", "Customer", "Amount", "Status", "Payment", "Date"]}
         csvFilename="sales_report"
-        csvRows={data.map((o) => [
-          o.id.slice(0, 8), o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
-          o.status, o.payment_method || "—",
-          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-        ])}
+        csvRows={data.map((o) => [o.id.slice(0, 8), o.customer, `₹${Number(o.total_amount).toLocaleString()}`, o.status, o.payment_method || "—", new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })])}
         rows={data.map((o) => [
           o.id.slice(0, 8) + "...", o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
           <StatusBadge status={o.status} key={o.id} />, o.payment_method || "—",
@@ -346,7 +497,9 @@ const SalesReport = ({ from, to }: ReportProps) => {
   );
 };
 
-/* ─── Shipping Report ─── */
+/* ═══════════════════════════════════════
+   SHIPPING REPORT
+   ═══════════════════════════════════════ */
 const ShippingReport = ({ from, to }: ReportProps) => {
   const [data, setData] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, shipped: 0, delivered: 0, pending: 0 });
@@ -355,29 +508,19 @@ const ShippingReport = ({ from, to }: ReportProps) => {
   const fetch = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
-    const toStr = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59).toISOString();
-
+    const toStr = toEnd(to).toISOString();
     const { data: orders } = await supabase
       .from("orders")
       .select("id, user_id, total_amount, status, shipping_method, shipping_address, created_at")
-      .gte("created_at", fromStr)
-      .lte("created_at", toStr)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+      .gte("created_at", fromStr).lte("created_at", toStr)
+      .order("created_at", { ascending: false }).limit(200);
     if (orders) {
       const userIds = [...new Set(orders.map((o) => o.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const nameMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
-
       setData(orders.map((o) => {
         const addr = o.shipping_address as any;
-        return {
-          ...o,
-          customer: nameMap.get(o.user_id) || "Unknown",
-          city: addr?.city || "—",
-          state: addr?.state || "—",
-        };
+        return { ...o, customer: nameMap.get(o.user_id) || "Unknown", city: addr?.city || "—", state: addr?.state || "—" };
       }));
       setStats({
         total: orders.length,
@@ -391,6 +534,18 @@ const ShippingReport = ({ from, to }: ReportProps) => {
 
   useEffect(() => { fetch(); }, [fetch]);
 
+  const statusData = useMemo(() => {
+    const map = new Map<string, number>();
+    data.forEach((o) => map.set(o.status, (map.get(o.status) || 0) + 1));
+    return Array.from(map, ([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
+  }, [data]);
+
+  const methodData = useMemo(() => {
+    const map = new Map<string, number>();
+    data.forEach((o) => map.set(o.shipping_method || "Free", (map.get(o.shipping_method || "Free") || 0) + 1));
+    return Array.from(map, ([name, value]) => ({ name, value }));
+  }, [data]);
+
   if (loading) return <LoadingState />;
 
   return (
@@ -401,17 +556,38 @@ const ShippingReport = ({ from, to }: ReportProps) => {
         <StatCard label="Delivered" value={stats.delivered} icon={Truck} />
         <StatCard label="Pending Shipment" value={stats.pending} icon={Truck} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChartCard title="Shipment Status Breakdown">
+          <ResponsiveContainer>
+            <BarChart data={statusData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Bar dataKey="value" name="Orders" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Shipping Method Distribution">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={methodData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {methodData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
       <ReportTable
         columns={["Order ID", "Customer", "City", "State", "Shipping Method", "Status", "Date"]}
         csvFilename="shipping_report"
-        csvRows={data.map((o) => [
-          o.id.slice(0, 8), o.customer, o.city, o.state,
-          o.shipping_method || "Free", o.status,
-          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-        ])}
+        csvRows={data.map((o) => [o.id.slice(0, 8), o.customer, o.city, o.state, o.shipping_method || "Free", o.status, new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })])}
         rows={data.map((o) => [
-          o.id.slice(0, 8) + "...", o.customer, o.city, o.state,
-          o.shipping_method || "Free",
+          o.id.slice(0, 8) + "...", o.customer, o.city, o.state, o.shipping_method || "Free",
           <StatusBadge status={o.status} key={o.id} />,
           new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         ])}
@@ -446,12 +622,7 @@ const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[
     <Card>
       {csvFilename && csvRows && (
         <div className="flex justify-end px-4 pt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={() => exportCsv(columns, csvRows, csvFilename)}
-          >
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => exportCsv(columns, csvRows, csvFilename)}>
             <Download className="h-3.5 w-3.5 mr-1" /> Export CSV
           </Button>
         </div>
