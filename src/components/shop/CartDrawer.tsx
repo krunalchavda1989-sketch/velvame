@@ -76,9 +76,11 @@ const CartDrawer = () => {
       .maybeSingle()
       .then(({ data }) => {
         const methods: ShippingMethod[] = [];
+        let freeShipMinAmt = 0;
         if (data?.content) {
           const c = data.content as any;
           if (c.free_shipping?.enabled) {
+            freeShipMinAmt = Number(c.free_shipping.min_amount) || 0;
             methods.push({ key: "free_shipping", label: c.free_shipping.label || "Free Shipping", cost: 0 });
           }
           if (c.flat_rate?.enabled) {
@@ -89,6 +91,7 @@ const CartDrawer = () => {
         if (methods.length === 0) {
           methods.push({ key: "free_shipping", label: "Free Shipping", cost: 0 });
         }
+        setFreeShippingMinAmount(freeShipMinAmt);
         setShippingMethods(methods);
         setSelectedShipping(methods[0]?.key || "");
       });
@@ -133,30 +136,31 @@ const CartDrawer = () => {
   };
 
   // Check if free shipping min amount is met
-  const getShippingMethodConfig = () => shippingMethods.find((m) => m.key === selectedShipping);
+  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
+
+  const freeShippingEligible = freeShippingMinAmount <= 0 || totalPrice >= freeShippingMinAmount;
+
+  // Filter shipping methods: hide free shipping if not eligible
+  const availableShippingMethods = shippingMethods.filter((m) => {
+    if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) {
+      return false;
+    }
+    return true;
+  });
+
+  // Auto-select first available method if current selection is hidden
+  useEffect(() => {
+    if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
+      setSelectedShipping(availableShippingMethods[0].key);
+    }
+  }, [availableShippingMethods, selectedShipping]);
+
+  const getShippingMethodConfig = () => availableShippingMethods.find((m) => m.key === selectedShipping);
   const activeShipping = getShippingMethodConfig();
   const shippingCost = activeShipping?.cost || 0;
 
-  // Check free shipping minimum amount from admin settings
-  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
-
-  useEffect(() => {
-    if (!cartOpen) return;
-    supabase
-      .from("pages_content")
-      .select("content")
-      .eq("page_slug", "shipping-methods")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.content) {
-          const c = data.content as any;
-          setFreeShippingMinAmount(Number(c.free_shipping?.min_amount) || 0);
-        }
-      });
-  }, [cartOpen]);
-
-  const isFreeShippingEligible = selectedShipping === "free_shipping" && freeShippingMinAmount > 0 && totalPrice < freeShippingMinAmount;
-  const effectiveShippingCost = isFreeShippingEligible ? 0 : shippingCost; // still 0 for free shipping; just show warning
+  // How much more to qualify for free shipping
+  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - totalPrice : 0;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -229,10 +233,6 @@ const CartDrawer = () => {
       return;
     }
     if (cartProducts.length === 0) return;
-    if (isFreeShippingEligible) {
-      toast.error(`Add ${fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping`);
-      return;
-    }
     setStep("address");
   };
 
@@ -486,27 +486,33 @@ const CartDrawer = () => {
                 )}
 
                 {/* Shipping Method Selection */}
-                {shippingMethods.length > 1 && (
+                {availableShippingMethods.length > 0 && (
                   <div className="p-3 rounded-lg border border-border space-y-2">
                     <p className="text-sm font-medium text-foreground flex items-center gap-2">
                       <Truck className="h-4 w-4 text-muted-foreground" /> Shipping Method
                     </p>
-                    <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
-                      {shippingMethods.map((m) => (
-                        <div key={m.key} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
-                            <Label htmlFor={`ship-${m.key}`} className="text-sm cursor-pointer">{m.label}</Label>
+                    {availableShippingMethods.length > 1 ? (
+                      <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
+                        {availableShippingMethods.map((m) => (
+                          <div key={m.key} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
+                              <Label htmlFor={`ship-${m.key}`} className="text-sm cursor-pointer">{m.label}</Label>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {m.cost === 0 ? "Free" : `+${fc(m.cost)}`}
+                            </span>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {m.cost === 0 ? "Free" : `+${fc(m.cost)}`}
-                          </span>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    {isFreeShippingEligible && (
-                      <p className="text-xs text-destructive">
-                        Add {fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping
+                        ))}
+                      </RadioGroup>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {availableShippingMethods[0].label} — {availableShippingMethods[0].cost === 0 ? "Free" : `+${fc(availableShippingMethods[0].cost)}`}
+                      </p>
+                    )}
+                    {freeShippingDelta > 0 && (
+                      <p className="text-xs text-primary">
+                        Add {fc(freeShippingDelta)} more to unlock free shipping!
                       </p>
                     )}
                   </div>
