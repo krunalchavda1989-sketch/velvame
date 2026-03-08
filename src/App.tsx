@@ -14,6 +14,8 @@ import Shop from "./pages/Shop";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import MyTeam from "./pages/dashboard/MyTeam";
 import GenealogyTree from "./pages/dashboard/GenealogyTree";
 import Wallet from "./pages/dashboard/Wallet";
@@ -66,6 +68,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
