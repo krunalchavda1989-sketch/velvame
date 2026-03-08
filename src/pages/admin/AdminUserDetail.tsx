@@ -19,9 +19,10 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye
 } from "lucide-react";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
