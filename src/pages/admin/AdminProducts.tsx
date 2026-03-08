@@ -43,6 +43,18 @@ const AdminProducts = () => {
   const [uploadingAdditional, setUploadingAdditional] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setAdditionalImages((prev) => {
+        const oldIndex = prev.findIndex((_, i) => `img-${i}` === active.id);
+        const newIndex = prev.findIndex((_, i) => `img-${i}` === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  };
 
   const fetchProducts = async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
