@@ -671,6 +671,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_coupon_usage: {
+        Args: { _coupon_id: string }
+        Returns: undefined
+      }
       is_direct_referral: {
         Args: { _profile_id: string; _viewer_user_id: string }
         Returns: boolean

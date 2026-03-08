@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,15 @@ declare global {
   }
 }
 
+interface AppliedCoupon {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  max_discount_amount: number;
+  discountAmount: number;
+}
+
 const CartDrawer = () => {
   const { user } = useAuth();
   const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart } = useCart();
@@ -24,14 +33,80 @@ const CartDrawer = () => {
   const [step, setStep] = useState<"cart" | "address" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
   const [address, setAddress] = useState({
-    name: "",
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    pincode: "",
-    phone: "",
+    name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  const calculateDiscount = (coupon: { discount_type: string; discount_value: number; max_discount_amount: number }, subtotal: number) => {
+    if (coupon.discount_type === "percentage") {
+      const raw = (subtotal * coupon.discount_value) / 100;
+      return coupon.max_discount_amount > 0 ? Math.min(raw, coupon.max_discount_amount) : raw;
+    }
+    return coupon.discount_value;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", couponCode.toUpperCase().trim())
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error || !data) {
+        toast.error("Invalid coupon code");
+        setCouponLoading(false);
+        return;
+      }
+
+      const coupon = data as any;
+      const now = new Date();
+      if (new Date(coupon.start_date) > now || new Date(coupon.end_date) < now) {
+        toast.error("Coupon has expired");
+        setCouponLoading(false);
+        return;
+      }
+      if (coupon.max_uses > 0 && coupon.used_count >= coupon.max_uses) {
+        toast.error("Coupon usage limit reached");
+        setCouponLoading(false);
+        return;
+      }
+      if (coupon.min_order_amount > 0 && totalPrice < coupon.min_order_amount) {
+        toast.error(`Minimum order ₹${coupon.min_order_amount} required`);
+        setCouponLoading(false);
+        return;
+      }
+
+      const discountAmount = calculateDiscount(coupon, totalPrice);
+      setAppliedCoupon({
+        id: coupon.id,
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        discount_value: coupon.discount_value,
+        max_discount_amount: coupon.max_discount_amount,
+        discountAmount,
+      });
+      toast.success(`Coupon applied! You save ₹${discountAmount.toFixed(2)}`);
+    } catch {
+      toast.error("Failed to apply coupon");
+    }
+    setCouponLoading(false);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
+
+  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
+  const finalPrice = Math.max(0, totalPrice - discountAmount);
 
   const handleCheckout = async () => {
     if (!user) {
@@ -57,7 +132,7 @@ const CartDrawer = () => {
         .from("orders")
         .insert({
           user_id: user!.id,
-          total_amount: totalPrice,
+          total_amount: finalPrice,
           shipping_address: address as any,
           payment_method: "razorpay",
           status: "pending",
@@ -77,10 +152,15 @@ const CartDrawer = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
+      // Increment coupon used_count
+      if (appliedCoupon) {
+        await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: appliedCoupon.id });
+      }
+
       const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
         body: {
           action: "create_order",
-          amount: totalPrice,
+          amount: finalPrice,
           purpose: "shop",
           order_ref_id: order.id,
         },
@@ -118,6 +198,8 @@ const CartDrawer = () => {
 
             toast.success("Order placed successfully!");
             clearCart();
+            setAppliedCoupon(null);
+            setCouponCode("");
             setStep("cart");
             setCartOpen(false);
           } catch {
@@ -191,9 +273,53 @@ const CartDrawer = () => {
             </div>
             {cartProducts.length > 0 && (
               <div className="border-t border-border pt-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-display font-bold text-foreground">₹{totalPrice.toFixed(2)}</span>
+                {/* Coupon Section */}
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-primary" />
+                      <div>
+                        <p className="text-sm font-mono font-bold text-primary">{appliedCoupon.code}</p>
+                        <p className="text-xs text-muted-foreground">-₹{discountAmount.toFixed(2)} off</p>
+                      </div>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={removeCoupon}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Coupon code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="pl-9 font-mono text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      />
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()}>
+                      {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-foreground">₹{totalPrice.toFixed(2)}</span>
+                  </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-primary">Coupon Discount</span>
+                      <span className="text-primary font-medium">-₹{discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm font-bold">
+                    <span className="text-foreground">Total</span>
+                    <span className="font-display text-foreground">₹{finalPrice.toFixed(2)}</span>
+                  </div>
                 </div>
                 <Button className="w-full" onClick={handleCheckout}>
                   Proceed to Checkout
@@ -239,15 +365,27 @@ const CartDrawer = () => {
                 </div>
               </div>
               <Separator />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-display font-bold text-foreground">₹{totalPrice.toFixed(2)}</span>
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground">₹{totalPrice.toFixed(2)}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-primary">Discount ({appliedCoupon.code})</span>
+                    <span className="text-primary">-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-bold">
+                  <span className="text-foreground">Total</span>
+                  <span className="font-display text-foreground">₹{finalPrice.toFixed(2)}</span>
+                </div>
               </div>
             </div>
             <div className="border-t border-border pt-4 space-y-2">
               <Button className="w-full" onClick={handlePayment} disabled={processing}>
                 {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Pay ₹{totalPrice.toFixed(2)} with Razorpay
+                Pay ₹{finalPrice.toFixed(2)} with Razorpay
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setStep("cart")}>
                 Back to Cart
