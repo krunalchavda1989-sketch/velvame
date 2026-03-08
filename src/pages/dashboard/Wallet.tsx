@@ -110,7 +110,7 @@ const WalletPage = () => {
   };
 
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+    `${currencySymbol}${val.toLocaleString("en-IN")}`;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
