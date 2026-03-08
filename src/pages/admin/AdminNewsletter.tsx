@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -27,6 +28,8 @@ const AdminNewsletter = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -39,6 +42,7 @@ const AdminNewsletter = () => {
     } else {
       setSubscribers((data as unknown as Subscriber[]) || []);
     }
+    setSelected(new Set());
     setLoading(false);
   };
 
@@ -70,6 +74,21 @@ const AdminNewsletter = () => {
     }
   };
 
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    const { error } = await supabase
+      .from("newsletter_subscribers")
+      .delete()
+      .in("id", ids);
+    if (error) {
+      toast.error("Failed to delete subscribers");
+    } else {
+      toast.success(`${ids.length} subscriber(s) deleted`);
+      fetchSubscribers();
+    }
+    setShowBulkDelete(false);
+  };
+
   const exportCSV = () => {
     const filtered = filteredSubscribers;
     if (filtered.length === 0) return toast.error("No subscribers to export");
@@ -96,6 +115,24 @@ const AdminNewsletter = () => {
 
   const activeCount = subscribers.filter((s) => s.is_active).length;
 
+  const allFilteredSelected = filteredSubscribers.length > 0 && filteredSubscribers.every((s) => selected.has(s.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filteredSubscribers.map((s) => s.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <AdminLayout>
       <div className="p-4 md:p-6 space-y-6">
@@ -111,6 +148,12 @@ const AdminNewsletter = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {selected.size > 0 && (
+              <Button variant="destructive" size="sm" onClick={() => setShowBulkDelete(true)}>
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                Delete ({selected.size})
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={fetchSubscribers} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -160,6 +203,13 @@ const AdminNewsletter = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allFilteredSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Subscribed</TableHead>
                 <TableHead>Status</TableHead>
@@ -169,19 +219,26 @@ const AdminNewsletter = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredSubscribers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                     No subscribers found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredSubscribers.map((sub) => (
-                  <TableRow key={sub.id}>
+                  <TableRow key={sub.id} className={selected.has(sub.id) ? "bg-primary/5" : ""}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(sub.id)}
+                        onCheckedChange={() => toggleSelect(sub.id)}
+                        aria-label={`Select ${sub.email}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{sub.email}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(sub.subscribed_at), "MMM dd, yyyy")}
@@ -212,7 +269,7 @@ const AdminNewsletter = () => {
           </Table>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Single Delete Confirmation */}
         <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -233,6 +290,27 @@ const AdminNewsletter = () => {
                 }}
               >
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation */}
+        <AlertDialog open={showBulkDelete} onOpenChange={setShowBulkDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {selected.size} Subscriber{selected.size > 1 ? "s" : ""}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <span className="font-semibold text-foreground">{selected.size}</span> selected subscriber{selected.size > 1 ? "s" : ""}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={bulkDelete}
+              >
+                Delete All
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
