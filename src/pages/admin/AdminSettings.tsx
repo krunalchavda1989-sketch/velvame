@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash, Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,12 @@ const SETTINGS_TABS = [
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState("payment");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleTabClick = (key: string) => {
+    setActiveTab(key);
+    setSidebarOpen(false);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -71,44 +77,70 @@ const AdminSettings = () => {
     }
   };
 
+  const SidebarContent = () => (
+    <>
+      <div className="mb-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">Settings</h2>
+      </div>
+      {SETTINGS_TABS.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.key;
+        return (
+          <button
+            key={tab.key}
+            onClick={() => handleTabClick(tab.key)}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+              isActive
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-4 w-4 flex-shrink-0" />
+            {tab.label}
+          </button>
+        );
+      })}
+    </>
+  );
+
   return (
     <AdminLayout>
-      <div className="flex min-h-[calc(100vh-64px)]">
-        {/* Sidebar */}
-        <aside className="w-56 flex-shrink-0 border-r border-border bg-card/50 p-4 space-y-1">
-          <div className="mb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">Settings</h2>
-          </div>
-          {SETTINGS_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                {tab.label}
-              </button>
-            );
-          })}
+      <div className="flex min-h-[calc(100vh-64px)] relative">
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Sidebar — desktop: always visible, mobile: slide-in */}
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 w-60 bg-card border-r border-border p-4 space-y-1 pt-16 transition-transform duration-200
+          lg:static lg:z-auto lg:w-56 lg:pt-4 lg:translate-x-0
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}>
+          {/* Mobile close button */}
+          <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-3 p-1 rounded-md text-muted-foreground hover:text-foreground lg:hidden">
+            <X className="h-5 w-5" />
+          </button>
+          <SidebarContent />
         </aside>
 
         {/* Content */}
-        <div className="flex-1 p-6 lg:p-8 max-w-4xl">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl">
           <div className="mb-6">
-            <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-              <Settings className="h-6 w-6 text-primary" />
-              {SETTINGS_TABS.find(t => t.key === activeTab)?.label || "Settings"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your {SETTINGS_TABS.find(t => t.key === activeTab)?.label.toLowerCase()} configuration
-            </p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-secondary lg:hidden">
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+                  <Settings className="h-6 w-6 text-primary" />
+                  {SETTINGS_TABS.find(t => t.key === activeTab)?.label || "Settings"}
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage your {SETTINGS_TABS.find(t => t.key === activeTab)?.label.toLowerCase()} configuration
+                </p>
+              </div>
+            </div>
           </div>
           {renderContent()}
         </div>
