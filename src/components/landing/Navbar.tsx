@@ -122,7 +122,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="sm" className="text-gray-700 hover:text-gray-900">
                     Login
                   </Button>
                 </Link>
