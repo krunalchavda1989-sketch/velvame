@@ -62,6 +62,7 @@ import Checkout from "./pages/Checkout";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminBulkSms from "./pages/admin/AdminBulkSms";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 
 const queryClient = new QueryClient();
 
