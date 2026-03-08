@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import { Users, DollarSign, Package, ShoppingCart, Truck, Loader2, Download, TrendingUp, TrendingDown } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
