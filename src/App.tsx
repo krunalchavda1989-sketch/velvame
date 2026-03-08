@@ -203,6 +203,7 @@ const App = () => (
             <Route path="/admin/menus" element={<AdminRoute><AdminMenus /></AdminRoute>} />
             <Route path="/admin/transactions" element={<AdminRoute><AdminTransactions /></AdminRoute>} />
             <Route path="/admin/manual-order" element={<AdminRoute><AdminManualOrder /></AdminRoute>} />
+            <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>
