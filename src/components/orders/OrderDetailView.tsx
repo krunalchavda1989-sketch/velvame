@@ -7,8 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft, Package, Truck, CreditCard, MapPin, Clock,
   CheckCircle2, XCircle, CircleDot, User, Hash,
-  Copy, ShoppingBag,
+  Copy, ShoppingBag, Printer,
 } from "lucide-react";
+import { useInvoicePrint } from "./InvoicePrint";
 import { toast } from "sonner";
 
 interface OrderDetailData {
@@ -149,6 +150,15 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const isCancelled = order.status === "cancelled";
   const shippingAddr = order.shipping_address || {};
 
+  const { handlePrint } = useInvoicePrint({
+    orderId,
+    order,
+    items,
+    payment,
+    customerName: profile?.full_name,
+    customerPhone: profile?.phone || undefined,
+  });
+
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
@@ -167,6 +177,10 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(order.created_at)}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2 flex-shrink-0">
+          <Printer className="h-4 w-4" />
+          Invoice
+        </Button>
       </div>
 
       {/* Status Timeline */}
