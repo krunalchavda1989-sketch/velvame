@@ -13,8 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DollarSign, TrendingUp, Clock, Download, Search, Users,
-  Layers, RefreshCw, ArrowUpDown, GitBranch, Repeat, BarChart3,
+  DollarSign, TrendingUp, Clock, Download, Search,
+  Layers, RefreshCw, GitBranch, Repeat, BarChart3,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
