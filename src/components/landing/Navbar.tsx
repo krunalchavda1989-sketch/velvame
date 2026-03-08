@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useBrand } from "@/contexts/BrandContext";
 import CartDrawer from "@/components/shop/CartDrawer";
 
 const navLinks = [
@@ -19,14 +20,25 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems, cartOpen, setCartOpen } = useCart();
+  const brand = useBrand();
+
+  const BrandLogo = () => (
+    <>
+      {brand.logo_url ? (
+        <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-8 object-contain rounded" />
+      ) : (
+        <Crown className="h-7 w-7 text-primary" />
+      )}
+      <span className="font-display text-xl font-bold text-gradient-gold">{brand.brand_name}</span>
+    </>
+  );
 
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 glass">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <Link to="/" className="flex items-center gap-2">
-            <Crown className="h-7 w-7 text-primary" />
-            <span className="font-display text-xl font-bold text-gradient-gold">NexaMLM</span>
+            <BrandLogo />
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
