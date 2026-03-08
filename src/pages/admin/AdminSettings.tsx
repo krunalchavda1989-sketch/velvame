@@ -43,80 +43,75 @@ const CURRENCIES = [
   { code: "LKR", symbol: "Rs", name: "Sri Lankan Rupee" },
 ];
 
+const SETTINGS_TABS = [
+  { key: "payment", label: "Payment", icon: Key },
+  { key: "localization", label: "Localization", icon: Globe },
+  { key: "smtp", label: "SMTP", icon: Mail },
+  { key: "shipping", label: "Shipping", icon: Truck },
+  { key: "pwa", label: "PWA", icon: MonitorSmartphone },
+  { key: "captcha", label: "reCAPTCHA", icon: ShieldCheck },
+  { key: "membership", label: "Membership", icon: DollarSign },
+  { key: "ordernumber", label: "Order Number", icon: Hash },
+];
+
 const AdminSettings = () => {
+  const [activeTab, setActiveTab] = useState("payment");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "payment": return <PaymentTab />;
+      case "localization": return <LocalizationTab />;
+      case "smtp": return <SmtpTab />;
+      case "shipping": return <ShippingTab />;
+      case "pwa": return <PWATab />;
+      case "captcha": return <CaptchaTab />;
+      case "membership": return <MembershipTab />;
+      case "ordernumber": return <OrderNumberTab />;
+      default: return <PaymentTab />;
+    }
+  };
+
   return (
     <AdminLayout>
-      <div className="p-6 max-w-4xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Settings className="h-6 w-6 text-primary" />
-            Settings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage payment, localization, and tax configuration
-          </p>
+      <div className="flex min-h-[calc(100vh-64px)]">
+        {/* Sidebar */}
+        <aside className="w-56 flex-shrink-0 border-r border-border bg-card/50 p-4 space-y-1">
+          <div className="mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">Settings</h2>
+          </div>
+          {SETTINGS_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </aside>
+
+        {/* Content */}
+        <div className="flex-1 p-6 lg:p-8 max-w-4xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+              <Settings className="h-6 w-6 text-primary" />
+              {SETTINGS_TABS.find(t => t.key === activeTab)?.label || "Settings"}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Manage your {SETTINGS_TABS.find(t => t.key === activeTab)?.label.toLowerCase()} configuration
+            </p>
+          </div>
+          {renderContent()}
         </div>
-
-        <Tabs defaultValue="payment" className="space-y-6">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="payment" className="gap-2">
-              <Key className="h-4 w-4" /> Payment
-            </TabsTrigger>
-            <TabsTrigger value="localization" className="gap-2">
-              <Globe className="h-4 w-4" /> Localization
-            </TabsTrigger>
-            <TabsTrigger value="smtp" className="gap-2">
-              <Mail className="h-4 w-4" /> SMTP
-            </TabsTrigger>
-            <TabsTrigger value="shipping" className="gap-2">
-              <Truck className="h-4 w-4" /> Shipping
-            </TabsTrigger>
-            <TabsTrigger value="pwa" className="gap-2">
-              <MonitorSmartphone className="h-4 w-4" /> PWA
-            </TabsTrigger>
-            <TabsTrigger value="captcha" className="gap-2">
-              <ShieldCheck className="h-4 w-4" /> reCAPTCHA
-            </TabsTrigger>
-            <TabsTrigger value="membership" className="gap-2">
-              <DollarSign className="h-4 w-4" /> Membership
-            </TabsTrigger>
-            <TabsTrigger value="ordernumber" className="gap-2">
-              <Hash className="h-4 w-4" /> Order Number
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="payment">
-            <PaymentTab />
-          </TabsContent>
-
-          <TabsContent value="localization">
-            <LocalizationTab />
-          </TabsContent>
-
-          <TabsContent value="smtp">
-            <SmtpTab />
-          </TabsContent>
-
-          <TabsContent value="shipping">
-            <ShippingTab />
-          </TabsContent>
-
-          <TabsContent value="pwa">
-            <PWATab />
-          </TabsContent>
-
-          <TabsContent value="captcha">
-            <CaptchaTab />
-          </TabsContent>
-
-          <TabsContent value="membership">
-            <MembershipTab />
-          </TabsContent>
-
-          <TabsContent value="ordernumber">
-            <OrderNumberTab />
-          </TabsContent>
-        </Tabs>
       </div>
     </AdminLayout>
   );
