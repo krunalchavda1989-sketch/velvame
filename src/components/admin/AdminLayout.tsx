@@ -7,7 +7,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp
+  TrendingUp, Menu
 } from "lucide-react";
 
 interface MenuItem {
@@ -40,6 +40,7 @@ const menuItems: MenuItem[] = [
     children: [
       { icon: PanelTop, label: "Hero Stats", href: "/admin/hero-stats" },
       { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
+      { icon: Menu, label: "Menus", href: "/admin/menus" },
       { icon: FileText, label: "Page Manager", href: "/admin/pages" },
       { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
     ],
