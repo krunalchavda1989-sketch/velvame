@@ -118,6 +118,7 @@ const AdminBulkSms = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const recipientCount = getRecipientCount(campaignForm.audience_type);
       const payload = {
         name: campaignForm.name.trim(),
         message: campaignForm.message.trim(),
