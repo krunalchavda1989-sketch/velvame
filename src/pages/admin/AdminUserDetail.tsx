@@ -650,7 +650,7 @@ const AdminUserDetail = () => {
 };
 
 /* ─── KYC Admin Tab ─── */
-const DOC_LABELS: Record<string, string> = { aadhar: "Aadhar Card", pan: "PAN Card" };
+const DOC_LABELS: Record<string, string> = { aadhar: "Aadhar Card", aadhar_front: "Aadhar Card (Front)", aadhar_back: "Aadhar Card (Back)", pan: "PAN Card" };
 const STATUS_MAP: Record<string, { icon: any; label: string; cls: string }> = {
   pending: { icon: Clock, label: "Pending", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
   approved: { icon: CheckCircle, label: "Approved", cls: "bg-success/15 text-success border-success/30" },
