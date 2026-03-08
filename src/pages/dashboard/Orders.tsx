@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import {
-  Package, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp,
+  Package, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp, Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface OrderItem {
   id: string;
