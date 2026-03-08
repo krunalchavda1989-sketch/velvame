@@ -53,6 +53,148 @@ export type Database = {
         }
         Relationships: []
       }
+      binary_payouts: {
+        Row: {
+          created_at: string
+          id: string
+          matching_amount: number
+          payout_percentage: number
+          period_end: string | null
+          period_start: string | null
+          status: string
+          strong_leg_bv: number
+          user_id: string
+          weak_leg_bv: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matching_amount?: number
+          payout_percentage?: number
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          strong_leg_bv?: number
+          user_id: string
+          weak_leg_bv?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matching_amount?: number
+          payout_percentage?: number
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          strong_leg_bv?: number
+          user_id?: string
+          weak_leg_bv?: number
+        }
+        Relationships: []
+      }
+      binary_positions: {
+        Row: {
+          carry_forward_left: number
+          carry_forward_right: number
+          created_at: string
+          id: string
+          left_bv: number
+          parent_id: string | null
+          position: string
+          profile_id: string | null
+          right_bv: number
+          sponsor_id: string | null
+          total_left_bv: number
+          total_right_bv: number
+          user_id: string
+        }
+        Insert: {
+          carry_forward_left?: number
+          carry_forward_right?: number
+          created_at?: string
+          id?: string
+          left_bv?: number
+          parent_id?: string | null
+          position?: string
+          profile_id?: string | null
+          right_bv?: number
+          sponsor_id?: string | null
+          total_left_bv?: number
+          total_right_bv?: number
+          user_id: string
+        }
+        Update: {
+          carry_forward_left?: number
+          carry_forward_right?: number
+          created_at?: string
+          id?: string
+          left_bv?: number
+          parent_id?: string | null
+          position?: string
+          profile_id?: string | null
+          right_bv?: number
+          sponsor_id?: string | null
+          total_left_bv?: number
+          total_right_bv?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "binary_positions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "binary_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "binary_positions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "binary_positions_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "binary_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      binary_settings: {
+        Row: {
+          cap_amount: number
+          created_at: string
+          id: string
+          is_active: boolean
+          matching_percentage: number
+          min_bv_for_payout: number
+          payout_frequency: string
+          updated_at: string
+        }
+        Insert: {
+          cap_amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          matching_percentage?: number
+          min_bv_for_payout?: number
+          payout_frequency?: string
+          updated_at?: string
+        }
+        Update: {
+          cap_amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          matching_percentage?: number
+          min_bv_for_payout?: number
+          payout_frequency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brand_settings: {
         Row: {
           address: string | null
