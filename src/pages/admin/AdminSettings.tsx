@@ -1601,4 +1601,173 @@ const PWATab = () => {
   );
 };
 
+/* ───────── Google reCAPTCHA Tab ───────── */
+interface CaptchaSettings {
+  enabled: boolean;
+  site_key: string;
+  secret_key: string;
+}
+
+const DEFAULT_CAPTCHA: CaptchaSettings = {
+  enabled: false,
+  site_key: "",
+  secret_key: "",
+};
+
+const CaptchaTab = () => {
+  const [form, setForm] = useState<CaptchaSettings>(DEFAULT_CAPTCHA);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("pages_content")
+        .select("content")
+        .eq("page_slug", "captcha-settings")
+        .maybeSingle();
+      if (data?.content) {
+        const saved = data.content as any;
+        setForm({
+          ...DEFAULT_CAPTCHA,
+          ...saved,
+          secret_key: saved.secret_key ? "••••••••••••" : "",
+        });
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    if (form.enabled && !form.site_key.trim()) {
+      toast.error("Site Key is required when reCAPTCHA is enabled");
+      return;
+    }
+    setSaving(true);
+
+    const payload: any = {
+      enabled: form.enabled,
+      site_key: form.site_key.trim(),
+    };
+    // Only update secret if user changed it (not the masked value)
+    if (form.secret_key && !form.secret_key.startsWith("••")) {
+      payload.secret_key = form.secret_key.trim();
+    }
+
+    const { data: existing } = await supabase
+      .from("pages_content")
+      .select("id, content")
+      .eq("page_slug", "captcha-settings")
+      .maybeSingle();
+
+    const mergedContent = existing?.content
+      ? { ...(existing.content as any), ...payload }
+      : payload;
+
+    if (existing) {
+      await supabase
+        .from("pages_content")
+        .update({ content: mergedContent as any, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("pages_content").insert({
+        page_slug: "captcha-settings",
+        title: "Captcha Settings",
+        content: mergedContent as any,
+      });
+    }
+    setSaving(false);
+    toast.success("reCAPTCHA settings saved");
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-10 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Google reCAPTCHA
+          </CardTitle>
+          <CardDescription>
+            Protect your forms from spam and abuse with Google reCAPTCHA v2
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Status toggle */}
+          <div className="flex items-center gap-3">
+            <Switch
+              id="captcha-enabled"
+              checked={form.enabled}
+              onCheckedChange={(v) => setForm((prev) => ({ ...prev, enabled: v }))}
+            />
+            <Label htmlFor="captcha-enabled" className="text-sm cursor-pointer">
+              Enable Google reCAPTCHA (V2) in Registration, Review and Contact Us Forms
+            </Label>
+          </div>
+
+          <Separator />
+
+          {/* Site Key */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Site Key <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={form.site_key}
+              onChange={(e) => setForm((prev) => ({ ...prev, site_key: e.target.value }))}
+              placeholder="Enter your reCAPTCHA site key"
+            />
+          </div>
+
+          {/* Secret Key */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Secret Key <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="password"
+              value={form.secret_key}
+              onChange={(e) => setForm((prev) => ({ ...prev, secret_key: e.target.value }))}
+              placeholder="Enter your reCAPTCHA secret key"
+              onFocus={(e) => {
+                if (e.target.value.startsWith("••")) {
+                  setForm((prev) => ({ ...prev, secret_key: "" }));
+                }
+              }}
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            Get your keys from{" "}
+            <a
+              href="https://www.google.com/recaptcha/admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline inline-flex items-center gap-0.5"
+            >
+              Google reCAPTCHA Admin <ExternalLink className="h-3 w-3" />
+            </a>
+          </p>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save
+      </Button>
+    </div>
+  );
+};
+
 export default AdminSettings;
