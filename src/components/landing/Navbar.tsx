@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Crown } from "lucide-react";
+import { Menu, X, Crown, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -14,6 +15,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const { user, profile, loading, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
@@ -36,16 +38,39 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Login
-            </Button>
-          </Link>
-          <Link to="/register">
-            <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
-              Join Now — ₹2800
-            </Button>
-          </Link>
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : user ? (
+            <>
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-2">
+                  <LayoutDashboard className="h-4 w-4" />
+                  {profile?.full_name || "Dashboard"}
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
+                  Join Now — ₹2800
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button className="md:hidden text-foreground" onClick={() => setOpen(!open)}>
@@ -72,12 +97,33 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-              <Link to="/login" onClick={() => setOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start text-muted-foreground">Login</Button>
-              </Link>
-              <Link to="/register" onClick={() => setOpen(false)}>
-                <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹2800</Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-muted-foreground gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      {profile?.full_name || "Dashboard"}
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-muted-foreground hover:text-destructive gap-2"
+                    onClick={() => { signOut(); setOpen(false); }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-muted-foreground">Login</Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setOpen(false)}>
+                    <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹2800</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}
