@@ -40,6 +40,11 @@ const CartDrawer = () => {
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
 
+  // Saved addresses state
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showManualForm, setShowManualForm] = useState(false);
+
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
@@ -58,6 +63,24 @@ const CartDrawer = () => {
       .single()
       .then(({ data }) => {
         setWalletBalance(data ? Number(data.balance) : 0);
+      });
+    // Fetch saved addresses
+    supabase
+      .from("user_addresses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        const addrs = (data as any) || [];
+        setSavedAddresses(addrs);
+        const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+        if (defaultAddr) {
+          setSelectedAddressId(defaultAddr.id);
+          setShowManualForm(false);
+        } else {
+          setShowManualForm(true);
+        }
       });
   }, [user, cartOpen]);
 
