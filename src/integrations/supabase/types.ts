@@ -629,6 +629,8 @@ export type Database = {
           price: number
           product_id: string
           quantity: number
+          variation_id: string | null
+          variation_label: string | null
         }
         Insert: {
           created_at?: string
@@ -637,6 +639,8 @@ export type Database = {
           price: number
           product_id: string
           quantity?: number
+          variation_id?: string | null
+          variation_label?: string | null
         }
         Update: {
           created_at?: string
@@ -645,6 +649,8 @@ export type Database = {
           price?: number
           product_id?: string
           quantity?: number
+          variation_id?: string | null
+          variation_label?: string | null
         }
         Relationships: [
           {
@@ -659,6 +665,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variation_id_fkey"
+            columns: ["variation_id"]
+            isOneToOne: false
+            referencedRelation: "product_variations"
             referencedColumns: ["id"]
           },
         ]
@@ -916,6 +929,82 @@ export type Database = {
           },
         ]
       }
+      product_tags: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          tag?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_tags_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variations: {
+        Row: {
+          attribute_name: string
+          attribute_value: string
+          created_at: string
+          id: string
+          is_active: boolean
+          price_adjustment: number
+          product_id: string
+          sku: string | null
+          sort_order: number
+          stock: number
+        }
+        Insert: {
+          attribute_name?: string
+          attribute_value?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_adjustment?: number
+          product_id: string
+          sku?: string | null
+          sort_order?: number
+          stock?: number
+        }
+        Update: {
+          attribute_name?: string
+          attribute_value?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          price_adjustment?: number
+          product_id?: string
+          sku?: string | null
+          sort_order?: number
+          stock?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
@@ -928,6 +1017,9 @@ export type Database = {
           name: string
           rating: number | null
           retail_price: number
+          seo_description: string | null
+          seo_slug: string | null
+          seo_title: string | null
           stock: number
         }
         Insert: {
@@ -941,6 +1033,9 @@ export type Database = {
           name: string
           rating?: number | null
           retail_price: number
+          seo_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
           stock?: number
         }
         Update: {
@@ -954,6 +1049,9 @@ export type Database = {
           name?: string
           rating?: number | null
           retail_price?: number
+          seo_description?: string | null
+          seo_slug?: string | null
+          seo_title?: string | null
           stock?: number
         }
         Relationships: []
