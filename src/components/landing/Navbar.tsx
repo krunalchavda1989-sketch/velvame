@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { supabase } from "@/integrations/supabase/client";
 import CartDrawer from "@/components/shop/CartDrawer";
 
-const navLinks = [
+const fallbackLinks = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/shop" },
   { label: "About", href: "/about" },
