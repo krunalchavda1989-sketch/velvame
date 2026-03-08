@@ -60,6 +60,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminBulkSms from "./pages/admin/AdminBulkSms";
 
 const queryClient = new QueryClient();
 
