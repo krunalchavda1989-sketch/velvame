@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
