@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Crown, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,11 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <Link to="/shop">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+              <ShoppingCart className="h-5 w-5" />
+            </Button>
+          </Link>
           {loading ? (
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : user ? (
