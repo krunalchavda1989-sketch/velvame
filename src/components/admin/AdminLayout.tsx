@@ -13,6 +13,8 @@ const menuItems = [
   { icon: Package, label: "Products", href: "/admin/products" },
   { icon: FolderTree, label: "Categories", href: "/admin/categories" },
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
+  { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
+  { icon: ShoppingBag, label: "Manual Order", href: "/admin/manual-order" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Settings, label: "Payment Settings", href: "/admin/settings" },
