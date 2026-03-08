@@ -23,6 +23,7 @@ const Index = () => {
   const { products, addToCart } = useCart();
   const { currencySymbol } = useLocalization();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
     const fetchCats = async () => {
