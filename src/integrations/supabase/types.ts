@@ -406,6 +406,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_genealogy_tree: {
+        Args: { _max_depth?: number; _user_id: string }
+        Returns: {
+          avatar_url: string
+          depth: number
+          direct_referral_count: number
+          full_name: string
+          profile_id: string
+          referral_code: string
+          referred_by: string
+          subscription_paid: boolean
+          title: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
