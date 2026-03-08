@@ -42,6 +42,7 @@ import AdminSmtpSettings from "./pages/admin/AdminSmtpSettings";
 import AdminTransactions from "./pages/admin/AdminTransactions";
 import AdminManualOrder from "./pages/admin/AdminManualOrder";
 import AdminMenus from "./pages/admin/AdminMenus";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQPage from "./pages/FAQ";
@@ -173,6 +174,7 @@ const App = () => (
             />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+            <Route path="/admin/users/:userId" element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
             <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
             <Route path="/admin/products/new" element={<AdminRoute><AdminProductForm /></AdminRoute>} />
             <Route path="/admin/products/:id/edit" element={<AdminRoute><AdminProductForm /></AdminRoute>} />
