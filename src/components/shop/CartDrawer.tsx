@@ -233,10 +233,6 @@ const CartDrawer = () => {
       return;
     }
     if (cartProducts.length === 0) return;
-    if (isFreeShippingEligible) {
-      toast.error(`Add ${fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping`);
-      return;
-    }
     setStep("address");
   };
 
