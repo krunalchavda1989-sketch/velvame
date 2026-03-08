@@ -148,12 +148,14 @@ const CartDrawer = () => {
     return true;
   });
 
-  // Auto-select first available method if current selection is hidden
+  // Auto-select free shipping when eligible, fallback if current selection is hidden
   useEffect(() => {
-    if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
+    if (freeShippingEligible && availableShippingMethods.find((m) => m.key === "free_shipping")) {
+      setSelectedShipping("free_shipping");
+    } else if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
       setSelectedShipping(availableShippingMethods[0].key);
     }
-  }, [availableShippingMethods, selectedShipping]);
+  }, [freeShippingEligible, availableShippingMethods, selectedShipping]);
 
   const getShippingMethodConfig = () => availableShippingMethods.find((m) => m.key === selectedShipping);
   const activeShipping = getShippingMethodConfig();
