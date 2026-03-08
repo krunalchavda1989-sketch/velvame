@@ -10,6 +10,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 import CartDrawer from "@/components/shop/CartDrawer";
+import AnnouncementBar from "@/components/dashboard/AnnouncementBar";
 
 const fallbackLinks = [
   { label: "Home", href: "/" },
@@ -55,7 +56,9 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <AnnouncementBar />
+        <nav className="glass">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <Link to="/" className="flex items-center gap-2">
             <BrandLogo />
@@ -216,7 +219,8 @@ const Navbar = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </nav>
+        </nav>
+      </div>
 
       <CartDrawer />
     </>
