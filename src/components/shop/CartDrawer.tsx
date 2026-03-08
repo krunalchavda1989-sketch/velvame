@@ -136,30 +136,31 @@ const CartDrawer = () => {
   };
 
   // Check if free shipping min amount is met
-  const getShippingMethodConfig = () => shippingMethods.find((m) => m.key === selectedShipping);
+  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
+
+  const freeShippingEligible = freeShippingMinAmount <= 0 || totalPrice >= freeShippingMinAmount;
+
+  // Filter shipping methods: hide free shipping if not eligible
+  const availableShippingMethods = shippingMethods.filter((m) => {
+    if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) {
+      return false;
+    }
+    return true;
+  });
+
+  // Auto-select first available method if current selection is hidden
+  useEffect(() => {
+    if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
+      setSelectedShipping(availableShippingMethods[0].key);
+    }
+  }, [availableShippingMethods, selectedShipping]);
+
+  const getShippingMethodConfig = () => availableShippingMethods.find((m) => m.key === selectedShipping);
   const activeShipping = getShippingMethodConfig();
   const shippingCost = activeShipping?.cost || 0;
 
-  // Check free shipping minimum amount from admin settings
-  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
-
-  useEffect(() => {
-    if (!cartOpen) return;
-    supabase
-      .from("pages_content")
-      .select("content")
-      .eq("page_slug", "shipping-methods")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.content) {
-          const c = data.content as any;
-          setFreeShippingMinAmount(Number(c.free_shipping?.min_amount) || 0);
-        }
-      });
-  }, [cartOpen]);
-
-  const isFreeShippingEligible = selectedShipping === "free_shipping" && freeShippingMinAmount > 0 && totalPrice < freeShippingMinAmount;
-  const effectiveShippingCost = isFreeShippingEligible ? 0 : shippingCost; // still 0 for free shipping; just show warning
+  // How much more to qualify for free shipping
+  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - totalPrice : 0;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
