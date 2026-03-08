@@ -26,6 +26,12 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminBrandSettings from "./pages/admin/AdminBrandSettings";
+import AdminTitleRoadmap from "./pages/admin/AdminTitleRoadmap";
+import AdminCommissionLevels from "./pages/admin/AdminCommissionLevels";
+import AdminAwards from "./pages/admin/AdminAwards";
+import AdminOffers from "./pages/admin/AdminOffers";
+import AdminCoupons from "./pages/admin/AdminCoupons";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
@@ -137,6 +143,12 @@ const App = () => (
             <Route path="/admin/commissions" element={<AdminRoute><AdminCommissions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+            <Route path="/admin/brand-settings" element={<AdminRoute><AdminBrandSettings /></AdminRoute>} />
+            <Route path="/admin/title-roadmap" element={<AdminRoute><AdminTitleRoadmap /></AdminRoute>} />
+            <Route path="/admin/commission-levels" element={<AdminRoute><AdminCommissionLevels /></AdminRoute>} />
+            <Route path="/admin/awards" element={<AdminRoute><AdminAwards /></AdminRoute>} />
+            <Route path="/admin/offers" element={<AdminRoute><AdminOffers /></AdminRoute>} />
+            <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>

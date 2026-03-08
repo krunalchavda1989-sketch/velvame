@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      awards_rewards: {
+        Row: {
+          cash_amount: number | null
+          created_at: string
+          gift_description: string | null
+          gift_image_url: string | null
+          gift_name: string | null
+          id: string
+          is_active: boolean
+          reward_type: string
+          sort_order: number
+          title_name: string
+        }
+        Insert: {
+          cash_amount?: number | null
+          created_at?: string
+          gift_description?: string | null
+          gift_image_url?: string | null
+          gift_name?: string | null
+          id?: string
+          is_active?: boolean
+          reward_type?: string
+          sort_order?: number
+          title_name: string
+        }
+        Update: {
+          cash_amount?: number | null
+          created_at?: string
+          gift_description?: string | null
+          gift_image_url?: string | null
+          gift_name?: string | null
+          id?: string
+          is_active?: boolean
+          reward_type?: string
+          sort_order?: number
+          title_name?: string
+        }
+        Relationships: []
+      }
+      brand_settings: {
+        Row: {
+          address: string | null
+          brand_name: string
+          created_at: string
+          email: string | null
+          gst_number: string | null
+          id: string
+          logo_url: string | null
+          phone: string | null
+          tagline: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          brand_name?: string
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          tagline?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          brand_name?: string
+          created_at?: string
+          email?: string | null
+          gst_number?: string | null
+          id?: string
+          logo_url?: string | null
+          phone?: string | null
+          tagline?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      commission_levels: {
+        Row: {
+          commission_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          level: number
+          min_referrals: number
+          rate: number
+        }
+        Insert: {
+          commission_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          level: number
+          min_referrals?: number
+          rate?: number
+        }
+        Update: {
+          commission_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          level?: number
+          min_referrals?: number
+          rate?: number
+        }
+        Relationships: []
+      }
       commissions: {
         Row: {
           amount: number
@@ -57,6 +168,101 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          end_date: string
+          id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          max_uses: number | null
+          min_order_amount: number | null
+          start_date: string
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          start_date?: string
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          start_date?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
+      monthly_offers: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_percentage: number | null
+          end_date: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          offer_type: string
+          product_id: string | null
+          start_date: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          offer_type?: string
+          product_id?: string | null
+          start_date?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number | null
+          end_date?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          offer_type?: string
+          product_id?: string | null
+          start_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -316,6 +522,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      title_roadmap: {
+        Row: {
+          badge_color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          required_referrals: number
+          sort_order: number
+          title_name: string
+        }
+        Insert: {
+          badge_color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          required_referrals?: number
+          sort_order?: number
+          title_name: string
+        }
+        Update: {
+          badge_color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          required_referrals?: number
+          sort_order?: number
+          title_name?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
