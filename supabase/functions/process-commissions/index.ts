@@ -16,6 +16,9 @@ const REPURCHASE_RATES = [0.03, 0.02, 0.01];
 // L1: 1, L2-L5: 3, L6-L9: 6
 const QUALIFICATION_REQUIRED = [1, 3, 3, 3, 3, 6, 6, 6, 6];
 
+// Minimum monthly purchase required for repurchase income (both beneficiary & source)
+const MIN_MONTHLY_PURCHASE = 1000;
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
