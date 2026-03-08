@@ -248,6 +248,21 @@ Deno.serve(async (req) => {
             subscription_date: new Date().toISOString(),
           })
           .eq("user_id", payment.user_id);
+
+        // Credit subscription amount to wallet
+        const { data: wallet } = await serviceClient
+          .from("wallets")
+          .select("balance, total_earned")
+          .eq("user_id", payment.user_id)
+          .single();
+
+        if (wallet) {
+          const subAmount = 2800;
+          await serviceClient.from("wallets").update({
+            balance: Number(wallet.balance) + subAmount,
+            total_earned: Number(wallet.total_earned) + subAmount,
+          }).eq("user_id", payment.user_id);
+        }
       }
 
       // If shop payment, update order status and process commissions
