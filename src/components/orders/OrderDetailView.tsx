@@ -150,6 +150,15 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const isCancelled = order.status === "cancelled";
   const shippingAddr = order.shipping_address || {};
 
+  const { handlePrint } = useInvoicePrint({
+    orderId,
+    order,
+    items,
+    payment,
+    customerName: profile?.full_name,
+    customerPhone: profile?.phone || undefined,
+  });
+
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
