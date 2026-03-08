@@ -74,18 +74,28 @@ const AdminUserDetail = () => {
           subscription_paid: prof.subscription_paid || false,
         });
 
-        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }] = await Promise.all([
+        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("orders").select("*, order_items(*, products(name, image_url))").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("commissions").select("*").eq("beneficiary_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("withdrawal_requests").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("kyc_documents").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
+          supabase.from("bank_details").select("*").eq("user_id", prof.user_id).single(),
+          supabase.from("user_addresses").select("*").eq("user_id", prof.user_id).order("is_default", { ascending: false }),
         ]);
         setWallet(w);
         setOrders(o || []);
         setCommissions(c || []);
         setWithdrawals(wdr || []);
         setKycDocs((kyc as any) || []);
+        setBankDetails(bank);
+        setAddresses(addr || []);
+
+        // Fetch user email via edge function
+        const { data: emailData } = await supabase.functions.invoke("admin-settings", {
+          body: { action: "get_user_email", user_id: prof.user_id },
+        });
+        if (emailData?.email) setUserEmail(emailData.email);
       }
 
       setLoading(false);
