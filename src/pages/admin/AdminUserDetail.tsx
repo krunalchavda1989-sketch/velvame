@@ -4,15 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, User, ShoppingBag, Users, Wallet, Trophy,
-  CreditCard, TrendingUp, Calendar, Phone, Mail, Hash
+  ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
+  CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 
 const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
@@ -23,21 +31,29 @@ const AdminUserDetail = () => {
   const [titleRoadmap, setTitleRoadmap] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    phone: "",
+    title: "",
+    subscription_paid: false,
+  });
+
   useEffect(() => {
     if (!userId) return;
     const fetchAll = async () => {
       const [
         { data: prof },
-        { data: wall },
-        { data: ord },
-        { data: comm },
+        , , ,
         { data: refs },
-        { data: wd },
+        ,
         { data: aw },
         { data: tr },
       ] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", userId).single(),
-        supabase.from("wallets").select("*").eq("user_id", "").limit(1), // placeholder
+        supabase.from("wallets").select("*").eq("user_id", "").limit(1),
         supabase.from("orders").select("*, order_items(*, products(name, image_url))").order("created_at", { ascending: false }),
         supabase.from("commissions").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").eq("referred_by", userId).order("created_at", { ascending: false }),
@@ -48,8 +64,14 @@ const AdminUserDetail = () => {
 
       setProfile(prof);
 
-      // Now fetch wallet & orders with correct user_id from profile
       if (prof) {
+        setEditForm({
+          full_name: prof.full_name || "",
+          phone: prof.phone || "",
+          title: prof.title || "Member",
+          subscription_paid: prof.subscription_paid || false,
+        });
+
         const [{ data: w }, { data: o }, { data: c }, { data: wdr }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("orders").select("*, order_items(*, products(name, image_url))").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
@@ -69,6 +91,63 @@ const AdminUserDetail = () => {
     };
     fetchAll();
   }, [userId]);
+
+  const handleSave = async () => {
+    if (!profile) return;
+    const trimmedName = editForm.full_name.trim();
+    if (!trimmedName) {
+      toast({ title: "Error", description: "Name cannot be empty.", variant: "destructive" });
+      return;
+    }
+    if (trimmedName.length > 100) {
+      toast({ title: "Error", description: "Name must be less than 100 characters.", variant: "destructive" });
+      return;
+    }
+
+    setSaving(true);
+    const updateData: any = {
+      full_name: trimmedName,
+      phone: editForm.phone.trim(),
+      title: editForm.title,
+      subscription_paid: editForm.subscription_paid,
+    };
+
+    if (editForm.subscription_paid && !profile.subscription_paid) {
+      updateData.subscription_date = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", profile.id);
+
+    setSaving(false);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+      return;
+    }
+
+    setProfile({ ...profile, ...updateData });
+    setEditOpen(false);
+    toast({ title: "Saved", description: "User profile updated successfully." });
+  };
+
+  const handleQuickToggleSubscription = async () => {
+    if (!profile) return;
+    const newVal = !profile.subscription_paid;
+    const updateData: any = { subscription_paid: newVal };
+    if (newVal) updateData.subscription_date = new Date().toISOString();
+
+    const { error } = await supabase.from("profiles").update(updateData).eq("id", profile.id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to update subscription.", variant: "destructive" });
+      return;
+    }
+    setProfile({ ...profile, ...updateData });
+    setEditForm((f) => ({ ...f, subscription_paid: newVal }));
+    toast({ title: newVal ? "Activated" : "Deactivated", description: `Subscription ${newVal ? "activated" : "deactivated"} successfully.` });
+  };
 
   if (loading) {
     return (
@@ -110,12 +189,79 @@ const AdminUserDetail = () => {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-display font-bold text-foreground">{profile.full_name || "User"}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-display font-bold text-foreground">{profile.full_name || "User"}</h1>
+              <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Edit User Profile</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-name">Full Name</Label>
+                      <Input
+                        id="edit-name"
+                        value={editForm.full_name}
+                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                        maxLength={100}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-phone">Phone</Label>
+                      <Input
+                        id="edit-phone"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        maxLength={20}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-title">Title</Label>
+                      <Select value={editForm.title} onValueChange={(v) => setEditForm({ ...editForm, title: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {titleRoadmap.length > 0 ? (
+                            titleRoadmap.map((t) => (
+                              <SelectItem key={t.id} value={t.title_name}>{t.title_name}</SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="Member">Member</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                      <div>
+                        <Label className="text-sm font-medium">Subscription Active</Label>
+                        <p className="text-xs text-muted-foreground">Toggle subscription status for this user</p>
+                      </div>
+                      <Switch
+                        checked={editForm.subscription_paid}
+                        onCheckedChange={(v) => setEditForm({ ...editForm, subscription_paid: v })}
+                      />
+                    </div>
+                    <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge variant="outline" className="font-mono text-xs">{profile.referral_code}</Badge>
-              <Badge className={profile.subscription_paid ? "bg-success text-success-foreground" : "bg-destructive/10 text-destructive"}>
-                {profile.subscription_paid ? "Active" : "Inactive"}
-              </Badge>
+              <button onClick={handleQuickToggleSubscription} className="cursor-pointer">
+                <Badge className={profile.subscription_paid ? "bg-success text-success-foreground hover:bg-success/80" : "bg-destructive/10 text-destructive hover:bg-destructive/20"}>
+                  {profile.subscription_paid ? "Active ✓" : "Inactive ✗"}
+                </Badge>
+              </button>
               <Badge variant="secondary">{profile.title}</Badge>
             </div>
           </div>
@@ -365,10 +511,10 @@ const AdminUserDetail = () => {
                             {achieved ? "✓" : i + 1}
                           </div>
                           <div className="flex-1">
-                            <p className={`text-sm font-medium ${isCurrent ? "text-primary" : "text-foreground"}`}>
+                            <div className={`text-sm font-medium ${isCurrent ? "text-primary" : "text-foreground"}`}>
                               {t.title_name}
                               {isCurrent && <Badge className="ml-2 text-[10px] bg-primary/10 text-primary">Current</Badge>}
-                            </p>
+                            </div>
                             <p className="text-xs text-muted-foreground">{t.required_referrals} direct referrals required</p>
                           </div>
                         </div>
