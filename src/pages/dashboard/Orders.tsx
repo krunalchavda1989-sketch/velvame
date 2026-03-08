@@ -41,7 +41,7 @@ const OrdersPage = () => {
       setLoading(true);
       const { data } = await supabase
         .from("orders")
-        .select("id, total_amount, status, payment_method, shipping_method, is_repurchase, created_at")
+        .select("id, total_amount, status, payment_method, shipping_method, is_repurchase, created_at, order_number")
         .eq("user_id", user.id)
         .neq("status", "pending")
         .order("created_at", { ascending: false })
