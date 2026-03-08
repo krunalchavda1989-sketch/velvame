@@ -201,9 +201,13 @@ const PaymentTransactionList = () => {
   const currentPage = Math.min(page, totalPages);
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
-  // Reset to page 1 when filter changes
   const handleFilterChange = (f: "all" | "paid" | "failed") => {
     setFilter(f);
+    setPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
     setPage(1);
   };
 
