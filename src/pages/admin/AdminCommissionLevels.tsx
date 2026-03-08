@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Pencil, Loader2, Save } from "lucide-react";
+import { BarChart3, Pencil, Loader2, Save, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,9 +29,21 @@ const AdminCommissionLevels = () => {
   const [form, setForm] = useState({ rate: 0, min_referrals: 0, is_active: true });
   const [saving, setSaving] = useState(false);
 
+  // Repurchase settings
+  const [minMonthlyPurchase, setMinMonthlyPurchase] = useState(1000);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+
   const fetchLevels = async () => {
-    const { data } = await supabase.from("commission_levels").select("*").order("commission_type").order("level");
+    const [{ data }, { data: settings }] = await Promise.all([
+      supabase.from("commission_levels").select("*").order("commission_type").order("level"),
+      supabase.from("binary_settings").select("id, min_monthly_purchase").limit(1).single(),
+    ]);
     setLevels((data as unknown as CommLevel[]) || []);
+    if (settings) {
+      setMinMonthlyPurchase(Number((settings as any).min_monthly_purchase) || 1000);
+      setSettingsId(settings.id);
+    }
     setLoading(false);
   };
 
@@ -51,6 +63,17 @@ const AdminCommissionLevels = () => {
     setSaving(false);
     setDialogOpen(false);
     fetchLevels();
+  };
+
+  const handleSaveMinPurchase = async () => {
+    if (!settingsId) return;
+    setSavingSettings(true);
+    const { error } = await supabase
+      .from("binary_settings")
+      .update({ min_monthly_purchase: minMonthlyPurchase } as any)
+      .eq("id", settingsId);
+    setSavingSettings(false);
+    if (error) toast.error("Failed to update"); else toast.success("Minimum monthly purchase updated!");
   };
 
   const levelItems = levels.filter((l) => l.commission_type === "level");
@@ -100,7 +123,40 @@ const AdminCommissionLevels = () => {
               <TabsTrigger value="repurchase">Repurchase Income ({repurchaseItems.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="level">{renderTable(levelItems, "Level")}</TabsContent>
-            <TabsContent value="repurchase">{renderTable(repurchaseItems, "Repurchase")}</TabsContent>
+            <TabsContent value="repurchase">
+              {/* Repurchase qualification settings */}
+              <Card className="mb-4 border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4 text-primary" />
+                    Repurchase Qualification
+                  </CardTitle>
+                  <CardDescription>
+                    Both the buyer and each upline must have at least this amount in purchases during the current month to qualify for repurchase commissions.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-3">
+                    <div className="space-y-1.5 flex-1 max-w-xs">
+                      <Label htmlFor="min-purchase">Minimum Monthly Purchase (₹)</Label>
+                      <Input
+                        id="min-purchase"
+                        type="number"
+                        min={0}
+                        step={100}
+                        value={minMonthlyPurchase}
+                        onChange={(e) => setMinMonthlyPurchase(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <Button onClick={handleSaveMinPurchase} disabled={savingSettings} className="gap-1.5">
+                      {savingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              {renderTable(repurchaseItems, "Repurchase")}
+            </TabsContent>
           </Tabs>
         )}
 

@@ -170,6 +170,7 @@ export type Database = {
           is_active: boolean
           matching_percentage: number
           min_bv_for_payout: number
+          min_monthly_purchase: number
           payout_frequency: string
           updated_at: string
         }
@@ -180,6 +181,7 @@ export type Database = {
           is_active?: boolean
           matching_percentage?: number
           min_bv_for_payout?: number
+          min_monthly_purchase?: number
           payout_frequency?: string
           updated_at?: string
         }
@@ -190,6 +192,7 @@ export type Database = {
           is_active?: boolean
           matching_percentage?: number
           min_bv_for_payout?: number
+          min_monthly_purchase?: number
           payout_frequency?: string
           updated_at?: string
         }
