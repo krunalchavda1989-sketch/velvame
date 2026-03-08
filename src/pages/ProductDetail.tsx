@@ -34,7 +34,22 @@ const ProductDetail = () => {
         toast.error("Product not found");
       }
       setProduct(data);
+      setSelectedImage(data?.image_url || null);
       setLoading(false);
+
+      // Fetch additional images
+      if (data) {
+        const { data: images } = await supabase
+          .from("product_images")
+          .select("image_url")
+          .eq("product_id", id)
+          .order("sort_order");
+        const allImages: string[] = [];
+        if (data.image_url && isImageUrl(data.image_url)) allImages.push(data.image_url);
+        if (images) allImages.push(...images.map((img: any) => img.image_url));
+        setProductImages(allImages);
+        if (allImages.length > 0) setSelectedImage(allImages[0]);
+      }
 
       // Fetch recommended products (same category, exclude current)
       if (data) {
