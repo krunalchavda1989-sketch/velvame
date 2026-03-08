@@ -16,6 +16,9 @@ const REPURCHASE_RATES = [0.03, 0.02, 0.01];
 // L1: 1, L2-L5: 3, L6-L9: 6
 const QUALIFICATION_REQUIRED = [1, 3, 3, 3, 3, 6, 6, 6, 6];
 
+// Minimum monthly purchase required for repurchase income (both beneficiary & source)
+const MIN_MONTHLY_PURCHASE = 1000;
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -103,6 +106,36 @@ Deno.serve(async (req: Request) => {
     const rates = isRepurchase ? REPURCHASE_RATES : LEVEL_RATES;
     const commissionType = isRepurchase ? "repurchase" : "level";
 
+    // Helper: get total purchase amount for a user in the current month
+    const getMonthlyPurchase = async (userId: string): Promise<number> => {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+      const { data } = await supabase
+        .from("orders")
+        .select("total_amount")
+        .eq("user_id", userId)
+        .gte("created_at", monthStart)
+        .lt("created_at", monthEnd)
+        .in("status", ["confirmed", "delivered", "shipped", "pending"]);
+      return (data || []).reduce((sum, o) => sum + Number(o.total_amount), 0);
+    };
+
+    // For repurchase income, verify the buyer (source) meets minimum monthly purchase
+    if (isRepurchase) {
+      const buyerMonthlyTotal = await getMonthlyPurchase(order.user_id);
+      if (buyerMonthlyTotal < MIN_MONTHLY_PURCHASE) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `Buyer monthly purchase ₹${buyerMonthlyTotal} is below minimum ₹${MIN_MONTHLY_PURCHASE} — no repurchase commissions`,
+            commissions_distributed: 0,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Walk up the upline chain level by level
     const commissionsToInsert: Record<string, unknown>[] = [];
     const walletUpdates: { user_id: string; amount: number }[] = [];
@@ -120,12 +153,19 @@ Deno.serve(async (req: Request) => {
 
       if (!upline) break;
 
-      const minReferrals = QUALIFICATION_REQUIRED[level - 1];
+      const minReferrals = isRepurchase ? 1 : QUALIFICATION_REQUIRED[level - 1];
       const isQualified = upline.direct_referral_count >= minReferrals;
 
-      if (isQualified) {
+      // For repurchase income, also check that the beneficiary has min monthly purchase
+      let beneficiaryPurchaseOk = true;
+      if (isRepurchase && isQualified) {
+        const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
+        beneficiaryPurchaseOk = uplineMonthlyTotal >= MIN_MONTHLY_PURCHASE;
+      }
+
+      if (isQualified && beneficiaryPurchaseOk) {
         const rate = rates[level - 1];
-        const amount = Math.round(order.total_amount * rate * 100) / 100; // round to 2 dp
+        const amount = Math.round(order.total_amount * rate * 100) / 100;
 
         commissionsToInsert.push({
           order_id: order.id,
