@@ -126,7 +126,7 @@ const Navbar = () => {
                 </Link>
                 <Link to="/register">
                   <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
-                    Join Now — ₹2800
+                    Join Now — ₹{membershipAmount.toLocaleString("en-IN")}
                   </Button>
                 </Link>
               </>
