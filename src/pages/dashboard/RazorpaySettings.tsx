@@ -178,7 +178,7 @@ const RazorpaySettings = () => {
                 {!profile?.subscription_paid && (
                   <Button onClick={handlePaySubscription} disabled={paying} className="gap-2">
                     {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <IndianRupee className="h-4 w-4" />}
-                    Pay ₹2,800
+                    Pay ₹{SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")}
                   </Button>
                 )}
               </div>
