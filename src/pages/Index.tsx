@@ -337,8 +337,6 @@ const Index = () => {
         </section>
       )}
 
-      {/* ===== CTA ===== */}
-      <CTASection />
 
       <Footer />
     </div>
