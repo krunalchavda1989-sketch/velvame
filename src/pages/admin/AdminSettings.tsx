@@ -69,6 +69,7 @@ const AdminSettings = () => {
       case "payment": return <PaymentTab />;
       case "localization": return <LocalizationTab />;
       case "smtp": return <SmtpTab />;
+      case "sms": return <SmsTab />;
       case "shipping": return <ShippingTab />;
       case "pwa": return <PWATab />;
       case "captcha": return <CaptchaTab />;
