@@ -75,14 +75,22 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const { handlePrint } = useInvoicePrint({
+    orderId,
+    order: order || { id: orderId, total_amount: 0, status: "", payment_method: null, shipping_address: {}, created_at: "", is_repurchase: false },
+    items,
+    payment,
+    customerName: profile?.full_name,
+    customerPhone: profile?.phone || undefined,
+  });
+
   useEffect(() => {
     const fetchOrder = async () => {
-      // Fetch order
       const { data: orderData, error } = await supabase
         .from("orders")
         .select("*")
         .eq("id", orderId)
-        .single();
+        .maybeSingle();
 
       if (error || !orderData) {
         toast.error("Order not found");
@@ -91,16 +99,14 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       }
       setOrder(orderData);
 
-      // Fetch items, payment, profile in parallel
       const [itemsRes, paymentRes, profileRes] = await Promise.all([
         supabase.from("order_items").select("id, quantity, price, product_id").eq("order_id", orderId),
         supabase.from("payments").select("*").eq("order_ref_id", orderId).order("created_at", { ascending: false }).limit(1),
         isAdmin
-          ? supabase.from("profiles").select("full_name, referral_code, phone, avatar_url").eq("user_id", orderData.user_id).single()
+          ? supabase.from("profiles").select("full_name, referral_code, phone, avatar_url").eq("user_id", orderData.user_id).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 
-      // Fetch products for items
       const productIds = [...new Set((itemsRes.data || []).map((i: any) => i.product_id))];
       let productMap = new Map();
       if (productIds.length > 0) {
@@ -150,15 +156,6 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const currentStepIndex = statusTimeline.indexOf(order.status);
   const isCancelled = order.status === "cancelled";
   const shippingAddr = order.shipping_address || {};
-
-  const { handlePrint } = useInvoicePrint({
-    orderId,
-    order,
-    items,
-    payment,
-    customerName: profile?.full_name,
-    customerPhone: profile?.phone || undefined,
-  });
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
