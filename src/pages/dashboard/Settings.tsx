@@ -17,6 +17,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
 
 const Settings = () => {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "profile";
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
