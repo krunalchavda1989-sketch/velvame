@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, TrendingUp, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const HeroSection = () => {
   return (

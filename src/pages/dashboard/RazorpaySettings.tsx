@@ -12,6 +12,7 @@ import {
   CreditCard, CheckCircle2, XCircle, Clock, IndianRupee, Loader2, ShieldCheck, ArrowLeft,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 declare global {
   interface Window {
@@ -19,9 +20,8 @@ declare global {
   }
 }
 
-const SUBSCRIPTION_AMOUNT = 2800;
-
 const RazorpaySettings = () => {
+  const { amount: SUBSCRIPTION_AMOUNT } = useMembershipAmount();
   const { user } = useAuth();
   const { toast } = useToast();
   const [paying, setPaying] = useState(false);

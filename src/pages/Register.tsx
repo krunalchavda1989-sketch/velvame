@@ -8,6 +8,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
+import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
