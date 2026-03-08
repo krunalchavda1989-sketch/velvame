@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
-  Layers, RefreshCw, GitBranch, Repeat, BarChart3,
+  Layers, RefreshCw, GitBranch, Repeat, BarChart3, Trophy, Crown, Medal,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { format, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
