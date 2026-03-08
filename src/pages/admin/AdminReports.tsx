@@ -613,20 +613,27 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <Badge variant="outline" className={`text-[10px] ${s.class}`}>{s.label}</Badge>;
 };
 
+const ROWS_PER_PAGE = 15;
+
 const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[]; rows: React.ReactNode[][]; csvFilename?: string; csvRows?: string[][] }) => {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(rows.length / ROWS_PER_PAGE);
+  const paginatedRows = rows.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+
   if (rows.length === 0) {
     return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No data found for the selected period.</CardContent></Card>;
   }
 
   return (
     <Card>
-      {csvFilename && csvRows && (
-        <div className="flex justify-end px-4 pt-3">
+      <div className="flex items-center justify-between px-4 pt-3">
+        <p className="text-xs text-muted-foreground">{rows.length} records</p>
+        {csvFilename && csvRows && (
           <Button variant="outline" size="sm" className="text-xs" onClick={() => exportCsv(columns, csvRows, csvFilename)}>
             <Download className="h-3.5 w-3.5 mr-1" /> Export CSV
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
@@ -636,7 +643,7 @@ const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row, i) => (
+              {paginatedRows.map((row, i) => (
                 <TableRow key={i}>
                   {row.map((cell, j) => <TableCell key={j} className="text-sm">{cell}</TableCell>)}
                 </TableRow>
@@ -644,6 +651,37 @@ const ReportTable = ({ columns, rows, csvFilename, csvRows }: { columns: string[
             </TableBody>
           </Table>
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="text-xs h-8 px-2.5" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Previous
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1]) > 1) acc.push("...");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, idx) =>
+                  p === "..." ? (
+                    <span key={`e${idx}`} className="px-1 text-xs text-muted-foreground">…</span>
+                  ) : (
+                    <Button key={p} variant={p === page ? "default" : "outline"} size="sm" className="text-xs h-8 w-8 p-0" onClick={() => setPage(p as number)}>
+                      {p}
+                    </Button>
+                  )
+                )}
+              <Button variant="outline" size="sm" className="text-xs h-8 px-2.5" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
