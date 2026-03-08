@@ -203,6 +203,7 @@ const Checkout = () => {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
         toast.success("Order placed successfully!");
         clearCart();
+        sendOrderEmail(order.id, "order_success");
         navigate("/dashboard/orders");
         return;
       }
