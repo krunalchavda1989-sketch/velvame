@@ -33,6 +33,10 @@ import AdminAwards from "./pages/admin/AdminAwards";
 import AdminOffers from "./pages/admin/AdminOffers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminPages from "./pages/admin/AdminPages";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQPage from "./pages/FAQ";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
@@ -54,6 +58,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQPage />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route
               path="/dashboard"
@@ -146,6 +153,7 @@ const App = () => (
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/brand-settings" element={<AdminRoute><AdminBrandSettings /></AdminRoute>} />
+            <Route path="/admin/pages" element={<AdminRoute><AdminPages /></AdminRoute>} />
             <Route path="/admin/title-roadmap" element={<AdminRoute><AdminTitleRoadmap /></AdminRoute>} />
             <Route path="/admin/commission-levels" element={<AdminRoute><AdminCommissionLevels /></AdminRoute>} />
             <Route path="/admin/awards" element={<AdminRoute><AdminAwards /></AdminRoute>} />

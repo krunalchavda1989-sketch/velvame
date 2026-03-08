@@ -16,24 +16,54 @@ const Footer = () => {
             </p>
           </div>
 
-          {[
-            { title: "Platform", links: ["Shop", "Dashboard", "Pricing", "FAQ"] },
-            { title: "Company", links: ["About", "Blog", "Contact", "Careers"] },
-            { title: "Legal", links: ["Privacy", "Terms", "Refunds", "Compliance"] },
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="font-display font-semibold text-foreground mb-4">{col.title}</h4>
-              <ul className="space-y-2">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {link}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h4 className="font-display font-semibold text-foreground mb-4">Platform</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Shop", href: "/shop" },
+                { label: "Dashboard", href: "/dashboard" },
+                { label: "FAQ", href: "/faq" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display font-semibold text-foreground mb-4">Company</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "About", href: "/about" },
+                { label: "Contact", href: "/contact" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display font-semibold text-foreground mb-4">Get Started</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Register", href: "/register" },
+                { label: "Login", href: "/login" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-border text-center text-sm text-muted-foreground">
