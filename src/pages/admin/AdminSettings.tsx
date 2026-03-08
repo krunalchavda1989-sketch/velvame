@@ -71,6 +71,7 @@ const AdminSettings = () => {
       case "localization": return <LocalizationTab />;
       case "smtp": return <SmtpTab />;
       case "sms": return <SmsTab />;
+      case "whatsapp": return <WhatsAppTab />;
       case "shipping": return <ShippingTab />;
       case "pwa": return <PWATab />;
       case "captcha": return <CaptchaTab />;
