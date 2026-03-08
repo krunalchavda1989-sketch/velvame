@@ -26,6 +26,7 @@ const AdminNewsletter = () => {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
 
   const fetchSubscribers = async () => {
     setLoading(true);
