@@ -101,6 +101,10 @@ const AdminCommissions = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedCommissions, setSelectedCommissions] = useState<Set<string>>(new Set());
+  const [selectedBinary, setSelectedBinary] = useState<Set<string>>(new Set());
+  const [showBulkApprove, setShowBulkApprove] = useState<"commission" | "binary" | null>(null);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
