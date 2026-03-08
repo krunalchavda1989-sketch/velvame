@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import AnnouncementBar from "@/components/dashboard/AnnouncementBar";
 
 const Shop = () => {
   const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
