@@ -531,4 +531,168 @@ const PaymentStats = () => {
   );
 };
 
+/* ───────── SMTP Tab ───────── */
+const SmtpTab = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [form, setForm] = useState({
+    smtp_host: "",
+    smtp_port: "587",
+    smtp_user: "",
+    smtp_password: "",
+    from_email: "",
+    from_name: "",
+    use_tls: true,
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("pages_content")
+        .select("content")
+        .eq("page_slug", "smtp-settings")
+        .maybeSingle();
+      if (data?.content) {
+        const c = data.content as any;
+        setForm({
+          smtp_host: c.smtp_host || "",
+          smtp_port: c.smtp_port || "587",
+          smtp_user: c.smtp_user || "",
+          smtp_password: c.smtp_password ? "••••••••" : "",
+          from_email: c.from_email || "",
+          from_name: c.from_name || "",
+          use_tls: c.use_tls !== false,
+        });
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload: any = {
+        smtp_host: form.smtp_host,
+        smtp_port: form.smtp_port,
+        smtp_user: form.smtp_user,
+        from_email: form.from_email,
+        from_name: form.from_name,
+        use_tls: form.use_tls,
+      };
+      if (form.smtp_password && form.smtp_password !== "••••••••") {
+        payload.smtp_password = form.smtp_password;
+      }
+
+      const { data: existing } = await supabase
+        .from("pages_content")
+        .select("id")
+        .eq("page_slug", "smtp-settings")
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("pages_content")
+          .update({ content: payload, title: "SMTP Settings", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("pages_content").insert({
+          page_slug: "smtp-settings",
+          title: "SMTP Settings",
+          content: payload,
+          is_published: false,
+        });
+      }
+      toast.success("SMTP settings saved successfully");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    try {
+      const res = await supabase.functions.invoke("smtp-test", {
+        body: { to_email: form.from_email },
+      });
+      if (res.error) throw new Error(res.error.message);
+      if (res.data?.success) toast.success("Test email sent successfully!");
+      else toast.error(res.data?.error || "Test failed");
+    } catch (err: any) {
+      toast.error(`Test failed: ${err.message}`);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Mail className="h-5 w-5 text-primary" />
+            SMTP Configuration
+          </CardTitle>
+          <CardDescription>Configure email server for sending transactional emails</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>SMTP Host</Label>
+              <Input value={form.smtp_host} onChange={(e) => setForm({ ...form, smtp_host: e.target.value })} placeholder="smtp.gmail.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>SMTP Port</Label>
+              <Input value={form.smtp_port} onChange={(e) => setForm({ ...form, smtp_port: e.target.value })} placeholder="587" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Username</Label>
+              <Input value={form.smtp_user} onChange={(e) => setForm({ ...form, smtp_user: e.target.value })} placeholder="your@email.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <Input type="password" value={form.smtp_password} onChange={(e) => setForm({ ...form, smtp_password: e.target.value })} placeholder="App password" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>From Email</Label>
+              <Input value={form.from_email} onChange={(e) => setForm({ ...form, from_email: e.target.value })} placeholder="noreply@yoursite.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>From Name</Label>
+              <Input value={form.from_name} onChange={(e) => setForm({ ...form, from_name: e.target.value })} placeholder="NexaMLM" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={form.use_tls} onCheckedChange={(checked) => setForm({ ...form, use_tls: checked })} />
+            <Label>Use TLS/STARTTLS</Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-3">
+        <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+          {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          Save SMTP Settings
+        </Button>
+        <Button variant="outline" onClick={handleTest} disabled={testing}>
+          {testing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <TestTube className="h-4 w-4 mr-2" />}
+          Send Test Email
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export default AdminSettings;
