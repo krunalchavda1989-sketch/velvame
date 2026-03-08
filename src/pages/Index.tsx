@@ -8,6 +8,7 @@ import Footer from "@/components/landing/Footer";
 import MLMStructure from "@/components/landing/MLMStructure";
 import CTASection from "@/components/landing/CTASection";
 import OffersCarousel from "@/components/shop/OffersCarousel";
+import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
