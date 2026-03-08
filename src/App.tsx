@@ -189,11 +189,7 @@ const App = () => (
             />
             <Route
               path="/dashboard/kyc"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
+              element={<Navigate to="/dashboard/settings?tab=kyc" replace />}
             />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
