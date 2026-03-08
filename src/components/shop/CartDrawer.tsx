@@ -455,38 +455,81 @@ const CartDrawer = () => {
         {step === "address" && (
           <>
             <div className="flex-1 overflow-y-auto space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Full Name *</Label>
-                <Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Address Line 1 *</Label>
-                <Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Address Line 2</Label>
-                <Input value={address.line2} onChange={(e) => setAddress({ ...address, line2: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>City *</Label>
-                  <Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+              {/* Saved addresses */}
+              {savedAddresses.length > 0 && !showManualForm && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">Select a delivery address</p>
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => setSelectedAddressId(addr.id)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedAddressId === addr.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px]">{addr.label}</Badge>
+                        {addr.is_default && <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px]">Default</Badge>}
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{addr.name}</p>
+                      <p className="text-xs text-muted-foreground">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}, {addr.state} – {addr.pincode}</p>
+                      <p className="text-xs text-muted-foreground">📞 {addr.phone}</p>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" className="text-xs gap-1.5 w-full" onClick={() => { setShowManualForm(true); setSelectedAddressId(null); }}>
+                    <MapPin className="h-3.5 w-3.5" /> Use a different address
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>State *</Label>
-                  <Input value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
+              )}
+
+              {/* Manual form */}
+              {(showManualForm || savedAddresses.length === 0) && (
+                <div className="space-y-4">
+                  {savedAddresses.length > 0 && (
+                    <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={() => {
+                      setShowManualForm(false);
+                      const def = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0];
+                      if (def) setSelectedAddressId(def.id);
+                    }}>
+                      ← Back to saved addresses
+                    </Button>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Full Name *</Label>
+                    <Input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} maxLength={100} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address Line 1 *</Label>
+                    <Input value={address.line1} onChange={(e) => setAddress({ ...address, line1: e.target.value })} maxLength={200} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address Line 2</Label>
+                    <Input value={address.line2} onChange={(e) => setAddress({ ...address, line2: e.target.value })} maxLength={200} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>City *</Label>
+                      <Input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} maxLength={50} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>State *</Label>
+                      <Input value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} maxLength={50} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Pincode *</Label>
+                      <Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value.replace(/\D/g, "").slice(0, 10) })} maxLength={10} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Phone *</Label>
+                      <Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} maxLength={15} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Pincode *</Label>
-                  <Input value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone *</Label>
-                  <Input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} />
-                </div>
-              </div>
+              )}
             </div>
             <div className="border-t border-border pt-4 space-y-3">
               <div className="space-y-1">
