@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
 interface Category { id: string; name: string; image_url: string; }
+interface Testimonial { id: string; name: string; text: string; rating: number; avatar_url: string; }
 
 const Index = () => {
   const { products, addToCart } = useCart();
