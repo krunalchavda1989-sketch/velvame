@@ -330,12 +330,15 @@ const SalesReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Order ID", "Customer", "Amount", "Status", "Payment", "Date"]}
+        csvFilename="sales_report"
+        csvRows={data.map((o) => [
+          o.id.slice(0, 8), o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
+          o.status, o.payment_method || "—",
+          new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        ])}
         rows={data.map((o) => [
-          o.id.slice(0, 8) + "...",
-          o.customer,
-          `₹${Number(o.total_amount).toLocaleString()}`,
-          <StatusBadge status={o.status} key={o.id} />,
-          o.payment_method || "—",
+          o.id.slice(0, 8) + "...", o.customer, `₹${Number(o.total_amount).toLocaleString()}`,
+          <StatusBadge status={o.status} key={o.id} />, o.payment_method || "—",
           new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         ])}
       />
