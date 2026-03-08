@@ -1400,6 +1400,57 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_settings: {
+        Row: {
+          abandoned_cart_enabled: boolean
+          api_key: string
+          business_account_id: string
+          config: Json
+          created_at: string
+          id: string
+          is_enabled: boolean
+          order_updates_enabled: boolean
+          phone_number_id: string
+          provider: string
+          support_chat_enabled: boolean
+          updated_at: string
+          webhook_verify_token: string
+          welcome_msg_enabled: boolean
+        }
+        Insert: {
+          abandoned_cart_enabled?: boolean
+          api_key?: string
+          business_account_id?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          order_updates_enabled?: boolean
+          phone_number_id?: string
+          provider?: string
+          support_chat_enabled?: boolean
+          updated_at?: string
+          webhook_verify_token?: string
+          welcome_msg_enabled?: boolean
+        }
+        Update: {
+          abandoned_cart_enabled?: boolean
+          api_key?: string
+          business_account_id?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          order_updates_enabled?: boolean
+          phone_number_id?: string
+          provider?: string
+          support_chat_enabled?: boolean
+          updated_at?: string
+          webhook_verify_token?: string
+          welcome_msg_enabled?: boolean
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           admin_note: string | null
