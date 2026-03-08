@@ -166,6 +166,29 @@ const AdminCommissions = () => {
     return groupByDate(allItems, "created_at", from, to);
   }, [commissions, binaryPayouts, from, to]);
 
+  const topEarners = useMemo(() => {
+    const earnerMap = new Map<string, { level: number; repurchase: number; binary: number; total: number }>();
+    commissions.forEach((c) => {
+      const prev = earnerMap.get(c.beneficiary_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
+      const amt = Number(c.amount);
+      if (c.commission_type === "level") prev.level += amt;
+      else if (c.commission_type === "repurchase") prev.repurchase += amt;
+      prev.total += amt;
+      earnerMap.set(c.beneficiary_id, prev);
+    });
+    binaryPayouts.forEach((b) => {
+      const prev = earnerMap.get(b.user_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
+      const amt = Number(b.matching_amount);
+      prev.binary += amt;
+      prev.total += amt;
+      earnerMap.set(b.user_id, prev);
+    });
+    return Array.from(earnerMap.entries())
+      .map(([id, stats]) => ({ id, name: getName(id), ...stats }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+  }, [commissions, binaryPayouts, profileMap]);
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
