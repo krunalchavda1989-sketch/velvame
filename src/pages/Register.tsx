@@ -14,6 +14,7 @@ const Register = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const brand = useBrand();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<"form" | "otp">("form");
