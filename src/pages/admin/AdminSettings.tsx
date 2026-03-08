@@ -2350,11 +2350,16 @@ const SmsTab = () => {
     if (!testPhone.trim()) { toast.error("Enter a phone number to test"); return; }
     if (!apiKey.trim()) { toast.error("Please configure API key first"); return; }
     setTesting(true);
-    // Simulate test — in production this would call an edge function
-    setTimeout(() => {
-      toast.success(`Test SMS request sent to ${testPhone}`);
-      setTesting(false);
-    }, 1500);
+    try {
+      const { error } = await supabase.functions.invoke("send-sms", {
+        body: { phone: testPhone.trim(), message: "This is a test SMS from your admin panel.", purpose: "test" },
+      });
+      if (error) throw error;
+      toast.success(`Test SMS sent to ${testPhone}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send test SMS");
+    }
+    setTesting(false);
   };
 
   const currentProvider = SMS_PROVIDERS.find(p => p.key === provider) || SMS_PROVIDERS[0];
