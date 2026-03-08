@@ -32,7 +32,7 @@ const emptyForm = {
   active: true,
 };
 
-const categories = ["General", "Health", "Beauty", "Nutrition", "Personal Care", "Wellness", "Supplements"];
+
 
 const AdminProductForm = () => {
   const { id } = useParams();

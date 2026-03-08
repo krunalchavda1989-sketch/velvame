@@ -10,6 +10,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: Package, label: "Products", href: "/admin/products" },
+  { icon: FolderTree, label: "Categories", href: "/admin/categories" },
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
