@@ -357,22 +357,21 @@ const AdminProducts = () => {
 
                 {/* Image Grid */}
                 {additionalImages.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {additionalImages.map((img, index) => (
-                      <div key={index} className="relative aspect-square rounded-lg border border-border overflow-hidden bg-muted group">
-                        <img src={img.image_url} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removeAdditionalImage(index)}
-                          className="absolute top-1 right-1 p-1 rounded-full bg-background/80 hover:bg-destructive hover:text-destructive-foreground border border-border opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-background/80 text-[10px] text-muted-foreground">
-                          {index + 1}
-                        </div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={additionalImages.map((_, i) => `img-${i}`)} strategy={rectSortingStrategy}>
+                      <div className="grid grid-cols-3 gap-2 mb-2">
+                        {additionalImages.map((img, index) => (
+                          <SortableImageItem
+                            key={`img-${index}`}
+                            id={`img-${index}`}
+                            imageUrl={img.image_url}
+                            index={index}
+                            onRemove={removeAdditionalImage}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
 
                 <button
