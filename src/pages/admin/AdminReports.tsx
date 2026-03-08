@@ -265,13 +265,15 @@ const ProductReport = ({ from, to }: ReportProps) => {
       </div>
       <ReportTable
         columns={["Product", "Category", "Retail Price", "Stock", "Units Sold", "Revenue", "Status"]}
+        csvFilename="product_report"
+        csvRows={data.map((p) => [
+          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
+          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
+          p.active ? "Active" : "Inactive",
+        ])}
         rows={data.map((p) => [
-          p.name,
-          p.category,
-          `₹${Number(p.retail_price).toLocaleString()}`,
-          String(p.stock),
-          String(p.sold),
-          `₹${p.revenue.toLocaleString()}`,
+          p.name, p.category, `₹${Number(p.retail_price).toLocaleString()}`,
+          String(p.stock), String(p.sold), `₹${p.revenue.toLocaleString()}`,
           p.active ? <Badge className="bg-success/15 text-success border-success/30 text-[10px]">Active</Badge> : <Badge variant="secondary" className="text-[10px]">Inactive</Badge>,
         ])}
       />
