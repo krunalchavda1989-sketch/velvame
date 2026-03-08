@@ -74,6 +74,9 @@ const AdminSettings = () => {
             <TabsTrigger value="pwa" className="gap-2">
               <MonitorSmartphone className="h-4 w-4" /> PWA
             </TabsTrigger>
+            <TabsTrigger value="captcha" className="gap-2">
+              <ShieldCheck className="h-4 w-4" /> reCAPTCHA
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
