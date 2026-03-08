@@ -136,7 +136,7 @@ const AdminBulkSms = () => {
       if (!user) throw new Error("Not authenticated");
 
       const recipientCount = getRecipientCount(campaignForm.audience_type);
-      const payload = {
+      const payload: any = {
         name: campaignForm.name.trim(),
         message: campaignForm.message.trim(),
         audience_type: campaignForm.audience_type,
@@ -154,6 +154,14 @@ const AdminBulkSms = () => {
         sent_count: sendNow ? recipientCount : 0,
         failed_count: 0,
       };
+
+      // Add WhatsApp media fields
+      if (campaignForm.channel === "whatsapp" || campaignForm.channel === "both") {
+        payload.media_url = campaignForm.media_url || "";
+        payload.media_type = campaignForm.media_type || "";
+        payload.link_url = campaignForm.link_url || "";
+        payload.link_text = campaignForm.link_text || "";
+      }
 
       await supabase.from("sms_campaigns").insert(payload);
       toast.success(sendNow ? "Campaign sent successfully!" : "Campaign saved!");
