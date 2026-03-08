@@ -114,7 +114,7 @@ const Navbar = () => {
                   variant="ghost"
                   size="sm"
                   onClick={signOut}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-gray-500 hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
