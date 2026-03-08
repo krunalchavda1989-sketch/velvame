@@ -344,8 +344,6 @@ const ProductReport = ({ from, to }: ReportProps) => {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  if (loading) return <LoadingState />;
-
   const totalRevenue = data.reduce((s, p) => s + p.revenue, 0);
   const totalSold = data.reduce((s, p) => s + p.sold, 0);
 
@@ -359,6 +357,8 @@ const ProductReport = ({ from, to }: ReportProps) => {
     data.forEach((p) => map.set(p.category, (map.get(p.category) || 0) + p.revenue));
     return Array.from(map, ([name, value]) => ({ name, value }));
   }, [data]);
+
+  if (loading) return <LoadingState />;
 
   return (
     <div className="space-y-4">
