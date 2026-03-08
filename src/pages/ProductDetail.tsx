@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, ShoppingCart, Plus, Minus, Package, Tag } from "lucide-react";
+import { Star, ShoppingCart, Plus, Minus, Package, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
