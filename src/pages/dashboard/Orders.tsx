@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import {
-  Package, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp,
+  Package, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp, Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface OrderItem {
   id: string;
@@ -28,6 +30,7 @@ interface Order {
 
 const OrdersPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -143,7 +146,15 @@ const OrdersPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1 text-primary"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/orders/${order.id}`); }}
+                      >
+                        <Eye className="w-3 h-3" /> Details
+                      </Button>
                       <Badge variant="outline" className={`text-xs ${sc.color}`}>{order.status}</Badge>
                       {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                     </div>

@@ -1,10 +1,11 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw } from "lucide-react";
+import { Coins, RefreshCw, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
@@ -13,6 +14,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
@@ -132,6 +134,7 @@ const AdminOrders = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/50">
+                     <th className="text-left p-3 text-muted-foreground font-medium"></th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Order ID</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
@@ -145,6 +148,11 @@ const AdminOrders = () => {
                 <tbody className="divide-y divide-border">
                   {orders.map((o) => (
                     <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
+                      <td className="p-3">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate(`/admin/orders/${o.id}`)}>
+                          <Eye className="w-3 h-3" /> View
+                        </Button>
+                      </td>
                       <td className="p-3 font-mono text-xs text-muted-foreground">{o.id.slice(0, 8)}…</td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
