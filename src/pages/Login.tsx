@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Crown, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useBrand } from "@/contexts/BrandContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -36,8 +38,12 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Crown className="h-8 w-8 text-primary" />
-            <span className="font-display text-2xl font-bold text-gradient-gold">NexaMLM</span>
+            {brand.logo_url ? (
+              <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-auto object-contain rounded" />
+            ) : (
+              <Crown className="h-8 w-8 text-primary" />
+            )}
+            <span className="font-display text-2xl font-bold text-gradient-gold">{brand.brand_name}</span>
           </Link>
           <h1 className="text-2xl font-display font-bold text-foreground">Welcome Back</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign in to your dashboard</p>
