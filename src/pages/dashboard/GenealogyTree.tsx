@@ -304,6 +304,26 @@ const GenealogyTree = () => {
               Visual overview of your referral network hierarchy
             </p>
           </div>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-3.5 w-3.5" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "graph" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => setViewMode("graph")}
+            >
+              <GitFork className="h-3.5 w-3.5" />
+              Graph
+            </Button>
+          </div>
         </div>
 
         {/* Breadcrumb Navigation */}
