@@ -351,8 +351,9 @@ const AdminUserDetail = () => {
         </div>
 
         {/* Quick Info Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
+            { icon: Mail, label: "Email", value: userEmail || "—" },
             { icon: Phone, label: "Phone", value: profile.phone || "—" },
             { icon: Calendar, label: "Joined", value: format(new Date(profile.created_at), "dd MMM yyyy") },
             { icon: Users, label: "Direct Referrals", value: String(profile.direct_referral_count) },
