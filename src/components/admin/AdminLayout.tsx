@@ -48,8 +48,12 @@ const menuItems: MenuItem[] = [
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
   { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
-  { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
-  { icon: Settings, label: "Settings", href: "/admin/settings" },
+  {
+    icon: Settings, label: "Settings", href: "/admin/settings",
+    children: [
+      { icon: Mail, label: "SMTP Settings", href: "/admin/smtp-settings" },
+    ],
+  },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
