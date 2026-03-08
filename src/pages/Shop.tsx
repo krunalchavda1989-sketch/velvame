@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Plus, Star } from "lucide-react";
@@ -8,12 +8,25 @@ import OffersCarousel from "@/components/shop/OffersCarousel";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Shop = () => {
   const { products, addToCart, totalItems, setCartOpen } = useCart();
   const [filter, setFilter] = useState("All");
+  const [categories, setCategories] = useState<string[]>(["All"]);
 
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase
+        .from("product_categories")
+        .select("name")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (data) setCategories(["All", ...data.map((c: any) => c.name)]);
+    };
+    fetchCategories();
+  }, []);
+
   const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
   const loading = products.length === 0;
 

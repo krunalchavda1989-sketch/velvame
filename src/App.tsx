@@ -32,6 +32,7 @@ import AdminCommissionLevels from "./pages/admin/AdminCommissionLevels";
 import AdminAwards from "./pages/admin/AdminAwards";
 import AdminOffers from "./pages/admin/AdminOffers";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminCategories from "./pages/admin/AdminCategories";
 import Settings from "./pages/dashboard/Settings";
 import MyTitle from "./pages/dashboard/MyTitle";
 import RazorpaySettings from "./pages/dashboard/RazorpaySettings";
@@ -139,6 +140,7 @@ const App = () => (
             <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
             <Route path="/admin/products/new" element={<AdminRoute><AdminProductForm /></AdminRoute>} />
             <Route path="/admin/products/:id/edit" element={<AdminRoute><AdminProductForm /></AdminRoute>} />
+            <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><AdminCommissions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
