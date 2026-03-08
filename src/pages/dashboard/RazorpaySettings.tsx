@@ -171,7 +171,7 @@ const RazorpaySettings = () => {
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Pay ₹2,800 one-time to activate your account and start earning commissions.
+                      Pay ₹{SUBSCRIPTION_AMOUNT.toLocaleString("en-IN")} one-time to activate your account and start earning commissions.
                     </p>
                   )}
                 </div>
