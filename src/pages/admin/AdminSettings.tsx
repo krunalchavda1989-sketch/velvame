@@ -98,6 +98,10 @@ const AdminSettings = () => {
           <TabsContent value="pwa">
             <PWATab />
           </TabsContent>
+
+          <TabsContent value="captcha">
+            <CaptchaTab />
+          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
