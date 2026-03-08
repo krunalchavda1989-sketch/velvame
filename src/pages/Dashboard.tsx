@@ -26,6 +26,7 @@ const COLORS = [
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
+  const { amount: membershipAmount } = useMembershipAmount();
   const [copied, setCopied] = useState(false);
   const [wallet, setWallet] = useState<any>(null);
   const [teamCount, setTeamCount] = useState(0);
