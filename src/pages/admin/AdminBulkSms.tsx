@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   MessageSquare, Plus, Send, Clock, Users, FileText, Trash2,
   Loader2, Search, Filter, Eye, CheckCircle,
-  XCircle, AlertTriangle, Save, Smartphone, Phone
+  XCircle, AlertTriangle, Save, Smartphone, Phone,
+  Image, Video, Paperclip, Link as LinkIcon, Upload, X
 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
