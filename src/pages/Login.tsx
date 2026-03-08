@@ -10,6 +10,7 @@ import { useBrand } from "@/contexts/BrandContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
