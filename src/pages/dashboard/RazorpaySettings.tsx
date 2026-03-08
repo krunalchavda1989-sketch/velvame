@@ -47,6 +47,7 @@ const RazorpaySettings = () => {
         .from("payments")
         .select("*")
         .eq("user_id", user!.id)
+        .eq("status", "paid")
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
