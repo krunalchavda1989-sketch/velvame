@@ -946,6 +946,39 @@ const AdminBulkSms = () => {
                 </div>
               </div>
               <Separator />
+              {/* Media attachment in preview */}
+              {previewCampaign.media_url && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Media Attachment</p>
+                  <div className="rounded-lg border border-border p-2">
+                    {previewCampaign.media_type === "image" && (
+                      <img src={previewCampaign.media_url} alt="Campaign media" className="max-h-32 rounded object-contain mx-auto" />
+                    )}
+                    {previewCampaign.media_type === "video" && (
+                      <video src={previewCampaign.media_url} controls className="max-h-32 rounded mx-auto" />
+                    )}
+                    {previewCampaign.media_type === "document" && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Paperclip className="h-4 w-4" />
+                        <a href={previewCampaign.media_url} target="_blank" rel="noopener noreferrer" className="underline truncate">
+                          {previewCampaign.media_url.split("/").pop()}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Link button in preview */}
+              {previewCampaign.link_text && previewCampaign.link_url && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">CTA Button</p>
+                  <div className="rounded-lg border border-border p-2.5 text-center">
+                    <a href={previewCampaign.link_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-blue-600 flex items-center justify-center gap-1">
+                      <LinkIcon className="h-3 w-3" /> {previewCampaign.link_text}
+                    </a>
+                  </div>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Message</p>
                 <div className={`rounded-lg p-3 border text-sm whitespace-pre-wrap ${
