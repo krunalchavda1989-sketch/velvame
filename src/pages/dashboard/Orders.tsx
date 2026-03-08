@@ -146,7 +146,15 @@ const OrdersPage = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1 text-primary"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/orders/${order.id}`); }}
+                      >
+                        <Eye className="w-3 h-3" /> Details
+                      </Button>
                       <Badge variant="outline" className={`text-xs ${sc.color}`}>{order.status}</Badge>
                       {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                     </div>
