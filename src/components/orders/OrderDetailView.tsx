@@ -7,8 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft, Package, Truck, CreditCard, MapPin, Clock,
   CheckCircle2, XCircle, CircleDot, User, Hash,
-  Copy, ShoppingBag,
+  Copy, ShoppingBag, Printer,
 } from "lucide-react";
+import { useInvoicePrint } from "./InvoicePrint";
 import { toast } from "sonner";
 
 interface OrderDetailData {
