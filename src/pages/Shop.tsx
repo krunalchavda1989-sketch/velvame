@@ -37,6 +37,8 @@ const Shop = () => {
           </Button>
         </div>
 
+        <OffersCarousel />
+
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           {categories.map((cat) => (
             <button
