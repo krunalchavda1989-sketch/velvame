@@ -120,7 +120,7 @@ const Register = () => {
           {step === "form" ? (
             <>
               <h1 className="text-2xl font-display font-bold text-foreground">Create Your Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Lifetime membership — One-time ₹2800</p>
+              <p className="text-sm text-muted-foreground mt-1">Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}</p>
             </>
           ) : (
             <>
