@@ -13,8 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
-  CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2
+  CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
+  Ban, Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -139,6 +144,31 @@ const AdminUserDetail = () => {
     toast({ title: newVal ? "Activated" : "Deactivated", description: `Subscription ${newVal ? "activated" : "deactivated"} successfully.` });
   };
 
+  const handleDeactivateUser = async () => {
+    if (!profile) return;
+    const { error } = await supabase.from("profiles").update({ subscription_paid: false, subscription_date: null }).eq("id", profile.id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to deactivate user.", variant: "destructive" });
+      return;
+    }
+    setProfile({ ...profile, subscription_paid: false, subscription_date: null });
+    setEditForm((f) => ({ ...f, subscription_paid: false }));
+    toast({ title: "User Deactivated", description: "User account has been deactivated successfully." });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!profile) return;
+    const { error } = await supabase.functions.invoke("admin-settings", {
+      body: { action: "delete_user", user_id: profile.user_id },
+    });
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete user account.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "User Deleted", description: "User account has been permanently deleted." });
+    window.location.href = "/admin/users";
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -253,6 +283,48 @@ const AdminUserDetail = () => {
                 </Badge>
               </button>
               <Badge variant="secondary">{profile.title}</Badge>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              {profile.subscription_paid && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-orange-600 border-orange-300 hover:bg-orange-50">
+                      <Ban className="h-3.5 w-3.5" /> Deactivate
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Deactivate User Account</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will deactivate {profile.full_name}'s subscription. They will lose access to distributor features but their account data will be preserved.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeactivateUser} className="bg-orange-600 hover:bg-orange-700">Deactivate</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10">
+                    <Trash2 className="h-3.5 w-3.5" /> Delete Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Permanently Delete User</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete {profile.full_name}'s account, profile, wallet, orders, and all associated data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90">Delete Permanently</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
