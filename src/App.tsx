@@ -65,6 +65,14 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/genealogy"
+              element={
+                <ProtectedRoute>
+                  <GenealogyTree />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/wallet"
               element={
                 <ProtectedRoute>
