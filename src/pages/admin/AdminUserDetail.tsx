@@ -13,8 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
-  CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2
+  CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
+  Ban, Trash2, ShieldCheck
 } from "lucide-react";
 import { format } from "date-fns";
 
