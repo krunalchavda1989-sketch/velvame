@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +56,7 @@ const chartConfig = {
 
 const Earnings = () => {
   const { user } = useAuth();
+  const { currencySymbol } = useLocalization();
   const [period, setPeriod] = useState<"6m" | "12m">("6m");
 
   const { data: commissions = [], isLoading } = useQuery({
@@ -116,15 +118,15 @@ const Earnings = () => {
   const avgMonthly = monthlyData.reduce((s, m) => s + m.total, 0) / monthlyData.length || 0;
 
   const stats = [
-    { label: "Total Earned", value: `₹${totalEarned.toLocaleString()}`, icon: DollarSign, color: "text-primary" },
-    { label: "This Month", value: `₹${thisMonth.toLocaleString()}`, icon: Calendar, color: "text-green-500" },
+    { label: "Total Earned", value: `${currencySymbol}${totalEarned.toLocaleString()}`, icon: DollarSign, color: "text-primary" },
+    { label: "This Month", value: `${currencySymbol}${thisMonth.toLocaleString()}`, icon: Calendar, color: "text-green-500" },
     {
       label: "Growth",
       value: `${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%`,
       icon: growth >= 0 ? TrendingUp : TrendingDown,
       color: growth >= 0 ? "text-green-500" : "text-red-500",
     },
-    { label: "Avg / Month", value: `₹${avgMonthly.toFixed(0)}`, icon: BarChart3, color: "text-blue-500" },
+    { label: "Avg / Month", value: `${currencySymbol}${avgMonthly.toFixed(0)}`, icon: BarChart3, color: "text-blue-500" },
   ];
 
   if (isLoading) {
@@ -283,14 +285,14 @@ const Earnings = () => {
                         <div className="w-3 h-3 rounded-full bg-primary" />
                         <span className="text-sm text-foreground">Standard Commission</span>
                         <Badge variant="secondary">
-                          ₹{commissions.filter((c) => c.commission_type === "level").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
+                          {currencySymbol}{commissions.filter((c) => c.commission_type === "level").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full" style={{ background: "hsl(var(--chart-2, 160 60% 45%))" }} />
                         <span className="text-sm text-foreground">Repurchase Commission</span>
                         <Badge variant="secondary">
-                          ₹{commissions.filter((c) => c.commission_type === "repurchase").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
+                          {currencySymbol}{commissions.filter((c) => c.commission_type === "repurchase").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
                         </Badge>
                       </div>
                     </div>
