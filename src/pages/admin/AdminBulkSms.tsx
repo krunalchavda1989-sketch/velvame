@@ -86,6 +86,8 @@ const AdminBulkSms = () => {
 
   const [previewDialog, setPreviewDialog] = useState(false);
   const [previewCampaign, setPreviewCampaign] = useState<any>(null);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   const [userCount, setUserCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
