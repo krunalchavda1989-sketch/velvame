@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet, MapPin } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -27,6 +28,12 @@ interface AppliedCoupon {
   discount_value: number;
   max_discount_amount: number;
   discountAmount: number;
+}
+
+interface ShippingMethod {
+  key: string;
+  label: string;
+  cost: number;
 }
 
 const CartDrawer = () => {
@@ -54,8 +61,39 @@ const CartDrawer = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
 
+  // Shipping methods state
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [selectedShipping, setSelectedShipping] = useState<string>("");
+
   useEffect(() => {
-    if (!user || !cartOpen) return;
+    if (!cartOpen) return;
+
+    // Fetch shipping methods
+    supabase
+      .from("pages_content")
+      .select("content")
+      .eq("page_slug", "shipping-methods")
+      .maybeSingle()
+      .then(({ data }) => {
+        const methods: ShippingMethod[] = [];
+        if (data?.content) {
+          const c = data.content as any;
+          if (c.free_shipping?.enabled) {
+            methods.push({ key: "free_shipping", label: c.free_shipping.label || "Free Shipping", cost: 0 });
+          }
+          if (c.flat_rate?.enabled) {
+            methods.push({ key: "flat_rate", label: c.flat_rate.label || "Flat Rate", cost: Number(c.flat_rate.cost) || 0 });
+          }
+        }
+        // Always have at least free shipping as fallback
+        if (methods.length === 0) {
+          methods.push({ key: "free_shipping", label: "Free Shipping", cost: 0 });
+        }
+        setShippingMethods(methods);
+        setSelectedShipping(methods[0]?.key || "");
+      });
+
+    if (!user) return;
     supabase
       .from("wallets")
       .select("balance")
@@ -93,6 +131,32 @@ const CartDrawer = () => {
     }
     return coupon.discount_value;
   };
+
+  // Check if free shipping min amount is met
+  const getShippingMethodConfig = () => shippingMethods.find((m) => m.key === selectedShipping);
+  const activeShipping = getShippingMethodConfig();
+  const shippingCost = activeShipping?.cost || 0;
+
+  // Check free shipping minimum amount from admin settings
+  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
+
+  useEffect(() => {
+    if (!cartOpen) return;
+    supabase
+      .from("pages_content")
+      .select("content")
+      .eq("page_slug", "shipping-methods")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.content) {
+          const c = data.content as any;
+          setFreeShippingMinAmount(Number(c.free_shipping?.min_amount) || 0);
+        }
+      });
+  }, [cartOpen]);
+
+  const isFreeShippingEligible = selectedShipping === "free_shipping" && freeShippingMinAmount > 0 && totalPrice < freeShippingMinAmount;
+  const effectiveShippingCost = isFreeShippingEligible ? 0 : shippingCost; // still 0 for free shipping; just show warning
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -153,7 +217,7 @@ const CartDrawer = () => {
   const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
   const afterCoupon = Math.max(0, totalPrice - discountAmount);
   const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
-  const afterTax = afterCoupon + tax;
+  const afterTax = afterCoupon + tax + shippingCost;
   const walletDeduction = useWallet ? Math.min(walletBalance, afterTax) : 0;
   const finalPrice = Math.max(0, afterTax - walletDeduction);
   const isFullWalletPayment = useWallet && finalPrice === 0;
@@ -165,6 +229,10 @@ const CartDrawer = () => {
       return;
     }
     if (cartProducts.length === 0) return;
+    if (isFreeShippingEligible) {
+      toast.error(`Add ${fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping`);
+      return;
+    }
     setStep("address");
   };
 
@@ -192,6 +260,7 @@ const CartDrawer = () => {
           user_id: user!.id,
           total_amount: afterTax,
           shipping_address: shippingAddr as any,
+          shipping_method: selectedShipping,
           payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay",
           status: "pending",
         })
@@ -416,6 +485,33 @@ const CartDrawer = () => {
                   </div>
                 )}
 
+                {/* Shipping Method Selection */}
+                {shippingMethods.length > 1 && (
+                  <div className="p-3 rounded-lg border border-border space-y-2">
+                    <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-muted-foreground" /> Shipping Method
+                    </p>
+                    <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping}>
+                      {shippingMethods.map((m) => (
+                        <div key={m.key} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
+                            <Label htmlFor={`ship-${m.key}`} className="text-sm cursor-pointer">{m.label}</Label>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {m.cost === 0 ? "Free" : `+${fc(m.cost)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                    {isFreeShippingEligible && (
+                      <p className="text-xs text-destructive">
+                        Add {fc(freeShippingMinAmount - totalPrice)} more to qualify for free shipping
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
@@ -425,6 +521,18 @@ const CartDrawer = () => {
                     <div className="flex justify-between text-sm">
                       <span className="text-primary">Coupon Discount</span>
                       <span className="text-primary font-medium">-{fc(discountAmount)}</span>
+                    </div>
+                  )}
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Shipping ({activeShipping?.label})</span>
+                      <span className="text-foreground">+{fc(shippingCost)}</span>
+                    </div>
+                  )}
+                  {shippingCost === 0 && shippingMethods.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="text-success">Free</span>
                     </div>
                   )}
                   {taxEnabled && (
@@ -537,6 +645,12 @@ const CartDrawer = () => {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="text-foreground">{fc(afterCoupon)}</span>
                 </div>
+                {shippingCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-foreground">+{fc(shippingCost)}</span>
+                  </div>
+                )}
                 {taxEnabled && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{taxLabel} ({taxRate}%)</span>
