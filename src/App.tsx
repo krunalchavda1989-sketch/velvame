@@ -191,7 +191,7 @@ const App = () => (
               path="/dashboard/kyc"
               element={
                 <ProtectedRoute>
-                  <KYC />
+                  <Settings />
                 </ProtectedRoute>
               }
             />
