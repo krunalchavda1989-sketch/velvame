@@ -92,7 +92,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             <Crown className="h-6 w-6 text-primary flex-shrink-0" />
           )}
         </div>
-        </div>
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
           {menuItems.map((item) => {
