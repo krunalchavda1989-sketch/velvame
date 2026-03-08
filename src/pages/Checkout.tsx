@@ -14,6 +14,7 @@ import { useBrand } from "@/contexts/BrandContext";
 import { useLocalization, formatPrice, taxAmount } from "@/hooks/useLocalization";
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
+import { sendOrderEmail } from "@/lib/orderEmail";
 
 declare global {
   interface Window {
