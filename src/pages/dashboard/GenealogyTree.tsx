@@ -236,6 +236,7 @@ const GenealogyTree = () => {
   const [stats, setStats] = useState({ total: 0, active: 0, levels: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "graph">("list");
 
   const isOwnTree = breadcrumbs.length === 0;
 
