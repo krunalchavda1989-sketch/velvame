@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrand } from "@/contexts/BrandContext";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft, Settings,
