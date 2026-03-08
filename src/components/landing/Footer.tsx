@@ -1,19 +1,32 @@
 import { Crown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useBrand } from "@/contexts/BrandContext";
 
 const Footer = () => {
+  const brand = useBrand();
+
   return (
     <footer className="border-t border-border py-12">
       <div className="container px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Crown className="h-6 w-6 text-primary" />
-              <span className="font-display text-lg font-bold text-gradient-gold">NexaMLM</span>
+              {brand.logo_url ? (
+                <img src={brand.logo_url} alt={brand.brand_name} className="h-6 w-6 object-contain rounded" />
+              ) : (
+                <Crown className="h-6 w-6 text-primary" />
+              )}
+              <span className="font-display text-lg font-bold text-gradient-gold">{brand.brand_name}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Build your network, grow your income. The premium MLM platform.
+              {brand.tagline || "Build your network, grow your income. The premium MLM platform."}
             </p>
+            {brand.email && (
+              <p className="text-sm text-muted-foreground mt-2">📧 {brand.email}</p>
+            )}
+            {brand.phone && (
+              <p className="text-sm text-muted-foreground mt-1">📞 {brand.phone}</p>
+            )}
           </div>
 
           <div>
@@ -67,7 +80,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border text-center text-sm text-muted-foreground">
-          © 2026 NexaMLM. All rights reserved.
+          © {new Date().getFullYear()} {brand.brand_name}. All rights reserved.
         </div>
       </div>
     </footer>
