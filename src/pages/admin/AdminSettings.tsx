@@ -152,7 +152,7 @@ const GATEWAY_META = [
   },
 ];
 
-/* ───────── Payment Transaction List ───────── */
+/* ───────── Payment Transaction List Component ───────── */
 const PaymentTransactionList = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
