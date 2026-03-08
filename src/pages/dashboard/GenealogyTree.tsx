@@ -5,11 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, User, Users, Crown, Loader2,
-  Shield, Search, X, Eye, ArrowLeft
+  Shield, Search, X, Eye, ArrowLeft, List, GitFork
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import HorizontalTreeGraph from "@/components/genealogy/HorizontalTreeGraph";
 
 interface TreeMember {
   profile_id: string;
@@ -234,6 +235,7 @@ const GenealogyTree = () => {
   const [stats, setStats] = useState({ total: 0, active: 0, levels: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "graph">("list");
 
   const isOwnTree = breadcrumbs.length === 0;
 
@@ -301,6 +303,26 @@ const GenealogyTree = () => {
             <p className="text-sm text-muted-foreground mt-1">
               Visual overview of your referral network hierarchy
             </p>
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-3.5 w-3.5" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "graph" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => setViewMode("graph")}
+            >
+              <GitFork className="h-3.5 w-3.5" />
+              Graph
+            </Button>
           </div>
         </div>
 
@@ -373,15 +395,24 @@ const GenealogyTree = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : tree ? (
-          <div className="space-y-2">
-            <TreeNodeCard
-              node={tree}
-              defaultOpen={true}
+          viewMode === "list" ? (
+            <div className="space-y-2">
+              <TreeNodeCard
+                node={tree}
+                defaultOpen={true}
+                searchQuery={searchQuery}
+                onEnterTree={handleEnterTree}
+                isOwnTree={isOwnTree}
+              />
+            </div>
+          ) : (
+            <HorizontalTreeGraph
+              tree={tree}
               searchQuery={searchQuery}
               onEnterTree={handleEnterTree}
               isOwnTree={isOwnTree}
             />
-          </div>
+          )
         ) : (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
