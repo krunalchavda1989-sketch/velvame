@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Minus, Plus, ShoppingBag, Trash2, Loader2 } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -16,18 +17,9 @@ declare global {
   }
 }
 
-export type CartItem = { id: string; qty: number };
-
-interface CartDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  cart: CartItem[];
-  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
-  products: any[];
-}
-
-const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerProps) => {
+const CartDrawer = () => {
   const { user } = useAuth();
+  const { cartOpen, setCartOpen, cartProducts, totalPrice, updateQty, removeItem, clearCart } = useCart();
   const navigate = useNavigate();
   const [step, setStep] = useState<"cart" | "address" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
@@ -41,34 +33,13 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
     phone: "",
   });
 
-  const cartProducts = cart
-    .map((c) => {
-      const product = products.find((p) => p.id === c.id);
-      return product ? { ...product, qty: c.qty } : null;
-    })
-    .filter(Boolean) as any[];
-
-  const total = cartProducts.reduce((sum, p) => sum + p.distributor_price * p.qty, 0);
-
-  const updateQty = (id: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((c) => (c.id === id ? { ...c, qty: c.qty + delta } : c))
-        .filter((c) => c.qty > 0)
-    );
-  };
-
-  const removeItem = (id: string) => {
-    setCart((prev) => prev.filter((c) => c.id !== id));
-  };
-
   const handleCheckout = async () => {
     if (!user) {
       toast.error("Please login to place an order");
       navigate("/login");
       return;
     }
-    if (cart.length === 0) return;
+    if (cartProducts.length === 0) return;
     setStep("address");
   };
 
@@ -82,12 +53,11 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
     setStep("processing");
 
     try {
-      // 1. Create order in DB
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user!.id,
-          total_amount: total,
+          total_amount: totalPrice,
           shipping_address: address as any,
           payment_method: "razorpay",
           status: "pending",
@@ -97,7 +67,6 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
 
       if (orderError) throw new Error(orderError.message);
 
-      // 2. Insert order items
       const items = cartProducts.map((p) => ({
         order_id: order.id,
         product_id: p.id,
@@ -108,11 +77,10 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
-      // 3. Create Razorpay order via edge function
       const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
         body: {
           action: "create_order",
-          amount: total,
+          amount: totalPrice,
           purpose: "shop",
           order_ref_id: order.id,
         },
@@ -120,7 +88,6 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
 
       if (rzpError || rzpData?.error) throw new Error(rzpData?.error || rzpError?.message);
 
-      // 4. Open Razorpay checkout
       const options = {
         key: rzpData.key_id,
         amount: rzpData.amount,
@@ -144,16 +111,15 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
               return;
             }
 
-            // Update order status
             await supabase
               .from("orders")
               .update({ status: "confirmed", payment_method: "razorpay" })
               .eq("id", order.id);
 
             toast.success("Order placed successfully!");
-            setCart([]);
+            clearCart();
             setStep("cart");
-            onOpenChange(false);
+            setCartOpen(false);
           } catch {
             toast.error("Payment verification failed");
           }
@@ -179,7 +145,7 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={cartOpen} onOpenChange={setCartOpen}>
       <SheetContent className="w-full sm:max-w-md flex flex-col">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-display">
@@ -197,7 +163,11 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
                 cartProducts.map((p) => (
                   <div key={p.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
                     <div className="w-12 h-12 rounded bg-secondary flex items-center justify-center text-2xl shrink-0">
-                      {p.image_url || "📦"}
+                      {p.image_url?.startsWith("http") ? (
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-contain rounded" />
+                      ) : (
+                        p.image_url || "📦"
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
@@ -223,7 +193,7 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-display font-bold text-foreground">₹{total.toFixed(2)}</span>
+                  <span className="font-display font-bold text-foreground">₹{totalPrice.toFixed(2)}</span>
                 </div>
                 <Button className="w-full" onClick={handleCheckout}>
                   Proceed to Checkout
@@ -271,13 +241,13 @@ const CartDrawer = ({ open, onOpenChange, cart, setCart, products }: CartDrawerP
               <Separator />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Total</span>
-                <span className="font-display font-bold text-foreground">₹{total.toFixed(2)}</span>
+                <span className="font-display font-bold text-foreground">₹{totalPrice.toFixed(2)}</span>
               </div>
             </div>
             <div className="border-t border-border pt-4 space-y-2">
               <Button className="w-full" onClick={handlePayment} disabled={processing}>
                 {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Pay ₹{total.toFixed(2)} with Razorpay
+                Pay ₹{totalPrice.toFixed(2)} with Razorpay
               </Button>
               <Button variant="ghost" className="w-full" onClick={() => setStep("cart")}>
                 Back to Cart

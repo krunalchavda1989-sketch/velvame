@@ -125,6 +125,7 @@ const App = () => (
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
