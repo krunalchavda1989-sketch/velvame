@@ -37,7 +37,7 @@ const Shop = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <AnnouncementBar />
+      
       <div className="pt-24 pb-16">
         <PageBreadcrumb
           title="Shop Products"

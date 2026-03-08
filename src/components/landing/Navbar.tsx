@@ -219,7 +219,8 @@ const Navbar = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </nav>
+        </nav>
+      </div>
 
       <CartDrawer />
     </>
