@@ -53,6 +53,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
     navigate("/admin/login");
   };
+
+  const isChildActive = (item: MenuItem) =>
     item.children?.some((c) => location.pathname === c.href) || false;
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
