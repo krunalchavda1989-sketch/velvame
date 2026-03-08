@@ -1116,6 +1116,7 @@ export type Database = {
         Row: {
           audience_filter: Json
           audience_type: string
+          channel: string
           created_at: string
           created_by: string
           failed_count: number
@@ -1132,6 +1133,7 @@ export type Database = {
         Insert: {
           audience_filter?: Json
           audience_type?: string
+          channel?: string
           created_at?: string
           created_by: string
           failed_count?: number
@@ -1148,6 +1150,7 @@ export type Database = {
         Update: {
           audience_filter?: Json
           audience_type?: string
+          channel?: string
           created_at?: string
           created_by?: string
           failed_count?: number
