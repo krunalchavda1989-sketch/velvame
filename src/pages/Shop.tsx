@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCart, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -101,18 +102,26 @@ const Shop = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
+                className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer"
               >
-                <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
-                  {product.image_url || "📦"}
-                </div>
-                <div className="p-4">
-                  <div className="text-xs text-muted-foreground mb-1">{product.category}</div>
-                  <h3 className="font-display font-semibold text-foreground text-sm mb-2">{product.name}</h3>
-                  <div className="flex items-center gap-1 mb-3">
-                    <Star className="h-3 w-3 text-primary fill-primary" />
-                    <span className="text-xs text-muted-foreground">{product.rating}</span>
+                <Link to={`/product/${product.id}`}>
+                  <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
+                    {product.image_url?.startsWith("http") ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
+                    ) : (
+                      product.image_url || "📦"
+                    )}
                   </div>
+                  <div className="p-4">
+                    <div className="text-xs text-muted-foreground mb-1">{product.category}</div>
+                    <h3 className="font-display font-semibold text-foreground text-sm mb-2">{product.name}</h3>
+                    <div className="flex items-center gap-1 mb-3">
+                      <Star className="h-3 w-3 text-primary fill-primary" />
+                      <span className="text-xs text-muted-foreground">{product.rating}</span>
+                    </div>
+                  </div>
+                </Link>
+                <div className="px-4 pb-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-lg font-display font-bold text-primary">₹{product.distributor_price}</div>
