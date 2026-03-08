@@ -172,10 +172,21 @@ const Navbar = () => {
                 ))}
                 {user ? (
                   <>
-                    <Link to="/dashboard" onClick={() => setOpen(false)}>
+                    <Link to="/dashboard" onClick={() => setOpen(false)} className="w-full">
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground gap-2">
                         <LayoutDashboard className="h-4 w-4" />
                         {profile?.full_name || "Dashboard"}
+                        {profile?.subscription_paid ? (
+                          <Badge className="bg-success/15 text-success border-success/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 ml-auto">
+                            <BadgeCheck className="h-3 w-3" />
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 ml-auto">
+                            <ShieldAlert className="h-3 w-3" />
+                            Inactive
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
                     <Button
