@@ -381,6 +381,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_direct_referral: {
+        Args: { _profile_id: string; _viewer_user_id: string }
+        Returns: boolean
+      }
       validate_referral_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
