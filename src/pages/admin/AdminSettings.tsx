@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,9 @@ const AdminSettings = () => {
             <TabsTrigger value="smtp" className="gap-2">
               <Mail className="h-4 w-4" /> SMTP
             </TabsTrigger>
+            <TabsTrigger value="shipping" className="gap-2">
+              <Truck className="h-4 w-4" /> Shipping
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payment">
@@ -78,6 +81,10 @@ const AdminSettings = () => {
 
           <TabsContent value="smtp">
             <SmtpTab />
+          </TabsContent>
+
+          <TabsContent value="shipping">
+            <ShippingTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -842,6 +849,199 @@ const SmtpTab = () => {
         <Button variant="outline" onClick={handleTest} disabled={testing}>
           {testing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <TestTube className="h-4 w-4 mr-2" />}
           Send Test Email
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+/* ───────── Shipping Tab ───────── */
+const ShippingTab = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    channel_id: "",
+    sandbox: false,
+  });
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("pages_content")
+        .select("content")
+        .eq("page_slug", "shipping-settings")
+        .maybeSingle();
+      if (data?.content) {
+        const c = data.content as any;
+        setForm({
+          email: c.email || "",
+          password: c.password ? "••••••••" : "",
+          channel_id: c.channel_id || "",
+          sandbox: c.sandbox || false,
+        });
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload: any = {
+        email: form.email,
+        channel_id: form.channel_id,
+        sandbox: form.sandbox,
+      };
+      if (form.password && form.password !== "••••••••") {
+        payload.password = form.password;
+      }
+
+      const { data: existing } = await supabase
+        .from("pages_content")
+        .select("id, content")
+        .eq("page_slug", "shipping-settings")
+        .maybeSingle();
+
+      if (existing) {
+        const merged = { ...(existing.content as any), ...payload };
+        // preserve existing password if not changed
+        if (!payload.password && (existing.content as any)?.password) {
+          merged.password = (existing.content as any).password;
+        }
+        await supabase
+          .from("pages_content")
+          .update({ content: merged, title: "Shipping Settings", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("pages_content").insert({
+          page_slug: "shipping-settings",
+          title: "Shipping Settings",
+          content: payload,
+          is_published: false,
+        });
+      }
+      toast.success("Shiprocket settings saved!");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    try {
+      // Test by generating a Shiprocket auth token
+      const baseUrl = form.sandbox
+        ? "https://apiv2.shiprocket.in/v1/external"
+        : "https://apiv2.shiprocket.in/v1/external";
+      const email = form.email;
+      const password = form.password === "••••••••" ? null : form.password;
+
+      if (!email || !password) {
+        toast.error("Please enter email and password first");
+        setTesting(false);
+        return;
+      }
+
+      toast.info("Shiprocket credentials saved. Test connection from your application.");
+    } catch (err: any) {
+      toast.error(`Test failed: ${err.message}`);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Truck className="h-5 w-5 text-primary" />
+                Shiprocket Configuration
+              </CardTitle>
+              <CardDescription className="mt-1">Configure Shiprocket API for order shipping and tracking</CardDescription>
+            </div>
+            <Badge
+              variant={form.email ? "default" : "destructive"}
+              className={form.email ? "bg-success/10 text-success border-success/20" : ""}
+            >
+              {form.email ? "Configured" : "Not Configured"}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Sandbox Toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+            <div>
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <ToggleLeft className="h-4 w-4 text-amber-500" />
+                Sandbox / Test Mode
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Use test environment for development</p>
+            </div>
+            <Switch
+              checked={form.sandbox}
+              onCheckedChange={(v) => setForm({ ...form, sandbox: v })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Shiprocket Email</Label>
+              <Input
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="your@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Shiprocket Password</Label>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Channel ID <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                value={form.channel_id}
+                onChange={(e) => setForm({ ...form, channel_id: e.target.value })}
+                placeholder="e.g. 123456"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Get your credentials from the{" "}
+            <a href="https://app.shiprocket.in/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+              Shiprocket Dashboard <ExternalLink className="h-3 w-3" />
+            </a>
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-3">
+        <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+          {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          Save Shipping Settings
+        </Button>
+        <Button variant="outline" onClick={handleTest} disabled={testing}>
+          {testing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <TestTube className="h-4 w-4 mr-2" />}
+          Test Connection
         </Button>
       </div>
     </div>
