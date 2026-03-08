@@ -10,6 +10,7 @@ import {
   Copy, ShoppingBag, Printer,
 } from "lucide-react";
 import { useInvoicePrint } from "./InvoicePrint";
+import OrderActivityTimeline from "./OrderActivityTimeline";
 import { toast } from "sonner";
 
 interface OrderDetailData {
