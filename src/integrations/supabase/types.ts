@@ -885,6 +885,39 @@ export type Database = {
           },
         ]
       }
+      testimonials: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          rating: number
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          rating?: number
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          rating?: number
+          sort_order?: number
+          text?: string
+        }
+        Relationships: []
+      }
       title_roadmap: {
         Row: {
           badge_color: string | null
