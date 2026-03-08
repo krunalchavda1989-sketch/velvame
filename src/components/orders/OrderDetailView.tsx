@@ -177,6 +177,10 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(order.created_at)}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2 flex-shrink-0">
+          <Printer className="h-4 w-4" />
+          Invoice
+        </Button>
       </div>
 
       {/* Status Timeline */}
