@@ -26,11 +26,15 @@ const Index = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
   useEffect(() => {
-    const fetchCats = async () => {
-      const { data } = await supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6);
-      setCategories((data as unknown as Category[]) || []);
+    const fetchData = async () => {
+      const [{ data: cats }, { data: reviews }] = await Promise.all([
+        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
+        supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
+      ]);
+      setCategories((cats as unknown as Category[]) || []);
+      setTestimonials((reviews as unknown as Testimonial[]) || []);
     };
-    fetchCats();
+    fetchData();
   }, []);
 
   const featuredProducts = products.slice(0, 8);
