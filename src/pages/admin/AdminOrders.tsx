@@ -45,7 +45,72 @@ const AdminOrders = () => {
 
   useEffect(() => { fetchOrders(); }, []);
 
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      // Get order details
+      const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
+      if (!order) throw new Error("Order not found");
+
+      // Refund wallet balance if wallet was used
+      const paymentMethod = order.payment_method || "";
+      if (paymentMethod === "wallet" || paymentMethod === "wallet+razorpay") {
+        let walletRefund = 0;
+
+        if (paymentMethod === "wallet") {
+          walletRefund = Number(order.total_amount);
+        } else {
+          // wallet+razorpay: refund = total_amount - razorpay amount
+          const { data: payment } = await supabase
+            .from("payments")
+            .select("amount")
+            .eq("order_ref_id", orderId)
+            .eq("status", "captured")
+            .maybeSingle();
+          walletRefund = payment
+            ? Number(order.total_amount) - Number(payment.amount)
+            : Number(order.total_amount);
+        }
+
+        if (walletRefund > 0) {
+          const { data: wallet } = await supabase
+            .from("wallets")
+            .select("balance")
+            .eq("user_id", order.user_id)
+            .single();
+          if (wallet) {
+            await supabase
+              .from("wallets")
+              .update({ balance: Number(wallet.balance) + walletRefund })
+              .eq("user_id", order.user_id);
+            toast.success(`₹${walletRefund} refunded to wallet`);
+          }
+        }
+      }
+
+      // Mark associated payments as failed
+      await supabase
+        .from("payments")
+        .update({ status: "failed" })
+        .eq("order_ref_id", orderId);
+
+      // Update order status
+      const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+      if (error) throw error;
+
+      toast.success("Order cancelled successfully");
+    } catch (err: any) {
+      toast.error(`Cancel failed: ${err.message}`);
+    } finally {
+      fetchOrders();
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
+    if (status === "cancelled") {
+      await handleCancelOrder(id);
+      return;
+    }
+
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Order status updated to ${status}`);
