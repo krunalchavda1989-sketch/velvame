@@ -339,6 +339,44 @@ export type Database = {
           },
         ]
       }
+      order_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          note_type: string
+          order_id: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          note_type?: string
+          order_id: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          note_type?: string
+          order_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
