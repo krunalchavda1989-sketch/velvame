@@ -9,10 +9,12 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, isMember, getPrice } = useCart();
+  const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const [product, setProduct] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -37,7 +39,6 @@ const ProductDetail = () => {
       setSelectedImage(data?.image_url || null);
       setLoading(false);
 
-      // Fetch additional images
       if (data) {
         const { data: images } = await supabase
           .from("product_images")
@@ -51,7 +52,6 @@ const ProductDetail = () => {
         if (allImages.length > 0) setSelectedImage(allImages[0]);
       }
 
-      // Fetch recommended products (same category, exclude current)
       if (data) {
         const { data: rec } = await supabase
           .from("products")
@@ -87,6 +87,8 @@ const ProductDetail = () => {
   const distributorPrice = product?.distributor_price || 0;
   const savings = isMember ? retailPrice - distributorPrice : 0;
   const savingsPercent = isMember && retailPrice > 0 ? Math.round((savings / retailPrice) * 100) : 0;
+
+  const fp = (val: number) => formatPrice(val, currencySymbol);
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,13 +199,13 @@ const ProductDetail = () => {
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Distributor Price</p>
                           <span className="text-3xl font-display font-bold text-primary">
-                            ₹{distributorPrice}
+                            {fp(distributorPrice)}
                           </span>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
                           <span className="text-xl text-muted-foreground line-through">
-                            ₹{retailPrice}
+                            {fp(retailPrice)}
                           </span>
                         </div>
                       </div>
@@ -211,7 +213,7 @@ const ProductDetail = () => {
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-success" />
                           <span className="text-sm font-medium text-success">
-                            You save ₹{savings} ({savingsPercent}% off)
+                            You save {fp(savings)} ({savingsPercent}% off)
                           </span>
                         </div>
                       )}
@@ -221,18 +223,23 @@ const ProductDetail = () => {
                       <div className="mb-3">
                         <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
                         <span className="text-3xl font-display font-bold text-primary">
-                          ₹{retailPrice}
+                          {fp(retailPrice)}
                         </span>
                       </div>
                       {distributorPrice < retailPrice && (
                         <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                           <Tag className="h-4 w-4 text-primary" />
                           <span className="text-sm text-primary">
-                            Members get this at ₹{distributorPrice} — <Link to="/dashboard/payment" className="underline font-medium">Subscribe now</Link>
+                            Members get this at {fp(distributorPrice)} — <Link to="/dashboard/payment" className="underline font-medium">Subscribe now</Link>
                           </span>
                         </div>
                       )}
                     </>
+                  )}
+                  {taxEnabled && (
+                    <p className="text-xs text-muted-foreground mt-3">
+                      + {taxRate}% {taxLabel} applicable at checkout
+                    </p>
                   )}
                 </div>
 
@@ -319,11 +326,11 @@ const ProductDetail = () => {
                             </h3>
                             <div className="flex items-center gap-2">
                               <span className="text-lg font-display font-bold text-primary">
-                                ₹{recPrice}
+                                {fp(recPrice)}
                               </span>
                               {isMember && (
                                 <span className="text-xs text-muted-foreground line-through">
-                                  ₹{item.retail_price}
+                                  {fp(item.retail_price)}
                                 </span>
                               )}
                             </div>

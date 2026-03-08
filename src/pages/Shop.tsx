@@ -9,9 +9,11 @@ import Footer from "@/components/landing/Footer";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocalization, formatPrice, withTax } from "@/hooks/useLocalization";
 
 const Shop = () => {
   const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
+  const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
 
@@ -39,6 +41,7 @@ const Shop = () => {
             <h1 className="text-3xl font-display font-bold text-foreground">Shop Products</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {isMember ? "Exclusive distributor prices for members" : "Quality products at retail prices"}
+              {taxEnabled && <span className="ml-1">(Prices excl. {taxLabel})</span>}
             </p>
           </div>
           <Button variant="outline" className="relative border-border" onClick={() => setCartOpen(true)}>
@@ -107,12 +110,18 @@ const Shop = () => {
                   <div className="px-4 pb-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-lg font-display font-bold text-primary">₹{price}</div>
+                        <div className="text-lg font-display font-bold text-primary">
+                          {formatPrice(price, currencySymbol)}
+                        </div>
                         {isMember && (
-                          <div className="text-xs text-muted-foreground line-through">₹{otherPrice}</div>
+                          <div className="text-xs text-muted-foreground line-through">
+                            {formatPrice(otherPrice, currencySymbol)}
+                          </div>
                         )}
                         {!isMember && product.distributor_price < product.retail_price && (
-                          <div className="text-xs text-muted-foreground">Member price: ₹{product.distributor_price}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Member price: {formatPrice(product.distributor_price, currencySymbol)}
+                          </div>
                         )}
                       </div>
                       <Button
