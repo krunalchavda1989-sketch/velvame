@@ -238,7 +238,7 @@ const PaymentTransactionList = () => {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg">Transaction History</CardTitle>
@@ -262,6 +262,15 @@ const PaymentTransactionList = () => {
               ))}
             </div>
           </div>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by customer name or payment ID..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
