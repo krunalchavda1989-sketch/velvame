@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
-import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check } from "lucide-react";
+import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowLeftRight } from "lucide-react";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 
 const COLORS = [
   "hsl(var(--primary))",
