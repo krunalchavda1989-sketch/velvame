@@ -1,10 +1,11 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw } from "lucide-react";
+import { Coins, RefreshCw, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
