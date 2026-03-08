@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Coins, RefreshCw, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { sendOrderEmail } from "@/lib/orderEmail";
+import type { OrderEmailType } from "@/lib/orderEmail";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
