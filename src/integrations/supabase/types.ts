@@ -422,6 +422,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_documents: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          document_number: string
+          document_type: string
+          document_url: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          document_number?: string
+          document_type: string
+          document_url: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          document_number?: string
+          document_type?: string
+          document_url?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       localization_settings: {
         Row: {
           available_currencies: Json
