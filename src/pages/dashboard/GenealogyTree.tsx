@@ -395,15 +395,24 @@ const GenealogyTree = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : tree ? (
-          <div className="space-y-2">
-            <TreeNodeCard
-              node={tree}
-              defaultOpen={true}
+          viewMode === "list" ? (
+            <div className="space-y-2">
+              <TreeNodeCard
+                node={tree}
+                defaultOpen={true}
+                searchQuery={searchQuery}
+                onEnterTree={handleEnterTree}
+                isOwnTree={isOwnTree}
+              />
+            </div>
+          ) : (
+            <HorizontalTreeGraph
+              tree={tree}
               searchQuery={searchQuery}
               onEnterTree={handleEnterTree}
               isOwnTree={isOwnTree}
             />
-          </div>
+          )
         ) : (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
