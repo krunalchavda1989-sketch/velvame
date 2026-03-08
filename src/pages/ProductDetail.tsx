@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, ShoppingCart, Plus, Minus, Package, Tag } from "lucide-react";
+import { Star, ShoppingCart, Plus, Minus, Package, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
@@ -93,14 +94,16 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container px-4 pt-24 pb-16">
-        <Link
-          to="/shop"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Shop
-        </Link>
+      <div className="pt-20">
+        <PageBreadcrumb
+          title={product?.name || "Product Details"}
+          breadcrumbs={[
+            { label: "Shop", href: "/shop" },
+            { label: product?.name || "Product" },
+          ]}
+        />
+      </div>
+      <div className="container px-4 py-10">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
