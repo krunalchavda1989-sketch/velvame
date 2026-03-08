@@ -286,6 +286,11 @@ const AdminUserDetail = () => {
                 </Badge>
               </button>
               <Badge variant="secondary">{profile.title}</Badge>
+              {kycDocs.length >= 2 && kycDocs.every((d: any) => d.status === "approved") ? (
+                <Badge className="bg-success/15 text-success border-success/30 text-xs gap-1"><Shield className="h-3 w-3" />KYC Verified</Badge>
+              ) : kycDocs.some((d: any) => d.status === "pending") ? (
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-xs">KYC Pending</Badge>
+              ) : null}
             </div>
             <div className="flex items-center gap-2 mt-2">
               {profile.subscription_paid && (
