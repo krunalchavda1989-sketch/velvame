@@ -9,9 +9,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  ArrowDownToLine, Clock, CheckCircle2, XCircle, DollarSign,
-} from "lucide-react";
+import { Clock, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 

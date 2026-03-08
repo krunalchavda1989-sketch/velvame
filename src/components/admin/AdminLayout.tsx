@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
-  BarChart3, ChevronLeft, ChevronRight, ArrowLeft
+  BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, ArrowLeft
 } from "lucide-react";
 
 const menuItems = [
@@ -11,6 +11,7 @@ const menuItems = [
   { icon: Package, label: "Products", href: "/admin/products" },
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
+  { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
