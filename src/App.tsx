@@ -124,6 +124,7 @@ const App = () => (
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><AdminCommissions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
+            <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>

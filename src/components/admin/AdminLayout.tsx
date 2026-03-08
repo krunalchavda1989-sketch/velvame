@@ -12,6 +12,7 @@ const menuItems = [
   { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
+  { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
