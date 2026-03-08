@@ -173,7 +173,7 @@
 
   .glass {
     @apply backdrop-blur-xl;
-    background: hsl(220 18% 8% / 0.8);
-    border: 1px solid hsl(220 14% 16% / 0.5);
+    background: hsl(0 0% 100% / 0.95);
+    border-bottom: 1px solid hsl(0 0% 90%);
   }
 }
