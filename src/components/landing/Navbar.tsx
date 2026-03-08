@@ -66,7 +66,7 @@ const Navbar = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {link.label}
               </Link>
@@ -77,7 +77,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:text-foreground relative"
+              className="text-gray-600 hover:text-gray-900 relative"
               onClick={() => setCartOpen(true)}
             >
               <ShoppingCart className="h-5 w-5" />
@@ -92,7 +92,7 @@ const Navbar = () => {
             ) : user ? (
               <>
                 <Link to="/dashboard" className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-2">
+                  <Button variant="ghost" size="sm" className="text-gray-700 hover:text-gray-900 gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     {profile?.full_name || "Dashboard"}
                   </Button>
@@ -114,7 +114,7 @@ const Navbar = () => {
                   variant="ghost"
                   size="sm"
                   onClick={signOut}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-gray-500 hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -122,7 +122,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="sm" className="text-gray-700 hover:text-gray-900">
                     Login
                   </Button>
                 </Link>
@@ -139,7 +139,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground relative"
+              className="text-gray-600 relative"
               onClick={() => setCartOpen(true)}
             >
               <ShoppingCart className="h-5 w-5" />
@@ -149,7 +149,7 @@ const Navbar = () => {
                 </span>
               )}
             </Button>
-            <button className="text-foreground" onClick={() => setOpen(!open)}>
+            <button className="text-gray-700" onClick={() => setOpen(!open)}>
               {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
