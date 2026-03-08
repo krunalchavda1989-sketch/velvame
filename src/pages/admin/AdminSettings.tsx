@@ -250,6 +250,30 @@ const PaymentTab = () => {
     }
   };
 
+  const handleTestConnection = async (gwKey: keyof AllGateways) => {
+    setTesting(gwKey);
+    setTestResults((prev) => {
+      const next = { ...prev };
+      delete next[gwKey];
+      return next;
+    });
+    try {
+      const { data, error } = await supabase.functions.invoke("test-payment-gateway", {
+        body: { gateway: gwKey },
+      });
+      if (error) throw error;
+      setTestResults((prev) => ({ ...prev, [gwKey]: data }));
+      if (data.success) toast.success(data.message);
+      else toast.error(data.error || "Test failed");
+    } catch (err: any) {
+      const result = { success: false, error: err.message || "Connection test failed" };
+      setTestResults((prev) => ({ ...prev, [gwKey]: result }));
+      toast.error(result.error);
+    } finally {
+      setTesting(null);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
