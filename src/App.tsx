@@ -53,6 +53,7 @@ import Orders from "./pages/dashboard/Orders";
 import OrderDetail from "./pages/dashboard/OrderDetail";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
+import Offers from "./pages/Offers";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/offers" element={<Offers />} />
             <Route
               path="/dashboard"
               element={
