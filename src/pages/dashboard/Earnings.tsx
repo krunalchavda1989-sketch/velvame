@@ -292,7 +292,7 @@ const Earnings = () => {
                         <div className="w-3 h-3 rounded-full" style={{ background: "hsl(var(--chart-2, 160 60% 45%))" }} />
                         <span className="text-sm text-foreground">Repurchase Commission</span>
                         <Badge variant="secondary">
-                          ₹{commissions.filter((c) => c.commission_type === "repurchase").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
+                          {currencySymbol}{commissions.filter((c) => c.commission_type === "repurchase").reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}
                         </Badge>
                       </div>
                     </div>
