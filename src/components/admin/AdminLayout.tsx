@@ -40,6 +40,7 @@ const menuItems: MenuItem[] = [
     children: [
       { icon: PanelTop, label: "Hero Stats", href: "/admin/hero-stats" },
       { icon: Store, label: "Brand Settings", href: "/admin/brand-settings" },
+      { icon: Menu, label: "Menus", href: "/admin/menus" },
       { icon: FileText, label: "Page Manager", href: "/admin/pages" },
       { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
     ],
