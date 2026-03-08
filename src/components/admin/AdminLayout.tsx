@@ -6,7 +6,8 @@ import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
-  CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop
+  CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
+  TrendingUp
 } from "lucide-react";
 
 interface MenuItem {
