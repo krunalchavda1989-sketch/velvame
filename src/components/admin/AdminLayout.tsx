@@ -54,6 +54,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const brand = useBrand();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
