@@ -12,7 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { addToCart } = useCart();
+  const { addToCart, isMember, getPrice } = useCart();
   const [product, setProduct] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -62,7 +62,6 @@ const ProductDetail = () => {
           .limit(4);
         
         let items = rec || [];
-        // If not enough from same category, fill with other products
         if (items.length < 4) {
           const excludeIds = [id, ...items.map((p: any) => p.id)];
           const { data: more } = await supabase
@@ -80,11 +79,14 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  const savings = product ? product.retail_price - product.distributor_price : 0;
-  const savingsPercent = product ? Math.round((savings / product.retail_price) * 100) : 0;
-
   const isImageUrl = (url: string) =>
     url?.startsWith("http") || url?.startsWith("/") || url?.startsWith("data:");
+
+  const currentPrice = product ? getPrice(product) : 0;
+  const retailPrice = product?.retail_price || 0;
+  const distributorPrice = product?.distributor_price || 0;
+  const savings = isMember ? retailPrice - distributorPrice : 0;
+  const savingsPercent = isMember && retailPrice > 0 ? Math.round((savings / retailPrice) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,7 +135,6 @@ const ProductDetail = () => {
                     <span className="text-8xl">{product.image_url || "📦"}</span>
                   )}
                 </div>
-                {/* Thumbnails */}
                 {productImages.length > 1 && (
                   <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                     {productImages.map((img, i) => (
@@ -190,27 +191,48 @@ const ProductDetail = () => {
 
                 {/* Pricing */}
                 <div className="rounded-xl border border-border bg-card p-5 mb-6">
-                  <div className="flex items-end gap-4 mb-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Distributor Price</p>
-                      <span className="text-3xl font-display font-bold text-primary">
-                        ₹{product.distributor_price}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
-                      <span className="text-xl text-muted-foreground line-through">
-                        ₹{product.retail_price}
-                      </span>
-                    </div>
-                  </div>
-                  {savings > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-success" />
-                      <span className="text-sm font-medium text-success">
-                        You save ₹{savings} ({savingsPercent}% off)
-                      </span>
-                    </div>
+                  {isMember ? (
+                    <>
+                      <div className="flex items-end gap-4 mb-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Distributor Price</p>
+                          <span className="text-3xl font-display font-bold text-primary">
+                            ₹{distributorPrice}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
+                          <span className="text-xl text-muted-foreground line-through">
+                            ₹{retailPrice}
+                          </span>
+                        </div>
+                      </div>
+                      {savings > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-success" />
+                          <span className="text-sm font-medium text-success">
+                            You save ₹{savings} ({savingsPercent}% off)
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-3">
+                        <p className="text-xs text-muted-foreground mb-1">Retail Price</p>
+                        <span className="text-3xl font-display font-bold text-primary">
+                          ₹{retailPrice}
+                        </span>
+                      </div>
+                      {distributorPrice < retailPrice && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                          <Tag className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-primary">
+                            Members get this at ₹{distributorPrice} — <Link to="/dashboard/payment" className="underline font-medium">Subscribe now</Link>
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -270,41 +292,46 @@ const ProductDetail = () => {
                   Recommended Products
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {recommended.map((item, i) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <Link
-                        to={`/product/${item.id}`}
-                        className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
+                  {recommended.map((item, i) => {
+                    const recPrice = getPrice(item);
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
                       >
-                        <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
-                          {isImageUrl(item.image_url) ? (
-                            <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
-                          ) : (
-                            item.image_url || "📦"
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <div className="text-xs text-muted-foreground mb-1">{item.category}</div>
-                          <h3 className="font-display font-semibold text-foreground text-sm mb-2 line-clamp-1">
-                            {item.name}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg font-display font-bold text-primary">
-                              ₹{item.distributor_price}
-                            </span>
-                            <span className="text-xs text-muted-foreground line-through">
-                              ₹{item.retail_price}
-                            </span>
+                        <Link
+                          to={`/product/${item.id}`}
+                          className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
+                        >
+                          <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
+                            {isImageUrl(item.image_url) ? (
+                              <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                            ) : (
+                              item.image_url || "📦"
+                            )}
                           </div>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
+                          <div className="p-4">
+                            <div className="text-xs text-muted-foreground mb-1">{item.category}</div>
+                            <h3 className="font-display font-semibold text-foreground text-sm mb-2 line-clamp-1">
+                              {item.name}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-display font-bold text-primary">
+                                ₹{recPrice}
+                              </span>
+                              {isMember && (
+                                <span className="text-xs text-muted-foreground line-through">
+                                  ₹{item.retail_price}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             )}
