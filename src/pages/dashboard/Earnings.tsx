@@ -56,6 +56,7 @@ const chartConfig = {
 
 const Earnings = () => {
   const { user } = useAuth();
+  const { currencySymbol } = useLocalization();
   const [period, setPeriod] = useState<"6m" | "12m">("6m");
 
   const { data: commissions = [], isLoading } = useQuery({
