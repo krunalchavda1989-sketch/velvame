@@ -76,9 +76,11 @@ const CartDrawer = () => {
       .maybeSingle()
       .then(({ data }) => {
         const methods: ShippingMethod[] = [];
+        let freeShipMinAmt = 0;
         if (data?.content) {
           const c = data.content as any;
           if (c.free_shipping?.enabled) {
+            freeShipMinAmt = Number(c.free_shipping.min_amount) || 0;
             methods.push({ key: "free_shipping", label: c.free_shipping.label || "Free Shipping", cost: 0 });
           }
           if (c.flat_rate?.enabled) {
@@ -89,6 +91,7 @@ const CartDrawer = () => {
         if (methods.length === 0) {
           methods.push({ key: "free_shipping", label: "Free Shipping", cost: 0 });
         }
+        setFreeShippingMinAmount(freeShipMinAmt);
         setShippingMethods(methods);
         setSelectedShipping(methods[0]?.key || "");
       });
