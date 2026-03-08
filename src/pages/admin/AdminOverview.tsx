@@ -34,13 +34,17 @@ const AdminOverview = () => {
       const [profilesRes, productsRes, ordersRes, commissionsRes] = await Promise.all([
         supabase.from("profiles").select("id, created_at", { count: "exact" }),
         supabase.from("products").select("*", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total_amount, status, created_at, user_id"),
+        supabase.from("orders").select("id, total_amount, status, created_at, user_id, order_number"),
         supabase.from("commissions").select("amount, commission_type, created_at"),
       ]);
 
-      const orders = ordersRes.data || [];
+      const allOrders = ordersRes.data || [];
       const commissions = commissionsRes.data || [];
       const profiles = profilesRes.data || [];
+
+      // Only count successful orders (not pending or cancelled)
+      const successStatuses = ["confirmed", "shipped", "delivered"];
+      const orders = allOrders.filter((o) => successStatuses.includes(o.status));
       const revenue = orders.reduce((s, o) => s + Number(o.total_amount), 0);
       const commTotal = commissions.reduce((s, c) => s + Number(c.amount), 0);
 
@@ -90,14 +94,14 @@ const AdminOverview = () => {
       });
       setCommissionBreakdown(Object.entries(typeMap).map(([name, value]) => ({ name, value: Math.round(value) })));
 
-      // Order status distribution
+      // Order status distribution (show all for context)
       const statusMap: Record<string, number> = {};
-      orders.forEach((o) => {
+      allOrders.forEach((o) => {
         statusMap[o.status] = (statusMap[o.status] || 0) + 1;
       });
       setOrderStatusData(Object.entries(statusMap).map(([name, value]) => ({ name, value })));
 
-      // Recent orders
+      // Recent orders (successful only)
       setRecentOrders(
         orders
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -319,7 +323,7 @@ const AdminOverview = () => {
                   <tbody>
                     {recentOrders.map((o) => (
                       <tr key={o.id} className="border-b border-border/50 hover:bg-secondary/30">
-                        <td className="py-2 font-mono text-xs">{o.id.slice(0, 8)}…</td>
+                        <td className="py-2 font-mono text-xs">{o.order_number || o.id.slice(0, 8)}</td>
                         <td className="py-2">₹{Number(o.total_amount).toLocaleString()}</td>
                         <td className="py-2">
                           <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">{o.status}</span>
