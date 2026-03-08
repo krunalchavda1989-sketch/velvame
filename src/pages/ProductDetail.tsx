@@ -14,6 +14,8 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<any>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [recommended, setRecommended] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -32,7 +34,22 @@ const ProductDetail = () => {
         toast.error("Product not found");
       }
       setProduct(data);
+      setSelectedImage(data?.image_url || null);
       setLoading(false);
+
+      // Fetch additional images
+      if (data) {
+        const { data: images } = await supabase
+          .from("product_images")
+          .select("image_url")
+          .eq("product_id", id)
+          .order("sort_order");
+        const allImages: string[] = [];
+        if (data.image_url && isImageUrl(data.image_url)) allImages.push(data.image_url);
+        if (images) allImages.push(...images.map((img: any) => img.image_url));
+        setProductImages(allImages);
+        if (allImages.length > 0) setSelectedImage(allImages[0]);
+      }
 
       // Fetch recommended products (same category, exclude current)
       if (data) {
@@ -103,16 +120,36 @@ const ProductDetail = () => {
               animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-10"
             >
-              {/* Image */}
-              <div className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center min-h-[320px] lg:min-h-[450px]">
-                {isImageUrl(product.image_url) ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-contain max-h-[450px]"
-                  />
-                ) : (
-                  <span className="text-8xl">{product.image_url || "📦"}</span>
+              {/* Image Gallery */}
+              <div>
+                <div className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center min-h-[320px] lg:min-h-[450px]">
+                  {selectedImage && isImageUrl(selectedImage) ? (
+                    <img
+                      src={selectedImage}
+                      alt={product.name}
+                      className="w-full h-full object-contain max-h-[450px]"
+                    />
+                  ) : (
+                    <span className="text-8xl">{product.image_url || "📦"}</span>
+                  )}
+                </div>
+                {/* Thumbnails */}
+                {productImages.length > 1 && (
+                  <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                    {productImages.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedImage(img)}
+                        className={`w-16 h-16 rounded-lg border-2 overflow-hidden flex-shrink-0 transition-colors ${
+                          selectedImage === img
+                            ? "border-primary"
+                            : "border-border hover:border-primary/40"
+                        }`}
+                      >
+                        <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
