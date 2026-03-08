@@ -144,6 +144,31 @@ const AdminUserDetail = () => {
     toast({ title: newVal ? "Activated" : "Deactivated", description: `Subscription ${newVal ? "activated" : "deactivated"} successfully.` });
   };
 
+  const handleDeactivateUser = async () => {
+    if (!profile) return;
+    const { error } = await supabase.from("profiles").update({ subscription_paid: false, subscription_date: null }).eq("id", profile.id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to deactivate user.", variant: "destructive" });
+      return;
+    }
+    setProfile({ ...profile, subscription_paid: false, subscription_date: null });
+    setEditForm((f) => ({ ...f, subscription_paid: false }));
+    toast({ title: "User Deactivated", description: "User account has been deactivated successfully." });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!profile) return;
+    const { error } = await supabase.functions.invoke("admin-settings", {
+      body: { action: "delete_user", user_id: profile.user_id },
+    });
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete user account.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "User Deleted", description: "User account has been permanently deleted." });
+    window.location.href = "/admin/users";
+  };
+
   if (loading) {
     return (
       <AdminLayout>
