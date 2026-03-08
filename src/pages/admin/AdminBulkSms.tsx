@@ -629,6 +629,138 @@ const AdminBulkSms = () => {
               </div>
             </div>
 
+            {/* WhatsApp Media Attachments - only for whatsapp/both */}
+            {(campaignForm.channel === "whatsapp" || campaignForm.channel === "both") && (
+              <div className="space-y-3 rounded-xl border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/10 p-4">
+                <p className="text-sm font-medium flex items-center gap-1.5 text-green-700 dark:text-green-400">
+                  <Phone className="h-4 w-4" /> WhatsApp Media & Links
+                </p>
+                <p className="text-xs text-muted-foreground">Attach media or add a CTA button per WhatsApp message criteria</p>
+
+                {/* Media Type Selector */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Media Type</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {WHATSAPP_MEDIA_TYPES.map((mt) => {
+                      const Icon = mt.icon;
+                      const selected = campaignForm.media_type === mt.value;
+                      return (
+                        <button
+                          key={mt.value}
+                          type="button"
+                          onClick={() => setCampaignForm((p) => ({ ...p, media_type: mt.value, media_url: mt.value !== p.media_type ? "" : p.media_url }))}
+                          className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border text-xs font-medium transition-all ${
+                            selected
+                              ? "border-green-500 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                              : "border-border bg-card hover:border-green-300"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {mt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Media Upload */}
+                {campaignForm.media_type && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">
+                      Upload {campaignForm.media_type.charAt(0).toUpperCase() + campaignForm.media_type.slice(1)}
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      {WHATSAPP_MEDIA_TYPES.find((m) => m.value === campaignForm.media_type)?.hint}
+                    </p>
+
+                    {campaignForm.media_url ? (
+                      <div className="relative rounded-lg border border-border bg-card p-3">
+                        {campaignForm.media_type === "image" && (
+                          <img src={campaignForm.media_url} alt="Preview" className="max-h-40 rounded-md object-contain mx-auto" />
+                        )}
+                        {campaignForm.media_type === "video" && (
+                          <video src={campaignForm.media_url} controls className="max-h-40 rounded-md mx-auto" />
+                        )}
+                        {campaignForm.media_type === "document" && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            <span className="truncate">{campaignForm.media_url.split("/").pop()}</span>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 bg-background/80 hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={removeMedia}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          ref={mediaInputRef}
+                          type="file"
+                          accept={WHATSAPP_MEDIA_TYPES.find((m) => m.value === campaignForm.media_type)?.accept || ""}
+                          onChange={handleMediaUpload}
+                          className="hidden"
+                          id="wa-media-upload"
+                        />
+                        <label
+                          htmlFor="wa-media-upload"
+                          className={`flex flex-col items-center justify-center gap-2 p-6 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${
+                            uploadingMedia
+                              ? "border-muted-foreground/30 bg-muted/50"
+                              : "border-green-300 dark:border-green-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/20"
+                          }`}
+                        >
+                          {uploadingMedia ? (
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          ) : (
+                            <Upload className="h-6 w-6 text-green-600" />
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {uploadingMedia ? "Uploading..." : "Click to upload or drag & drop"}
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <Separator className="bg-green-200 dark:bg-green-800" />
+
+                {/* Link / CTA Button */}
+                <div className="space-y-2">
+                  <Label className="text-xs flex items-center gap-1.5">
+                    <LinkIcon className="h-3.5 w-3.5" /> CTA Link Button (optional)
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground">Add a clickable button at the bottom of your WhatsApp message</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">Button Text</Label>
+                      <Input
+                        placeholder="e.g. Shop Now"
+                        value={campaignForm.link_text}
+                        onChange={(e) => setCampaignForm((p) => ({ ...p, link_text: e.target.value.slice(0, 25) }))}
+                        className="h-8 text-xs"
+                      />
+                      <span className="text-[10px] text-muted-foreground">{campaignForm.link_text.length}/25</span>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">URL</Label>
+                      <Input
+                        placeholder="https://example.com"
+                        value={campaignForm.link_url}
+                        onChange={(e) => setCampaignForm((p) => ({ ...p, link_url: e.target.value }))}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Preview */}
             <div className="rounded-xl border border-border bg-muted/30 p-4">
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -640,6 +772,24 @@ const AdminBulkSms = () => {
                   <><Smartphone className="h-3.5 w-3.5" /> SMS Preview</>
                 )}
               </p>
+              {/* Media preview in message */}
+              {campaignForm.media_url && (campaignForm.channel === "whatsapp" || campaignForm.channel === "both") && (
+                <div className="mb-2 rounded-lg overflow-hidden border border-green-200 dark:border-green-800">
+                  {campaignForm.media_type === "image" && (
+                    <img src={campaignForm.media_url} alt="Media" className="w-full max-h-32 object-cover" />
+                  )}
+                  {campaignForm.media_type === "video" && (
+                    <div className="bg-muted/50 p-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Video className="h-4 w-4" /> Video attached
+                    </div>
+                  )}
+                  {campaignForm.media_type === "document" && (
+                    <div className="bg-muted/50 p-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Paperclip className="h-4 w-4" /> Document attached
+                    </div>
+                  )}
+                </div>
+              )}
               <div className={`rounded-lg p-3 border text-sm leading-relaxed whitespace-pre-wrap min-h-[60px] ${
                 campaignForm.channel === "whatsapp"
                   ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
@@ -647,6 +797,14 @@ const AdminBulkSms = () => {
               }`}>
                 {campaignForm.message || <span className="text-muted-foreground italic">Your message will appear here...</span>}
               </div>
+              {/* Link button preview */}
+              {campaignForm.link_text && campaignForm.link_url && (campaignForm.channel === "whatsapp" || campaignForm.channel === "both") && (
+                <div className="mt-2 border border-green-200 dark:border-green-800 rounded-lg p-2.5 text-center">
+                  <span className="text-xs font-medium text-blue-600 flex items-center justify-center gap-1">
+                    <LinkIcon className="h-3 w-3" /> {campaignForm.link_text}
+                  </span>
+                </div>
+              )}
             </div>
 
             <Separator />
