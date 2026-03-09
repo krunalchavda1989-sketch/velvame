@@ -55,7 +55,12 @@ const menuItems: MenuItem[] = [
   { icon: Megaphone, label: "Announcements", href: "/admin/announcements" },
   { icon: MessageSquare, label: "Bulk Messaging", href: "/admin/bulk-sms" },
   { icon: Mail, label: "Newsletter", href: "/admin/newsletter" },
-  { icon: Settings, label: "Settings", href: "/admin/settings" },
+  {
+    icon: Settings, label: "Settings", href: "/admin/settings",
+    children: [
+      { icon: Share2, label: "Social Media", href: "/admin/social-media" },
+    ],
+  },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {

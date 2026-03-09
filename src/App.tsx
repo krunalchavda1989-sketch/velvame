@@ -227,6 +227,7 @@ const App = () => (
             <Route path="/admin/bulk-sms" element={<AdminRoute><AdminBulkSms /></AdminRoute>} />
             <Route path="/admin/newsletter" element={<AdminRoute><AdminNewsletter /></AdminRoute>} />
             <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
+            <Route path="/admin/social-media" element={<AdminRoute><AdminSocialMedia /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>
