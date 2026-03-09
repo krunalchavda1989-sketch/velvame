@@ -12,7 +12,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               {brand.logo_url ? (
-                <img src={brand.logo_url} alt={brand.brand_name} className="h-6 w-6 object-contain rounded" />
+                <img src={brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
               ) : (
                 <Crown className="h-6 w-6 text-primary" />
               )}
