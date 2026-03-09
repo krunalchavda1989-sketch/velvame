@@ -14,9 +14,11 @@ const Footer = () => {
               {brand.logo_url ? (
                 <img src={brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
               ) : (
-                <Crown className="h-6 w-6 text-primary" />
+                <>
+                  <Crown className="h-6 w-6 text-primary" />
+                  <span className="font-display text-lg font-bold text-gradient-gold">{brand.brand_name}</span>
+                </>
               )}
-              <span className="font-display text-lg font-bold text-gradient-gold">{brand.brand_name}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               {brand.tagline || "Build your network, grow your income. The premium MLM platform."}
