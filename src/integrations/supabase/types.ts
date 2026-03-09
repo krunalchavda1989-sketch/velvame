@@ -1364,6 +1364,39 @@ export type Database = {
         }
         Relationships: []
       }
+      social_media_links: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          platform: string
+          sort_order: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          platform?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          platform?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
