@@ -6,34 +6,14 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Award, Users, Star, ChevronRight, Lock, CheckCircle2, Loader2 } from "lucide-react";
+import { Award, Users, Star, Lock, CheckCircle2, Loader2 } from "lucide-react";
 
-const TITLES = [
-  { name: "Member", requiredReferrals: 0, icon: "🌱" },
-  { name: "Bronze", requiredReferrals: 1, icon: "🥉" },
-  { name: "Silver", requiredReferrals: 3, icon: "🥈" },
-  { name: "Gold", requiredReferrals: 6, icon: "🥇" },
-  { name: "Platinum", requiredReferrals: 10, icon: "💎" },
-  { name: "Diamond", requiredReferrals: 15, icon: "👑" },
-  { name: "Crown", requiredReferrals: 25, icon: "🏆" },
-];
-
-const COMMISSION_LEVELS = [
-  { level: 1, rate: 5, minReferrals: 1 },
-  { level: 2, rate: 4.5, minReferrals: 3 },
-  { level: 3, rate: 4, minReferrals: 3 },
-  { level: 4, rate: 3.5, minReferrals: 3 },
-  { level: 5, rate: 3, minReferrals: 3 },
-  { level: 6, rate: 2.5, minReferrals: 6 },
-  { level: 7, rate: 2, minReferrals: 6 },
-  { level: 8, rate: 1.5, minReferrals: 6 },
-  { level: 9, rate: 1, minReferrals: 6 },
-];
+const TITLE_ICONS = ["🌱", "🥉", "🥈", "🥇", "💎", "👑", "🏆", "⭐", "🔥", "🚀"];
 
 const MyTitle = () => {
   const { user } = useAuth();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["title-profile", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,6 +27,35 @@ const MyTitle = () => {
     enabled: !!user,
   });
 
+  const { data: titles = [], isLoading: titlesLoading } = useQuery({
+    queryKey: ["title-roadmap"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("title_roadmap")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: commissionLevels = [], isLoading: levelsLoading } = useQuery({
+    queryKey: ["commission-levels-user"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("commission_levels")
+        .select("*")
+        .eq("is_active", true)
+        .eq("commission_type", "level")
+        .order("level");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isLoading = profileLoading || titlesLoading || levelsLoading;
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -58,16 +67,36 @@ const MyTitle = () => {
   }
 
   const referrals = profile?.direct_referral_count ?? 0;
-  const currentTitleIndex = [...TITLES].reverse().findIndex((t) => referrals >= t.requiredReferrals);
-  const resolvedIndex = currentTitleIndex >= 0 ? TITLES.length - 1 - currentTitleIndex : 0;
-  const currentTitle = TITLES[resolvedIndex];
-  const nextTitle = TITLES[resolvedIndex + 1] || null;
+
+  // Build titles list from DB
+  const titleList = titles.map((t, i) => ({
+    name: t.title_name,
+    requiredReferrals: t.required_referrals,
+    icon: TITLE_ICONS[i] || "⭐",
+    color: t.badge_color,
+  }));
+
+  // Fallback if no titles configured
+  if (titleList.length === 0) {
+    titleList.push({ name: "Member", requiredReferrals: 0, icon: "🌱", color: null });
+  }
+
+  const currentTitleIndex = [...titleList].reverse().findIndex((t) => referrals >= t.requiredReferrals);
+  const resolvedIndex = currentTitleIndex >= 0 ? titleList.length - 1 - currentTitleIndex : 0;
+  const currentTitle = titleList[resolvedIndex];
+  const nextTitle = titleList[resolvedIndex + 1] || null;
   const progress = nextTitle
     ? Math.min(100, ((referrals - currentTitle.requiredReferrals) / (nextTitle.requiredReferrals - currentTitle.requiredReferrals)) * 100)
     : 100;
 
-  // Determine max unlocked commission level
-  const unlockedLevels = COMMISSION_LEVELS.filter((l) => referrals >= l.minReferrals).length;
+  // Build commission levels from DB
+  const levelsList = commissionLevels.map((cl) => ({
+    level: cl.level,
+    rate: Number(cl.rate),
+    minReferrals: cl.min_referrals,
+  }));
+
+  const unlockedLevels = levelsList.filter((l) => referrals >= l.minReferrals).length;
 
   return (
     <DashboardLayout>
@@ -132,7 +161,7 @@ const MyTitle = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {TITLES.map((title, i) => {
+                {titleList.map((title) => {
                   const achieved = referrals >= title.requiredReferrals;
                   return (
                     <div
@@ -163,7 +192,7 @@ const MyTitle = () => {
           </Card>
         </motion.div>
 
-        {/* Commission Levels Unlocked */}
+        {/* Commission Levels */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <Card>
             <CardHeader>
@@ -174,27 +203,31 @@ const MyTitle = () => {
               <CardDescription>Levels unlocked based on your direct referrals</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                {COMMISSION_LEVELS.map((cl) => {
-                  const unlocked = referrals >= cl.minReferrals;
-                  return (
-                    <div
-                      key={cl.level}
-                      className={`text-center p-3 rounded-lg border ${
-                        unlocked ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border opacity-60"
-                      }`}
-                    >
-                      <p className={`text-lg font-bold ${unlocked ? "text-primary" : "text-muted-foreground"}`}>
-                        L{cl.level}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{cl.rate}%</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {cl.minReferrals} ref{cl.minReferrals !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+              {levelsList.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No commission levels configured yet.</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {levelsList.map((cl) => {
+                    const unlocked = referrals >= cl.minReferrals;
+                    return (
+                      <div
+                        key={cl.level}
+                        className={`text-center p-3 rounded-lg border ${
+                          unlocked ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border opacity-60"
+                        }`}
+                      >
+                        <p className={`text-lg font-bold ${unlocked ? "text-primary" : "text-muted-foreground"}`}>
+                          L{cl.level}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{cl.rate}%</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {cl.minReferrals} ref{cl.minReferrals !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
