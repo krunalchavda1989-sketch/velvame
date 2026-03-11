@@ -117,7 +117,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
-    if (cartProducts.length === 0) { navigate("/shop"); return; }
+    if (!isBuyNow && cartProducts.length === 0) { navigate("/shop"); return; }
 
     // Fetch shipping methods
     supabase.from("pages_content").select("content").eq("page_slug", "shipping-methods").maybeSingle().then(({ data }) => {
