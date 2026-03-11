@@ -26,7 +26,8 @@ const Login = () => {
       });
       if (error) throw error;
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      const redirectTo = searchParams.get("redirect");
+      navigate(redirectTo || "/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {
