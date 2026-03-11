@@ -24,6 +24,8 @@ interface OrderDetailData {
   created_at: string;
   updated_at: string;
   user_id: string;
+  wallet_amount_used?: number;
+  razorpay_amount?: number;
 }
 
 interface OrderItemData {
