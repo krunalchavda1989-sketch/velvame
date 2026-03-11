@@ -100,7 +100,7 @@ const Checkout = () => {
   const [selectedShipping, setSelectedShipping] = useState<string>("");
   const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
 
-  const freeShippingEligible = freeShippingMinAmount <= 0 || totalPrice >= freeShippingMinAmount;
+  const freeShippingEligible = freeShippingMinAmount <= 0 || checkoutTotal >= freeShippingMinAmount;
 
   const availableShippingMethods = shippingMethods.filter((m) => {
     if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) return false;
