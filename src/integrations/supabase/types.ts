@@ -1651,6 +1651,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deduct_wallet_balance: {
+        Args: { _amount: number; _user_id: string }
+        Returns: Json
+      }
       get_genealogy_tree: {
         Args: {
           _max_depth?: number
