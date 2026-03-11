@@ -206,6 +206,12 @@ const Checkout = () => {
     return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
   };
 
+  const getPaymentMethodLabel = () => {
+    if (isFullWalletPayment) return "wallet";
+    if (!selectedPaymentMethod) return "razorpay";
+    return useWallet ? `wallet+${selectedPaymentMethod}` : selectedPaymentMethod;
+  };
+
   const handlePlaceOrder = async () => {
     const shippingAddr = getShippingAddress();
     if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
@@ -214,13 +220,20 @@ const Checkout = () => {
       return;
     }
 
+    if (!isFullWalletPayment && !selectedPaymentMethod && paymentGateways.length > 0) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
     setProcessing(true);
     setStep("processing");
+
+    const paymentMethod = getPaymentMethodLabel();
 
     try {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
-        shipping_method: selectedShipping, payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay", status: "pending",
+        shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
       }).select().single();
       if (orderError) throw new Error(orderError.message);
 
@@ -237,42 +250,63 @@ const Checkout = () => {
         }
       }
 
+      // Full wallet payment
       if (isFullWalletPayment) {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
         toast.success("Order placed successfully!");
         clearCart();
         sendOrderEmail(order.id, "order_success");
-        navigate("/dashboard/orders");
+        navigate(`/order-success?order_id=${order.id}`);
         return;
       }
 
-      const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
-        body: { action: "create_order", amount: finalPrice, purpose: "shop", order_ref_id: order.id },
-      });
-      if (rzpError || rzpData?.error) throw new Error(rzpData?.error || rzpError?.message);
+      // COD / Bank Transfer — confirm immediately
+      if (selectedPaymentMethod === "cod" || selectedPaymentMethod === "bank_transfer") {
+        const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
+        await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
+        toast.success("Order placed successfully!");
+        clearCart();
+        sendOrderEmail(order.id, "order_success");
+        navigate(`/order-success?order_id=${order.id}`);
+        return;
+      }
 
-      const options = {
-        key: rzpData.key_id, amount: rzpData.amount, currency: rzpData.currency,
-        name: brand.brand_name || "Store", description: `Order #${order.id.slice(0, 8)}`,
-        order_id: rzpData.order_id,
-        handler: async (response: any) => {
-          try {
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
-              body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
-            });
-            if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
-            await supabase.from("orders").update({ status: "confirmed", payment_method: useWallet ? "wallet+razorpay" : "razorpay" }).eq("id", order.id);
-            toast.success("Order placed successfully!");
-            clearCart();
-            sendOrderEmail(order.id, "order_success");
-            navigate("/dashboard/orders");
-          } catch { toast.error("Payment verification failed"); }
-        },
-        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
-        theme: { color: "#333" },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      // Razorpay payment gateway
+      if (selectedPaymentMethod === "razorpay" || (!selectedPaymentMethod && paymentGateways.length === 0)) {
+        const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
+          body: { action: "create_order", amount: finalPrice, purpose: "shop", order_ref_id: order.id },
+        });
+        if (rzpError || rzpData?.error) throw new Error(rzpData?.error || rzpError?.message);
+
+        const options = {
+          key: rzpData.key_id, amount: rzpData.amount, currency: rzpData.currency,
+          name: brand.brand_name || "Store", description: `Order #${order.id.slice(0, 8)}`,
+          order_id: rzpData.order_id,
+          handler: async (response: any) => {
+            try {
+              const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
+                body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
+              });
+              if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
+              await supabase.from("orders").update({ status: "confirmed", payment_method: paymentMethod }).eq("id", order.id);
+              toast.success("Order placed successfully!");
+              clearCart();
+              sendOrderEmail(order.id, "order_success");
+              navigate(`/order-success?order_id=${order.id}`);
+            } catch { toast.error("Payment verification failed"); }
+          },
+          modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
+          theme: { color: "#333" },
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
+      // Other gateways (phonepe, stripe, paytm, instamojo) — placeholder
+      toast.info(`${selectedPaymentMethod} gateway integration coming soon. Order saved as pending.`);
+      clearCart();
+      navigate(`/order-success?order_id=${order.id}`);
     } catch (error: any) {
       toast.error(error.message || "Checkout failed");
       setStep("payment");
