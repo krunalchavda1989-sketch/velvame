@@ -87,10 +87,23 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
-  const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+  // Load Razorpay credentials from admin payment gateway settings in DB
+  const serviceClientForSettings = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+  const { data: gwSettings } = await serviceClientForSettings
+    .from("pages_content")
+    .select("content")
+    .eq("page_slug", "payment-gateway-settings")
+    .maybeSingle();
+
+  const razorpayConfig = (gwSettings?.content as Record<string, any>)?.razorpay;
+  const RAZORPAY_KEY_ID = razorpayConfig?.fields?.key_id || Deno.env.get("RAZORPAY_KEY_ID");
+  const RAZORPAY_KEY_SECRET = razorpayConfig?.fields?.key_secret || Deno.env.get("RAZORPAY_KEY_SECRET");
+
   if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-    return new Response(JSON.stringify({ error: "Razorpay credentials not configured" }), {
+    return new Response(JSON.stringify({ error: "Razorpay credentials not configured. Please add Key ID and Key Secret in Admin > Settings > Payment." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
