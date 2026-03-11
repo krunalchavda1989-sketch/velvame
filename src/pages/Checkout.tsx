@@ -110,6 +110,39 @@ const Checkout = () => {
       setSelectedShipping(methods[0]?.key || "");
     });
 
+    // Fetch enabled payment gateways from admin settings
+    supabase.from("pages_content").select("content").eq("page_slug", "payment-gateway-settings").maybeSingle().then(({ data }) => {
+      if (data?.content) {
+        const content = data.content as any;
+        const enabled: any[] = [];
+        const gatewayMeta: Record<string, { label: string; icon: string; description: string }> = {
+          razorpay: { label: "Razorpay", icon: "credit-card", description: "Pay securely via Razorpay" },
+          phonepe: { label: "PhonePe", icon: "smartphone", description: "Pay via PhonePe UPI" },
+          stripe: { label: "Stripe", icon: "zap", description: "Pay securely via Stripe" },
+          paytm: { label: "Paytm", icon: "wallet", description: "Pay via Paytm" },
+          instamojo: { label: "Instamojo", icon: "zap", description: "Pay via Instamojo" },
+          bank_transfer: { label: "Bank Transfer", icon: "building", description: "Pay via direct bank transfer" },
+          cod: { label: "Cash on Delivery", icon: "package", description: "Pay when you receive your order" },
+        };
+        for (const key of Object.keys(gatewayMeta)) {
+          if (content[key]?.enabled) {
+            const gw = content[key];
+            const meta = gatewayMeta[key];
+            // COD: check min/max order amount
+            if (key === "cod") {
+              const minAmt = Number(gw.fields?.min_order_amount) || 0;
+              const maxAmt = Number(gw.fields?.max_order_amount) || 0;
+              if (minAmt > 0 && totalPrice < minAmt) continue;
+              if (maxAmt > 0 && totalPrice > maxAmt) continue;
+            }
+            enabled.push({ key, ...meta, instructions: gw.fields?.instructions || "" });
+          }
+        }
+        setPaymentGateways(enabled);
+        if (enabled.length > 0) setSelectedPaymentMethod(enabled[0].key);
+      }
+    });
+
     // Fetch wallet
     supabase.from("wallets").select("balance").eq("user_id", user.id).single().then(({ data }) => {
       setWalletBalance(data ? Number(data.balance) : 0);
