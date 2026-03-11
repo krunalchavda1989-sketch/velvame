@@ -344,6 +344,31 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
                 <span className="text-muted-foreground">Method</span>
                 <span className="text-foreground capitalize">{order.payment_method || "—"}</span>
               </div>
+
+              {/* Payment Breakdown */}
+              {((order as any).wallet_amount_used > 0 || (order as any).razorpay_amount > 0) && (
+                <div className="pt-2 mt-2 border-t border-border space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Payment Breakdown</p>
+                  {(order as any).wallet_amount_used > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Wallet Balance Used</span>
+                      <span className="text-foreground font-medium">{formatCurrency((order as any).wallet_amount_used)}</span>
+                    </div>
+                  )}
+                  {(order as any).razorpay_amount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Paid via Gateway</span>
+                      <span className="text-foreground font-medium">{formatCurrency((order as any).razorpay_amount)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span className="text-foreground">Total</span>
+                    <span className="text-foreground">{formatCurrency(order.total_amount)}</span>
+                  </div>
+                </div>
+              )}
+
               {payment && (
                 <>
                   <div className="flex justify-between text-sm">
@@ -362,7 +387,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
                   </div>
                 </>
               )}
-              {!payment && (
+              {!payment && !((order as any).wallet_amount_used > 0) && (
                 <p className="text-xs text-muted-foreground">No payment record found</p>
               )}
             </div>
