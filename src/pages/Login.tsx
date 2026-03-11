@@ -10,6 +10,7 @@ import { useBrand } from "@/contexts/BrandContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
