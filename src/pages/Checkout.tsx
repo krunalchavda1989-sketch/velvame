@@ -244,9 +244,12 @@ const Checkout = () => {
       if (appliedCoupon) await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: appliedCoupon.id });
 
       if (useWallet && walletDeduction > 0) {
-        const { data: wallet } = await supabase.from("wallets").select("balance").eq("user_id", user!.id).single();
-        if (wallet) {
-          await supabase.from("wallets").update({ balance: Math.max(0, Number(wallet.balance) - walletDeduction) }).eq("user_id", user!.id);
+        const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet_balance" as any, {
+          _user_id: user!.id,
+          _amount: walletDeduction,
+        });
+        if (deductError || !deductResult?.success) {
+          throw new Error(deductResult?.error || deductError?.message || "Wallet deduction failed");
         }
       }
 
