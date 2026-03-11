@@ -207,8 +207,8 @@ const Checkout = () => {
       const now = new Date();
       if (new Date(coupon.start_date) > now || new Date(coupon.end_date) < now) { toast.error("Coupon has expired"); setCouponLoading(false); return; }
       if (coupon.max_uses > 0 && coupon.used_count >= coupon.max_uses) { toast.error("Coupon usage limit reached"); setCouponLoading(false); return; }
-      if (coupon.min_order_amount > 0 && totalPrice < coupon.min_order_amount) { toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`); setCouponLoading(false); return; }
-      const discountAmount = calculateDiscount(coupon, totalPrice);
+      if (coupon.min_order_amount > 0 && checkoutTotal < coupon.min_order_amount) { toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`); setCouponLoading(false); return; }
+      const discountAmount = calculateDiscount(coupon, checkoutTotal);
       setAppliedCoupon({ id: coupon.id, code: coupon.code, discount_type: coupon.discount_type, discount_value: coupon.discount_value, max_discount_amount: coupon.max_discount_amount, discountAmount });
       toast.success(`Coupon applied! You save ${fc(discountAmount)}`);
     } catch { toast.error("Failed to apply coupon"); }
