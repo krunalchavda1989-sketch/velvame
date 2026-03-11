@@ -268,6 +268,9 @@ const WalletPage = () => {
               </div>
             )}
 
+            {/* Wallet Activity */}
+            <WalletTransactionHistory />
+
             {/* Commissions table */}
             <div className="rounded-xl bg-card border border-border overflow-hidden">
               <div className="p-4 border-b border-border">
