@@ -226,7 +226,7 @@ const Checkout = () => {
   const walletDeduction = useWallet ? Math.min(walletBalance, afterTax) : 0;
   const finalPrice = Math.max(0, afterTax - walletDeduction);
   const isFullWalletPayment = useWallet && finalPrice === 0;
-  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - totalPrice : 0;
+  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - checkoutTotal : 0;
 
   const getShippingAddress = () => {
     if (showManualForm) return address;
