@@ -1535,6 +1535,47 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          closing_balance: number
+          created_at: string
+          description: string
+          id: string
+          order_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          closing_balance?: number
+          created_at?: string
+          description?: string
+          id?: string
+          order_id?: string | null
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          closing_balance?: number
+          created_at?: string
+          description?: string
+          id?: string
+          order_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallets: {
         Row: {
           balance: number
@@ -1657,6 +1698,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_wallet_adjust: {
+        Args: {
+          _amount: number
+          _description: string
+          _type: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       cancel_order_and_refund_wallet: {
         Args: { _order_id: string; _user_id: string }
         Returns: Json
