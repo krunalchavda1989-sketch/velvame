@@ -219,8 +219,8 @@ const Checkout = () => {
 
   const activeShipping = availableShippingMethods.find((m) => m.key === selectedShipping);
   const shippingCost = activeShipping?.cost || 0;
-  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
-  const afterCoupon = Math.max(0, totalPrice - discountAmount);
+  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, checkoutTotal) : 0;
+  const afterCoupon = Math.max(0, checkoutTotal - discountAmount);
   const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
   const afterTax = afterCoupon + tax + shippingCost;
   const walletDeduction = useWallet ? Math.min(walletBalance, afterTax) : 0;
