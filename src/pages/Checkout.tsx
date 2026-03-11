@@ -268,7 +268,7 @@ const Checkout = () => {
       } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
-      const items = cartProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
+      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
