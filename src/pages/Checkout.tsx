@@ -234,7 +234,9 @@ const Checkout = () => {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
         shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
-      }).select().single();
+        wallet_amount_used: walletDeduction,
+        razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
+      } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
       const items = cartProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
