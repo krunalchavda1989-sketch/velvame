@@ -4,6 +4,7 @@ import { useLocalization } from "@/hooks/useLocalization";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
+import WalletTransactionHistory from "@/components/wallet/WalletTransactionHistory";
 import {
   Wallet as WalletIcon, TrendingUp, ArrowDownToLine, Clock,
   DollarSign, Send, AlertCircle, CheckCircle2, XCircle,
