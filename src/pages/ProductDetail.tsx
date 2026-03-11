@@ -16,6 +16,8 @@ import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, isMember, getPrice } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const [product, setProduct] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
