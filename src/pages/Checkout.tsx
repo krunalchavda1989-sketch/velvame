@@ -378,7 +378,7 @@ const Checkout = () => {
     }
   };
 
-  if (!user || cartProducts.length === 0) return null;
+  if (!user || checkoutProducts.length === 0) return null;
 
   const stepIndex = step === "information" ? 0 : step === "shipping" ? 1 : step === "payment" ? 2 : 3;
 
