@@ -47,6 +47,10 @@ const Checkout = () => {
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
 
+  // Payment gateways
+  const [paymentGateways, setPaymentGateways] = useState<any[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+
   // Address
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
