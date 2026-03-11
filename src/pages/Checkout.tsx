@@ -748,7 +748,7 @@ const Checkout = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="text-gray-900">{fc(totalPrice)}</span>
+                        <span className="text-gray-900">{fc(checkoutTotal)}</span>
                       </div>
                       {appliedCoupon && (
                         <div className="flex justify-between text-sm">
