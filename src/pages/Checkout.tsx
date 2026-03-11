@@ -39,10 +39,39 @@ interface ShippingMethod {
 
 const Checkout = () => {
   const { user } = useAuth();
-  const { cartProducts, totalPrice, clearCart, getPrice } = useCart();
+  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
+
+  // Buy Now mode
+  const isBuyNow = new URLSearchParams(window.location.search).get("buyNow") === "1";
+  const [buyNowProduct, setBuyNowProduct] = useState<(typeof cartProducts)[0] | null>(null);
+
+  useEffect(() => {
+    if (!isBuyNow) return;
+    try {
+      const raw = sessionStorage.getItem("buyNowItem");
+      if (!raw) { navigate("/shop"); return; }
+      const { id, qty } = JSON.parse(raw);
+      const found = allProducts.find((p) => p.id === id);
+      if (found) {
+        setBuyNowProduct({ ...found, qty: qty || 1 });
+      } else {
+        // Product not in cache yet — fetch directly
+        supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
+          if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
+          else { toast.error("Product not found"); navigate("/shop"); }
+        });
+      }
+    } catch { navigate("/shop"); }
+  }, [isBuyNow, allProducts]);
+
+  const clearBuyNow = () => sessionStorage.removeItem("buyNowItem");
+
+  // Unified checkout items
+  const checkoutProducts = isBuyNow ? (buyNowProduct ? [buyNowProduct] : []) : cartProducts;
+  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
 
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
@@ -71,7 +100,7 @@ const Checkout = () => {
   const [selectedShipping, setSelectedShipping] = useState<string>("");
   const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
 
-  const freeShippingEligible = freeShippingMinAmount <= 0 || totalPrice >= freeShippingMinAmount;
+  const freeShippingEligible = freeShippingMinAmount <= 0 || checkoutTotal >= freeShippingMinAmount;
 
   const availableShippingMethods = shippingMethods.filter((m) => {
     if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) return false;
@@ -88,7 +117,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
-    if (cartProducts.length === 0) { navigate("/shop"); return; }
+    if (!isBuyNow && cartProducts.length === 0) { navigate("/shop"); return; }
 
     // Fetch shipping methods
     supabase.from("pages_content").select("content").eq("page_slug", "shipping-methods").maybeSingle().then(({ data }) => {
@@ -132,8 +161,8 @@ const Checkout = () => {
             if (key === "cod") {
               const minAmt = Number(gw.fields?.min_order_amount) || 0;
               const maxAmt = Number(gw.fields?.max_order_amount) || 0;
-              if (minAmt > 0 && totalPrice < minAmt) continue;
-              if (maxAmt > 0 && totalPrice > maxAmt) continue;
+              if (minAmt > 0 && checkoutTotal < minAmt) continue;
+              if (maxAmt > 0 && checkoutTotal > maxAmt) continue;
             }
             enabled.push({ key, ...meta, instructions: gw.fields?.instructions || "" });
           }
@@ -178,8 +207,8 @@ const Checkout = () => {
       const now = new Date();
       if (new Date(coupon.start_date) > now || new Date(coupon.end_date) < now) { toast.error("Coupon has expired"); setCouponLoading(false); return; }
       if (coupon.max_uses > 0 && coupon.used_count >= coupon.max_uses) { toast.error("Coupon usage limit reached"); setCouponLoading(false); return; }
-      if (coupon.min_order_amount > 0 && totalPrice < coupon.min_order_amount) { toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`); setCouponLoading(false); return; }
-      const discountAmount = calculateDiscount(coupon, totalPrice);
+      if (coupon.min_order_amount > 0 && checkoutTotal < coupon.min_order_amount) { toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`); setCouponLoading(false); return; }
+      const discountAmount = calculateDiscount(coupon, checkoutTotal);
       setAppliedCoupon({ id: coupon.id, code: coupon.code, discount_type: coupon.discount_type, discount_value: coupon.discount_value, max_discount_amount: coupon.max_discount_amount, discountAmount });
       toast.success(`Coupon applied! You save ${fc(discountAmount)}`);
     } catch { toast.error("Failed to apply coupon"); }
@@ -190,14 +219,14 @@ const Checkout = () => {
 
   const activeShipping = availableShippingMethods.find((m) => m.key === selectedShipping);
   const shippingCost = activeShipping?.cost || 0;
-  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, totalPrice) : 0;
-  const afterCoupon = Math.max(0, totalPrice - discountAmount);
+  const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, checkoutTotal) : 0;
+  const afterCoupon = Math.max(0, checkoutTotal - discountAmount);
   const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
   const afterTax = afterCoupon + tax + shippingCost;
   const walletDeduction = useWallet ? Math.min(walletBalance, afterTax) : 0;
   const finalPrice = Math.max(0, afterTax - walletDeduction);
   const isFullWalletPayment = useWallet && finalPrice === 0;
-  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - totalPrice : 0;
+  const freeShippingDelta = freeShippingMinAmount > 0 && !freeShippingEligible ? freeShippingMinAmount - checkoutTotal : 0;
 
   const getShippingAddress = () => {
     if (showManualForm) return address;
@@ -239,7 +268,7 @@ const Checkout = () => {
       } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
-      const items = cartProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
+      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
@@ -259,7 +288,7 @@ const Checkout = () => {
       if (isFullWalletPayment) {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
         toast.success("Order placed successfully!");
-        clearCart();
+        if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
         navigate(`/order-success?order_id=${order.id}`);
         return;
@@ -270,7 +299,7 @@ const Checkout = () => {
         const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
         await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
         toast.success("Order placed successfully!");
-        clearCart();
+        if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
         navigate(`/order-success?order_id=${order.id}`);
         return;
@@ -303,7 +332,7 @@ const Checkout = () => {
               }
               await supabase.from("orders").update({ status: "confirmed", payment_method: paymentMethod }).eq("id", order.id);
               toast.success("Order placed successfully!");
-              clearCart();
+              if (isBuyNow) clearBuyNow(); else clearCart();
               sendOrderEmail(order.id, "order_success");
               navigate(`/order-success?order_id=${order.id}`);
             } catch {
@@ -339,7 +368,7 @@ const Checkout = () => {
 
       // Other gateways (phonepe, stripe, paytm, instamojo) — placeholder
       toast.info(`${selectedPaymentMethod} gateway integration coming soon. Order saved as pending.`);
-      clearCart();
+      if (isBuyNow) clearBuyNow(); else clearCart();
       navigate(`/order-success?order_id=${order.id}`);
     } catch (error: any) {
       toast.error(error.message || "Checkout failed");
@@ -349,7 +378,7 @@ const Checkout = () => {
     }
   };
 
-  if (!user || cartProducts.length === 0) return null;
+  if (!user || checkoutProducts.length === 0) return null;
 
   const stepIndex = step === "information" ? 0 : step === "shipping" ? 1 : step === "payment" ? 2 : 3;
 
@@ -537,11 +566,11 @@ const Checkout = () => {
                   {freeShippingMinAmount > 0 && !freeShippingEligible && (
                     <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-amber-700">{fc(totalPrice)} / {fc(freeShippingMinAmount)}</span>
+                        <span className="text-amber-700">{fc(checkoutTotal)} / {fc(freeShippingMinAmount)}</span>
                         <span className="font-medium text-amber-800">Add {fc(freeShippingDelta)} more for free shipping</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-amber-200 overflow-hidden">
-                        <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${Math.min((totalPrice / freeShippingMinAmount) * 100, 100)}%` }} />
+                        <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${Math.min((checkoutTotal / freeShippingMinAmount) * 100, 100)}%` }} />
                       </div>
                     </div>
                   )}
@@ -667,7 +696,7 @@ const Checkout = () => {
                   <CardContent className="space-y-4">
                     {/* Cart items */}
                     <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                      {cartProducts.map((p) => (
+                      {checkoutProducts.map((p) => (
                         <div key={p.id} className="flex items-center gap-3">
                           <div className="relative w-14 h-14 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
                             {p.image_url?.startsWith("http") ? (
@@ -719,7 +748,7 @@ const Checkout = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="text-gray-900">{fc(totalPrice)}</span>
+                        <span className="text-gray-900">{fc(checkoutTotal)}</span>
                       </div>
                       {appliedCoupon && (
                         <div className="flex justify-between text-sm">

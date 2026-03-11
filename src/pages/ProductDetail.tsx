@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, Plus, Minus, Package, Tag } from "lucide-react";
+import { Star, ShoppingCart, Plus, Minus, Package, Tag, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,11 +10,14 @@ import Footer from "@/components/landing/Footer";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, isMember, getPrice } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const [product, setProduct] = useState<any>(null);
   const [productImages, setProductImages] = useState<string[]>([]);
@@ -256,7 +259,7 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                {/* Quantity & Add to Cart */}
+                {/* Quantity & Add to Cart & Buy Now */}
                 <div className="flex items-center gap-4 mt-auto pt-4">
                   <div className="flex items-center border border-border rounded-lg">
                     <button
@@ -273,17 +276,35 @@ const ProductDetail = () => {
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <Button
-                    className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
-                    disabled={product.stock <= 0}
-                    onClick={() => {
-                      addToCart(product.id, qty);
-                      toast.success(`Added ${qty}x ${product.name} to cart`);
-                    }}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Add to Cart
-                  </Button>
+                  <div className="flex-1 flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-11 border-primary text-primary hover:bg-primary/5"
+                      disabled={product.stock <= 0}
+                      onClick={() => {
+                        addToCart(product.id, qty);
+                        toast.success(`Added ${qty}x ${product.name} to cart`);
+                      }}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
+                      disabled={product.stock <= 0}
+                      onClick={() => {
+                        sessionStorage.setItem("buyNowItem", JSON.stringify({ id: product.id, qty }));
+                        if (!user) {
+                          navigate("/login?redirect=/checkout?buyNow=1");
+                        } else {
+                          navigate("/checkout?buyNow=1");
+                        }
+                      }}
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Buy Now
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Stock info */}

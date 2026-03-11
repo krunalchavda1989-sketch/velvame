@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useBrand } from "@/contexts/BrandContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +26,8 @@ const Login = () => {
       });
       if (error) throw error;
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      const redirectTo = searchParams.get("redirect");
+      navigate(redirectTo || "/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
     } finally {
