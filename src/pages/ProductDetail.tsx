@@ -259,7 +259,7 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                {/* Quantity & Add to Cart */}
+                {/* Quantity & Add to Cart & Buy Now */}
                 <div className="flex items-center gap-4 mt-auto pt-4">
                   <div className="flex items-center border border-border rounded-lg">
                     <button
@@ -276,17 +276,35 @@ const ProductDetail = () => {
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <Button
-                    className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
-                    disabled={product.stock <= 0}
-                    onClick={() => {
-                      addToCart(product.id, qty);
-                      toast.success(`Added ${qty}x ${product.name} to cart`);
-                    }}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Add to Cart
-                  </Button>
+                  <div className="flex-1 flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-11 border-primary text-primary hover:bg-primary/5"
+                      disabled={product.stock <= 0}
+                      onClick={() => {
+                        addToCart(product.id, qty);
+                        toast.success(`Added ${qty}x ${product.name} to cart`);
+                      }}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gradient-gold text-primary-foreground hover:opacity-90 h-11"
+                      disabled={product.stock <= 0}
+                      onClick={() => {
+                        sessionStorage.setItem("buyNowItem", JSON.stringify({ id: product.id, qty }));
+                        if (!user) {
+                          navigate("/login?redirect=/checkout?buyNow=1");
+                        } else {
+                          navigate("/checkout?buyNow=1");
+                        }
+                      }}
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Buy Now
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Stock info */}

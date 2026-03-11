@@ -39,10 +39,39 @@ interface ShippingMethod {
 
 const Checkout = () => {
   const { user } = useAuth();
-  const { cartProducts, totalPrice, clearCart, getPrice } = useCart();
+  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
+
+  // Buy Now mode
+  const isBuyNow = new URLSearchParams(window.location.search).get("buyNow") === "1";
+  const [buyNowProduct, setBuyNowProduct] = useState<(typeof cartProducts)[0] | null>(null);
+
+  useEffect(() => {
+    if (!isBuyNow) return;
+    try {
+      const raw = sessionStorage.getItem("buyNowItem");
+      if (!raw) { navigate("/shop"); return; }
+      const { id, qty } = JSON.parse(raw);
+      const found = allProducts.find((p) => p.id === id);
+      if (found) {
+        setBuyNowProduct({ ...found, qty: qty || 1 });
+      } else {
+        // Product not in cache yet — fetch directly
+        supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
+          if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
+          else { toast.error("Product not found"); navigate("/shop"); }
+        });
+      }
+    } catch { navigate("/shop"); }
+  }, [isBuyNow, allProducts]);
+
+  const clearBuyNow = () => sessionStorage.removeItem("buyNowItem");
+
+  // Unified checkout items
+  const checkoutProducts = isBuyNow ? (buyNowProduct ? [buyNowProduct] : []) : cartProducts;
+  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
 
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
