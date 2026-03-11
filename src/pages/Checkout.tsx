@@ -299,7 +299,7 @@ const Checkout = () => {
         const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
         await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
         toast.success("Order placed successfully!");
-        clearCart();
+        if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
         navigate(`/order-success?order_id=${order.id}`);
         return;
