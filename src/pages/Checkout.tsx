@@ -234,7 +234,9 @@ const Checkout = () => {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
         shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
-      }).select().single();
+        wallet_amount_used: walletDeduction,
+        razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
+      } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
       const items = cartProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
@@ -290,18 +292,47 @@ const Checkout = () => {
               const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
                 body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
               });
-              if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
+              if (verifyError || verifyData?.error) {
+                toast.error("Payment verification failed");
+                // Cancel order and refund wallet on verification failure
+                await supabase.rpc("cancel_order_and_refund_wallet" as any, { _order_id: order.id, _user_id: user!.id });
+                sendOrderEmail(order.id, "order_failed");
+                setProcessing(false);
+                setStep("payment");
+                return;
+              }
               await supabase.from("orders").update({ status: "confirmed", payment_method: paymentMethod }).eq("id", order.id);
               toast.success("Order placed successfully!");
               clearCart();
               sendOrderEmail(order.id, "order_success");
               navigate(`/order-success?order_id=${order.id}`);
-            } catch { toast.error("Payment verification failed"); }
+            } catch {
+              toast.error("Payment verification failed");
+              await supabase.rpc("cancel_order_and_refund_wallet" as any, { _order_id: order.id, _user_id: user!.id });
+              setProcessing(false);
+              setStep("payment");
+            }
           },
-          modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
+          modal: {
+            ondismiss: async () => {
+              // User closed Razorpay popup — cancel order and refund wallet
+              await supabase.rpc("cancel_order_and_refund_wallet" as any, { _order_id: order.id, _user_id: user!.id });
+              setProcessing(false);
+              setStep("payment");
+              toast.info("Payment cancelled. Wallet balance has been restored.");
+            },
+          },
           theme: { color: "#333" },
         };
         const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", async () => {
+          // Razorpay payment failed event — cancel order and refund wallet
+          await supabase.rpc("cancel_order_and_refund_wallet" as any, { _order_id: order.id, _user_id: user!.id });
+          toast.error("Payment failed. Wallet balance has been restored.");
+          sendOrderEmail(order.id, "order_failed");
+          setProcessing(false);
+          setStep("payment");
+        });
         rzp.open();
         return;
       }

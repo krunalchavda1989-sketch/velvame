@@ -859,12 +859,14 @@ export type Database = {
           is_repurchase: boolean
           order_number: string | null
           payment_method: string | null
+          razorpay_amount: number
           shipping_address: Json | null
           shipping_method: string | null
           status: string
           total_amount: number
           updated_at: string
           user_id: string
+          wallet_amount_used: number
         }
         Insert: {
           created_at?: string
@@ -872,12 +874,14 @@ export type Database = {
           is_repurchase?: boolean
           order_number?: string | null
           payment_method?: string | null
+          razorpay_amount?: number
           shipping_address?: Json | null
           shipping_method?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
           user_id: string
+          wallet_amount_used?: number
         }
         Update: {
           created_at?: string
@@ -885,12 +889,14 @@ export type Database = {
           is_repurchase?: boolean
           order_number?: string | null
           payment_method?: string | null
+          razorpay_amount?: number
           shipping_address?: Json | null
           shipping_method?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
           user_id?: string
+          wallet_amount_used?: number
         }
         Relationships: []
       }
@@ -1651,6 +1657,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_order_and_refund_wallet: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: Json
+      }
       deduct_wallet_balance: {
         Args: { _amount: number; _user_id: string }
         Returns: Json
