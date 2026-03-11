@@ -368,7 +368,7 @@ const Checkout = () => {
 
       // Other gateways (phonepe, stripe, paytm, instamojo) — placeholder
       toast.info(`${selectedPaymentMethod} gateway integration coming soon. Order saved as pending.`);
-      clearCart();
+      if (isBuyNow) clearBuyNow(); else clearCart();
       navigate(`/order-success?order_id=${order.id}`);
     } catch (error: any) {
       toast.error(error.message || "Checkout failed");
