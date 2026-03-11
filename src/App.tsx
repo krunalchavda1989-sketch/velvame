@@ -59,6 +59,7 @@ import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import ProductDetail from "./pages/ProductDetail";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminBulkSms from "./pages/admin/AdminBulkSms";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route
               path="/dashboard"
               element={

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Minus, Plus, ShoppingBag, Trash2, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock } from "lucide-react";
+import { ShoppingBag, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, Zap, Building2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,13 +39,17 @@ interface ShippingMethod {
 
 const Checkout = () => {
   const { user } = useAuth();
-  const { cartProducts, totalPrice, updateQty, removeItem, clearCart, getPrice } = useCart();
+  const { cartProducts, totalPrice, clearCart, getPrice } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
+
+  // Payment gateways
+  const [paymentGateways, setPaymentGateways] = useState<any[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
 
   // Address
   const [address, setAddress] = useState({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
@@ -104,6 +108,39 @@ const Checkout = () => {
       setFreeShippingMinAmount(freeShipMinAmt);
       setShippingMethods(methods);
       setSelectedShipping(methods[0]?.key || "");
+    });
+
+    // Fetch enabled payment gateways from admin settings
+    supabase.from("pages_content").select("content").eq("page_slug", "payment-gateway-settings").maybeSingle().then(({ data }) => {
+      if (data?.content) {
+        const content = data.content as any;
+        const enabled: any[] = [];
+        const gatewayMeta: Record<string, { label: string; icon: string; description: string }> = {
+          razorpay: { label: "Razorpay", icon: "credit-card", description: "Pay securely via Razorpay" },
+          phonepe: { label: "PhonePe", icon: "smartphone", description: "Pay via PhonePe UPI" },
+          stripe: { label: "Stripe", icon: "zap", description: "Pay securely via Stripe" },
+          paytm: { label: "Paytm", icon: "wallet", description: "Pay via Paytm" },
+          instamojo: { label: "Instamojo", icon: "zap", description: "Pay via Instamojo" },
+          bank_transfer: { label: "Bank Transfer", icon: "building", description: "Pay via direct bank transfer" },
+          cod: { label: "Cash on Delivery", icon: "package", description: "Pay when you receive your order" },
+        };
+        for (const key of Object.keys(gatewayMeta)) {
+          if (content[key]?.enabled) {
+            const gw = content[key];
+            const meta = gatewayMeta[key];
+            // COD: check min/max order amount
+            if (key === "cod") {
+              const minAmt = Number(gw.fields?.min_order_amount) || 0;
+              const maxAmt = Number(gw.fields?.max_order_amount) || 0;
+              if (minAmt > 0 && totalPrice < minAmt) continue;
+              if (maxAmt > 0 && totalPrice > maxAmt) continue;
+            }
+            enabled.push({ key, ...meta, instructions: gw.fields?.instructions || "" });
+          }
+        }
+        setPaymentGateways(enabled);
+        if (enabled.length > 0) setSelectedPaymentMethod(enabled[0].key);
+      }
     });
 
     // Fetch wallet
@@ -169,6 +206,12 @@ const Checkout = () => {
     return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
   };
 
+  const getPaymentMethodLabel = () => {
+    if (isFullWalletPayment) return "wallet";
+    if (!selectedPaymentMethod) return "razorpay";
+    return useWallet ? `wallet+${selectedPaymentMethod}` : selectedPaymentMethod;
+  };
+
   const handlePlaceOrder = async () => {
     const shippingAddr = getShippingAddress();
     if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
@@ -177,13 +220,20 @@ const Checkout = () => {
       return;
     }
 
+    if (!isFullWalletPayment && !selectedPaymentMethod && paymentGateways.length > 0) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
     setProcessing(true);
     setStep("processing");
+
+    const paymentMethod = getPaymentMethodLabel();
 
     try {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
-        shipping_method: selectedShipping, payment_method: isFullWalletPayment ? "wallet" : useWallet ? "wallet+razorpay" : "razorpay", status: "pending",
+        shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
       }).select().single();
       if (orderError) throw new Error(orderError.message);
 
@@ -200,42 +250,63 @@ const Checkout = () => {
         }
       }
 
+      // Full wallet payment
       if (isFullWalletPayment) {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
         toast.success("Order placed successfully!");
         clearCart();
         sendOrderEmail(order.id, "order_success");
-        navigate("/dashboard/orders");
+        navigate(`/order-success?order_id=${order.id}`);
         return;
       }
 
-      const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
-        body: { action: "create_order", amount: finalPrice, purpose: "shop", order_ref_id: order.id },
-      });
-      if (rzpError || rzpData?.error) throw new Error(rzpData?.error || rzpError?.message);
+      // COD / Bank Transfer — confirm immediately
+      if (selectedPaymentMethod === "cod" || selectedPaymentMethod === "bank_transfer") {
+        const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
+        await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
+        toast.success("Order placed successfully!");
+        clearCart();
+        sendOrderEmail(order.id, "order_success");
+        navigate(`/order-success?order_id=${order.id}`);
+        return;
+      }
 
-      const options = {
-        key: rzpData.key_id, amount: rzpData.amount, currency: rzpData.currency,
-        name: brand.brand_name || "Store", description: `Order #${order.id.slice(0, 8)}`,
-        order_id: rzpData.order_id,
-        handler: async (response: any) => {
-          try {
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
-              body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
-            });
-            if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
-            await supabase.from("orders").update({ status: "confirmed", payment_method: useWallet ? "wallet+razorpay" : "razorpay" }).eq("id", order.id);
-            toast.success("Order placed successfully!");
-            clearCart();
-            sendOrderEmail(order.id, "order_success");
-            navigate("/dashboard/orders");
-          } catch { toast.error("Payment verification failed"); }
-        },
-        modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
-        theme: { color: "#333" },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      // Razorpay payment gateway
+      if (selectedPaymentMethod === "razorpay" || (!selectedPaymentMethod && paymentGateways.length === 0)) {
+        const { data: rzpData, error: rzpError } = await supabase.functions.invoke("razorpay", {
+          body: { action: "create_order", amount: finalPrice, purpose: "shop", order_ref_id: order.id },
+        });
+        if (rzpError || rzpData?.error) throw new Error(rzpData?.error || rzpError?.message);
+
+        const options = {
+          key: rzpData.key_id, amount: rzpData.amount, currency: rzpData.currency,
+          name: brand.brand_name || "Store", description: `Order #${order.id.slice(0, 8)}`,
+          order_id: rzpData.order_id,
+          handler: async (response: any) => {
+            try {
+              const { data: verifyData, error: verifyError } = await supabase.functions.invoke("razorpay", {
+                body: { action: "verify_payment", razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature },
+              });
+              if (verifyError || verifyData?.error) { toast.error("Payment verification failed"); sendOrderEmail(order.id, "order_failed"); return; }
+              await supabase.from("orders").update({ status: "confirmed", payment_method: paymentMethod }).eq("id", order.id);
+              toast.success("Order placed successfully!");
+              clearCart();
+              sendOrderEmail(order.id, "order_success");
+              navigate(`/order-success?order_id=${order.id}`);
+            } catch { toast.error("Payment verification failed"); }
+          },
+          modal: { ondismiss: () => { setProcessing(false); setStep("payment"); toast.info("Payment cancelled"); sendOrderEmail(order.id, "order_failed"); } },
+          theme: { color: "#333" },
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        return;
+      }
+
+      // Other gateways (phonepe, stripe, paytm, instamojo) — placeholder
+      toast.info(`${selectedPaymentMethod} gateway integration coming soon. Order saved as pending.`);
+      clearCart();
+      navigate(`/order-success?order_id=${order.id}`);
     } catch (error: any) {
       toast.error(error.message || "Checkout failed");
       setStep("payment");
@@ -495,9 +566,45 @@ const Checkout = () => {
                   )}
 
                   {!isFullWalletPayment && (
-                    <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
-                      <p className="text-sm font-medium text-gray-900">Razorpay</p>
-                      <p className="text-xs text-gray-500 mt-1">You'll be redirected to complete payment securely</p>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-foreground">Select Payment Method</p>
+                      {paymentGateways.length > 0 ? (
+                        <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="space-y-2">
+                          {paymentGateways.map((gw) => {
+                            const iconMap: Record<string, any> = {
+                              "credit-card": CreditCard,
+                              "smartphone": Smartphone,
+                              "zap": Zap,
+                              "wallet": Wallet,
+                              "building": Building2,
+                              "package": Package,
+                            };
+                            const IconComp = iconMap[gw.icon] || CreditCard;
+                            return (
+                              <label
+                                key={gw.key}
+                                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  selectedPaymentMethod === gw.key ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <RadioGroupItem value={gw.key} id={`pay-${gw.key}`} />
+                                  <IconComp className="h-5 w-5 text-muted-foreground" />
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">{gw.label}</p>
+                                    <p className="text-xs text-muted-foreground">{gw.description}</p>
+                                  </div>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </RadioGroup>
+                      ) : (
+                        <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
+                          <p className="text-sm font-medium text-foreground">Razorpay</p>
+                          <p className="text-xs text-muted-foreground mt-1">You'll be redirected to complete payment securely</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
