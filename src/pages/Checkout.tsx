@@ -161,8 +161,8 @@ const Checkout = () => {
             if (key === "cod") {
               const minAmt = Number(gw.fields?.min_order_amount) || 0;
               const maxAmt = Number(gw.fields?.max_order_amount) || 0;
-              if (minAmt > 0 && totalPrice < minAmt) continue;
-              if (maxAmt > 0 && totalPrice > maxAmt) continue;
+              if (minAmt > 0 && checkoutTotal < minAmt) continue;
+              if (maxAmt > 0 && checkoutTotal > maxAmt) continue;
             }
             enabled.push({ key, ...meta, instructions: gw.fields?.instructions || "" });
           }
