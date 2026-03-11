@@ -566,11 +566,11 @@ const Checkout = () => {
                   {freeShippingMinAmount > 0 && !freeShippingEligible && (
                     <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-amber-700">{fc(totalPrice)} / {fc(freeShippingMinAmount)}</span>
+                        <span className="text-amber-700">{fc(checkoutTotal)} / {fc(freeShippingMinAmount)}</span>
                         <span className="font-medium text-amber-800">Add {fc(freeShippingDelta)} more for free shipping</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-amber-200 overflow-hidden">
-                        <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${Math.min((totalPrice / freeShippingMinAmount) * 100, 100)}%` }} />
+                        <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${Math.min((checkoutTotal / freeShippingMinAmount) * 100, 100)}%` }} />
                       </div>
                     </div>
                   )}
