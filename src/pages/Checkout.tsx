@@ -566,9 +566,45 @@ const Checkout = () => {
                   )}
 
                   {!isFullWalletPayment && (
-                    <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
-                      <p className="text-sm font-medium text-gray-900">Razorpay</p>
-                      <p className="text-xs text-gray-500 mt-1">You'll be redirected to complete payment securely</p>
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-foreground">Select Payment Method</p>
+                      {paymentGateways.length > 0 ? (
+                        <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="space-y-2">
+                          {paymentGateways.map((gw) => {
+                            const iconMap: Record<string, any> = {
+                              "credit-card": CreditCard,
+                              "smartphone": Smartphone,
+                              "zap": Zap,
+                              "wallet": Wallet,
+                              "building": Building2,
+                              "package": Package,
+                            };
+                            const IconComp = iconMap[gw.icon] || CreditCard;
+                            return (
+                              <label
+                                key={gw.key}
+                                className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  selectedPaymentMethod === gw.key ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <RadioGroupItem value={gw.key} id={`pay-${gw.key}`} />
+                                  <IconComp className="h-5 w-5 text-muted-foreground" />
+                                  <div>
+                                    <p className="text-sm font-medium text-foreground">{gw.label}</p>
+                                    <p className="text-xs text-muted-foreground">{gw.description}</p>
+                                  </div>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </RadioGroup>
+                      ) : (
+                        <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
+                          <p className="text-sm font-medium text-foreground">Razorpay</p>
+                          <p className="text-xs text-muted-foreground mt-1">You'll be redirected to complete payment securely</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
