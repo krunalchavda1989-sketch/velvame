@@ -696,7 +696,7 @@ const Checkout = () => {
                   <CardContent className="space-y-4">
                     {/* Cart items */}
                     <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                      {cartProducts.map((p) => (
+                      {checkoutProducts.map((p) => (
                         <div key={p.id} className="flex items-center gap-3">
                           <div className="relative w-14 h-14 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
                             {p.image_url?.startsWith("http") ? (
