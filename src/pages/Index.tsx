@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, ShoppingBag, Star, Plus, Users, TrendingUp, Shield,
+  ArrowRight, ShoppingBag, Star, Users, TrendingUp, Shield,
   ChevronRight, Sparkles, Gift, Zap, Heart, Award, Globe, type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
