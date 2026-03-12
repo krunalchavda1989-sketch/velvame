@@ -259,6 +259,8 @@ Deno.serve(async (req) => {
           .update({
             subscription_paid: true,
             subscription_date: new Date().toISOString(),
+            membership_source: "paid",
+            membership_activated_at: new Date().toISOString(),
           })
           .eq("user_id", payment.user_id);
 
