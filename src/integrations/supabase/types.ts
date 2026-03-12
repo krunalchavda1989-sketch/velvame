@@ -856,9 +856,11 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_first_order: boolean | null
           is_repurchase: boolean
           order_number: string | null
           payment_method: string | null
+          price_type_used: string | null
           razorpay_amount: number
           shipping_address: Json | null
           shipping_method: string | null
@@ -871,9 +873,11 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
           payment_method?: string | null
+          price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
           shipping_method?: string | null
@@ -886,9 +890,11 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
           payment_method?: string | null
+          price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
           shipping_method?: string | null
@@ -1180,6 +1186,8 @@ export type Database = {
           direct_referral_count: number
           full_name: string
           id: string
+          membership_activated_at: string | null
+          membership_source: string | null
           phone: string | null
           referral_code: string
           referred_by: string | null
@@ -1195,6 +1203,8 @@ export type Database = {
           direct_referral_count?: number
           full_name?: string
           id?: string
+          membership_activated_at?: string | null
+          membership_source?: string | null
           phone?: string | null
           referral_code: string
           referred_by?: string | null
@@ -1210,6 +1220,8 @@ export type Database = {
           direct_referral_count?: number
           full_name?: string
           id?: string
+          membership_activated_at?: string | null
+          membership_source?: string | null
           phone?: string | null
           referral_code?: string
           referred_by?: string | null

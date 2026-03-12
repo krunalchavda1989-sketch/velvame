@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingBag, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, Zap, Building2, Package } from "lucide-react";
+import { ShoppingBag, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, Zap, Building2, Package, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { useLocalization, formatPrice, taxAmount } from "@/hooks/useLocalization
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { sendOrderEmail } from "@/lib/orderEmail";
+import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
 
 declare global {
   interface Window {
@@ -38,11 +39,22 @@ interface ShippingMethod {
 }
 
 const Checkout = () => {
-  const { user } = useAuth();
-  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts } = useCart();
+  const { user, profile } = useAuth();
+  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts, isMember } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
+
+  // First order check for paid subscribers → use retail pricing on first order
+  const { useRetailPricing, isFirstOrder } = useFirstOrderCheck();
+
+  // Price getter that respects first-order retail pricing rule
+  const getCheckoutPrice = (product: { distributor_price: number; retail_price: number }) => {
+    if (useRetailPricing) return product.retail_price;
+    return getPrice(product as any);
+  };
+
+  const priceTypeUsed = useRetailPricing ? "retail" : (isMember ? "distributor" : "retail");
 
   // Buy Now mode
   const isBuyNow = new URLSearchParams(window.location.search).get("buyNow") === "1";
@@ -58,7 +70,6 @@ const Checkout = () => {
       if (found) {
         setBuyNowProduct({ ...found, qty: qty || 1 });
       } else {
-        // Product not in cache yet — fetch directly
         supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
           if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
           else { toast.error("Product not found"); navigate("/shop"); }
@@ -71,7 +82,7 @@ const Checkout = () => {
 
   // Unified checkout items
   const checkoutProducts = isBuyNow ? (buyNowProduct ? [buyNowProduct] : []) : cartProducts;
-  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
+  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getCheckoutPrice(p) * p.qty, 0);
 
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
@@ -265,10 +276,12 @@ const Checkout = () => {
         shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
         wallet_amount_used: walletDeduction,
         razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
+        is_first_order: isFirstOrder,
+        price_type_used: priceTypeUsed,
       } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
-      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
+      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getCheckoutPrice(p) }));
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
@@ -287,6 +300,8 @@ const Checkout = () => {
       // Full wallet payment
       if (isFullWalletPayment) {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
+        // Check auto-membership activation (non-blocking)
+        supabase.functions.invoke("razorpay", { body: { action: "check_auto_membership", order_id: order.id } }).catch(() => {});
         toast.success("Order placed successfully!");
         if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
@@ -298,6 +313,10 @@ const Checkout = () => {
       if (selectedPaymentMethod === "cod" || selectedPaymentMethod === "bank_transfer") {
         const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
         await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
+        // Check auto-membership activation for COD confirmed orders (non-blocking)
+        if (status === "confirmed") {
+          supabase.functions.invoke("razorpay", { body: { action: "check_auto_membership", order_id: order.id } }).catch(() => {});
+        }
         toast.success("Order placed successfully!");
         if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
@@ -693,7 +712,14 @@ const Checkout = () => {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base text-gray-900">Order Summary</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                   <CardContent className="space-y-4">
+                    {/* Retail pricing notice */}
+                    {useRetailPricing && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        <span>As a subscribed member's first order, retail pricing applies. Distributor pricing will apply from your next order onwards.</span>
+                      </div>
+                    )}
                     {/* Cart items */}
                     <div className="space-y-3 max-h-[300px] overflow-y-auto">
                       {checkoutProducts.map((p) => (
@@ -709,7 +735,7 @@ const Checkout = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
                           </div>
-                          <p className="text-sm font-medium text-gray-900 shrink-0">{fc(getPrice(p) * p.qty)}</p>
+                          <p className="text-sm font-medium text-gray-900 shrink-0">{fc(getCheckoutPrice(p) * p.qty)}</p>
                         </div>
                       ))}
                     </div>

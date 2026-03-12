@@ -82,6 +82,59 @@ async function processCommissions(serviceClient: any, orderId: string) {
   }
 }
 
+async function autoActivateMembership(serviceClient: any, userId: string, orderId: string) {
+  // Check if user is already a member
+  const { data: profile } = await serviceClient
+    .from("profiles")
+    .select("subscription_paid, membership_source")
+    .eq("user_id", userId)
+    .single();
+
+  if (profile?.subscription_paid) return; // Already a member
+
+  // Check if this is user's first successful order
+  const { count } = await serviceClient
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "confirmed");
+
+  if ((count ?? 0) > 1) return; // Not first order (current order already confirmed = 1)
+
+  // Get auto-activation threshold from admin settings
+  const { data: membershipSettings } = await serviceClient
+    .from("pages_content")
+    .select("content")
+    .eq("page_slug", "membership-settings")
+    .maybeSingle();
+
+  const threshold = membershipSettings?.content
+    ? Number((membershipSettings.content as any).auto_activation_threshold) || 0
+    : 0;
+
+  if (threshold <= 0) return; // Auto-activation disabled
+
+  // Get order total
+  const { data: order } = await serviceClient
+    .from("orders")
+    .select("total_amount")
+    .eq("id", orderId)
+    .single();
+
+  if (!order || Number(order.total_amount) < threshold) return;
+
+  // Auto-activate membership
+  await serviceClient
+    .from("profiles")
+    .update({
+      subscription_paid: true,
+      subscription_date: new Date().toISOString(),
+      membership_source: "auto",
+      membership_activated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -259,6 +312,8 @@ Deno.serve(async (req) => {
           .update({
             subscription_paid: true,
             subscription_date: new Date().toISOString(),
+            membership_source: "paid",
+            membership_activated_at: new Date().toISOString(),
           })
           .eq("user_id", payment.user_id);
 
@@ -300,6 +355,13 @@ Deno.serve(async (req) => {
             .update({ status: "confirmed", payment_method: "razorpay" })
             .eq("id", paymentRecord.order_ref_id);
 
+          // Auto-membership activation: check if first order meets threshold
+          try {
+            await autoActivateMembership(serviceClient, payment.user_id, paymentRecord.order_ref_id);
+          } catch (err) {
+            console.error("Auto-membership activation error (non-fatal):", err);
+          }
+
           // Auto-process commissions for the confirmed order
           try {
             await processCommissions(serviceClient, paymentRecord.order_ref_id);
@@ -313,6 +375,33 @@ Deno.serve(async (req) => {
         JSON.stringify({ success: true, status: "paid" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (action === "check_auto_membership") {
+      const { order_id } = body;
+      if (!order_id) {
+        return new Response(JSON.stringify({ error: "Missing order_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const svcClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      try {
+        await autoActivateMembership(svcClient, userId, order_id);
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        console.error("Auto-membership check error:", err);
+        return new Response(JSON.stringify({ success: false }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {

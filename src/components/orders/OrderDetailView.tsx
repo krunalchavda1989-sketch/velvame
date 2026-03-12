@@ -26,6 +26,8 @@ interface OrderDetailData {
   user_id: string;
   wallet_amount_used?: number;
   razorpay_amount?: number;
+  is_first_order?: boolean;
+  price_type_used?: string;
 }
 
 interface OrderItemData {
@@ -174,6 +176,12 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
             </button>
             <Badge variant="outline" className={sc.bg}>{order.status}</Badge>
             {order.is_repurchase && <Badge variant="outline" className="text-xs">Repurchase</Badge>}
+            {order.price_type_used && (
+              <Badge variant="outline" className="text-xs capitalize">
+                {order.price_type_used === "retail" ? "Retail Price" : "Distributor Price"}
+              </Badge>
+            )}
+            {order.is_first_order && <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">First Order</Badge>}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">{formatDate(order.created_at)}</p>
         </div>
