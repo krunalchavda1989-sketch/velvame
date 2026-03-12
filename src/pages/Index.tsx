@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, ShoppingBag, Star, Plus, Users, TrendingUp, Shield,
+  ArrowRight, ShoppingBag, Star, Users, TrendingUp, Shield,
   ChevronRight, Sparkles, Gift, Zap, Heart, Award, Globe, type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -238,10 +238,11 @@ const Index = () => {
                           {formatPrice(product.retail_price, currencySymbol)}
                         </span>
                       </div>
-                      <Button size="icon" variant="outline" className="h-8 w-8 hover:bg-primary hover:text-primary-foreground transition-colors"
+                      <Button size="sm" variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-colors"
                         onClick={() => { addToCart(product.id); toast.success(`Added ${product.name}`); }}
                       >
-                        <Plus className="h-3.5 w-3.5" />
+                        <ShoppingBag className="h-3.5 w-3.5 mr-1" />
+                        Add to Cart
                       </Button>
                     </div>
                   </div>

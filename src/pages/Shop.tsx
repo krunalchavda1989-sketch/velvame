@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, Plus, Star } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import OffersCarousel from "@/components/shop/OffersCarousel";
@@ -133,7 +133,8 @@ const Shop = () => {
                           onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
                           className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                         >
-                          <Plus className="h-4 w-4" />
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          Add to Cart
                         </Button>
                       </div>
                     </div>
