@@ -302,6 +302,13 @@ Deno.serve(async (req) => {
             .update({ status: "confirmed", payment_method: "razorpay" })
             .eq("id", paymentRecord.order_ref_id);
 
+          // Auto-membership activation: check if first order meets threshold
+          try {
+            await autoActivateMembership(serviceClient, payment.user_id, paymentRecord.order_ref_id);
+          } catch (err) {
+            console.error("Auto-membership activation error (non-fatal):", err);
+          }
+
           // Auto-process commissions for the confirmed order
           try {
             await processCommissions(serviceClient, paymentRecord.order_ref_id);
