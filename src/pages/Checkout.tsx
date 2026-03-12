@@ -313,6 +313,10 @@ const Checkout = () => {
       if (selectedPaymentMethod === "cod" || selectedPaymentMethod === "bank_transfer") {
         const status = selectedPaymentMethod === "cod" ? "confirmed" : "pending";
         await supabase.from("orders").update({ status, payment_method: paymentMethod }).eq("id", order.id);
+        // Check auto-membership activation for COD confirmed orders (non-blocking)
+        if (status === "confirmed") {
+          supabase.functions.invoke("razorpay", { body: { action: "check_auto_membership", order_id: order.id } }).catch(() => {});
+        }
         toast.success("Order placed successfully!");
         if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
