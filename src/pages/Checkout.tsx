@@ -706,7 +706,14 @@ const Checkout = () => {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base text-gray-900">Order Summary</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                   <CardContent className="space-y-4">
+                    {/* Retail pricing notice */}
+                    {useRetailPricing && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        <span>As a subscribed member's first order, retail pricing applies. Distributor pricing will apply from your next order onwards.</span>
+                      </div>
+                    )}
                     {/* Cart items */}
                     <div className="space-y-3 max-h-[300px] overflow-y-auto">
                       {checkoutProducts.map((p) => (
