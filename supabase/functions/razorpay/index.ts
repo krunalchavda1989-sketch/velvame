@@ -82,6 +82,59 @@ async function processCommissions(serviceClient: any, orderId: string) {
   }
 }
 
+async function autoActivateMembership(serviceClient: any, userId: string, orderId: string) {
+  // Check if user is already a member
+  const { data: profile } = await serviceClient
+    .from("profiles")
+    .select("subscription_paid, membership_source")
+    .eq("user_id", userId)
+    .single();
+
+  if (profile?.subscription_paid) return; // Already a member
+
+  // Check if this is user's first successful order
+  const { count } = await serviceClient
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "confirmed");
+
+  if ((count ?? 0) > 1) return; // Not first order (current order already confirmed = 1)
+
+  // Get auto-activation threshold from admin settings
+  const { data: membershipSettings } = await serviceClient
+    .from("pages_content")
+    .select("content")
+    .eq("page_slug", "membership-settings")
+    .maybeSingle();
+
+  const threshold = membershipSettings?.content
+    ? Number((membershipSettings.content as any).auto_activation_threshold) || 0
+    : 0;
+
+  if (threshold <= 0) return; // Auto-activation disabled
+
+  // Get order total
+  const { data: order } = await serviceClient
+    .from("orders")
+    .select("total_amount")
+    .eq("id", orderId)
+    .single();
+
+  if (!order || Number(order.total_amount) < threshold) return;
+
+  // Auto-activate membership
+  await serviceClient
+    .from("profiles")
+    .update({
+      subscription_paid: true,
+      subscription_date: new Date().toISOString(),
+      membership_source: "auto",
+      membership_activated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
