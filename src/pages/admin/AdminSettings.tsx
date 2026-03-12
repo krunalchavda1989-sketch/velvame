@@ -2029,6 +2029,7 @@ const CaptchaTab = () => {
 /* ───────── Membership Tab ───────── */
 const MembershipTab = () => {
   const [amount, setAmount] = useState<number>(2800);
+  const [autoActivationThreshold, setAutoActivationThreshold] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -2042,6 +2043,7 @@ const MembershipTab = () => {
       if (data?.content) {
         const content = data.content as any;
         setAmount(Number(content.membership_amount) || 2800);
+        setAutoActivationThreshold(Number(content.auto_activation_threshold) || 0);
       }
       setLoading(false);
     };
@@ -2051,7 +2053,7 @@ const MembershipTab = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const content = { membership_amount: amount };
+      const content = { membership_amount: amount, auto_activation_threshold: autoActivationThreshold };
 
       const { data: existing } = await supabase
         .from("pages_content")
@@ -2072,9 +2074,9 @@ const MembershipTab = () => {
           is_published: true,
         });
       }
-      toast.success("Membership amount updated successfully");
+      toast.success("Membership settings updated successfully");
     } catch {
-      toast.error("Failed to save membership amount");
+      toast.error("Failed to save membership settings");
     } finally {
       setSaving(false);
     }
@@ -2128,9 +2130,47 @@ const MembershipTab = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-primary" />
+            Auto Membership Activation
+          </CardTitle>
+          <CardDescription>
+            Automatically activate membership when a user's first order meets or exceeds this threshold amount. Set to 0 to disable auto-activation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-w-sm">
+            <Label htmlFor="auto-threshold">Minimum Order Amount for Auto Activation (₹)</Label>
+            <Input
+              id="auto-threshold"
+              type="number"
+              min={0}
+              step={100}
+              value={autoActivationThreshold}
+              onChange={(e) => setAutoActivationThreshold(Number(e.target.value))}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              If a user's first order total is ≥ this amount, their membership will be automatically activated (source: "auto"). Set to 0 to disable.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Current Setting</p>
+            <p className="text-sm text-muted-foreground">
+              {autoActivationThreshold > 0
+                ? <>Auto-activate membership on first order ≥ <span className="font-semibold text-foreground">₹{autoActivationThreshold.toLocaleString("en-IN")}</span></>
+                : "Auto-activation is disabled"}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
         {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-        Save Membership Amount
+        Save Membership Settings
       </Button>
     </div>
   );
