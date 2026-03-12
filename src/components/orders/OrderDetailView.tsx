@@ -26,6 +26,8 @@ interface OrderDetailData {
   user_id: string;
   wallet_amount_used?: number;
   razorpay_amount?: number;
+  is_first_order?: boolean;
+  price_type_used?: string;
 }
 
 interface OrderItemData {
