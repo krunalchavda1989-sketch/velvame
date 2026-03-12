@@ -336,9 +336,9 @@ const ProductDetail = () => {
                           to={`/product/${item.id}`}
                           className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
                         >
-                          <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
+                          <div className="bg-secondary flex items-center justify-center text-5xl">
                             {isImageUrl(item.image_url) ? (
-                              <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                              <img src={item.image_url} alt={item.name} className="w-full h-auto object-contain" />
                             ) : (
                               item.image_url || "📦"
                             )}
