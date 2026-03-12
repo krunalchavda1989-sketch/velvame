@@ -39,11 +39,22 @@ interface ShippingMethod {
 }
 
 const Checkout = () => {
-  const { user } = useAuth();
-  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts } = useCart();
+  const { user, profile } = useAuth();
+  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts, isMember } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
+
+  // First order check for paid subscribers → use retail pricing on first order
+  const { useRetailPricing, isFirstOrder } = useFirstOrderCheck();
+
+  // Price getter that respects first-order retail pricing rule
+  const getCheckoutPrice = (product: { distributor_price: number; retail_price: number }) => {
+    if (useRetailPricing) return product.retail_price;
+    return getPrice(product as any);
+  };
+
+  const priceTypeUsed = useRetailPricing ? "retail" : (isMember ? "distributor" : "retail");
 
   // Buy Now mode
   const isBuyNow = new URLSearchParams(window.location.search).get("buyNow") === "1";
@@ -59,7 +70,6 @@ const Checkout = () => {
       if (found) {
         setBuyNowProduct({ ...found, qty: qty || 1 });
       } else {
-        // Product not in cache yet — fetch directly
         supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
           if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
           else { toast.error("Product not found"); navigate("/shop"); }
@@ -72,7 +82,7 @@ const Checkout = () => {
 
   // Unified checkout items
   const checkoutProducts = isBuyNow ? (buyNowProduct ? [buyNowProduct] : []) : cartProducts;
-  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getPrice(p) * p.qty, 0);
+  const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getCheckoutPrice(p) * p.qty, 0);
 
   const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
   const [processing, setProcessing] = useState(false);
