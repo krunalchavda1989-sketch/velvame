@@ -15,6 +15,7 @@ import { useLocalization, formatPrice, taxAmount } from "@/hooks/useLocalization
 import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { sendOrderEmail } from "@/lib/orderEmail";
+import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
 
 declare global {
   interface Window {
