@@ -95,9 +95,9 @@ const Shop = () => {
                     className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer"
                   >
                     <Link to={`/product/${product.id}`}>
-                      <div className="h-40 bg-secondary flex items-center justify-center text-5xl">
+                      <div className="bg-secondary flex items-center justify-center text-5xl">
                         {product.image_url?.startsWith("http") ? (
-                          <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
+                          <img src={product.image_url} alt={product.name} className="w-full h-auto object-contain" />
                         ) : (
                           product.image_url || "📦"
                         )}
