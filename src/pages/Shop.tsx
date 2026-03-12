@@ -133,7 +133,8 @@ const Shop = () => {
                           onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
                           className="bg-gradient-gold text-primary-foreground hover:opacity-90"
                         >
-                          <Plus className="h-4 w-4" />
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          Add to Cart
                         </Button>
                       </div>
                     </div>
