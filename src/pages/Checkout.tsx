@@ -722,7 +722,7 @@ const Checkout = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
                           </div>
-                          <p className="text-sm font-medium text-gray-900 shrink-0">{fc(getPrice(p) * p.qty)}</p>
+                          <p className="text-sm font-medium text-gray-900 shrink-0">{fc(getCheckoutPrice(p) * p.qty)}</p>
                         </div>
                       ))}
                     </div>
