@@ -276,10 +276,12 @@ const Checkout = () => {
         shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
         wallet_amount_used: walletDeduction,
         razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
+        is_first_order: isFirstOrder,
+        price_type_used: priceTypeUsed,
       } as any).select().single();
       if (orderError) throw new Error(orderError.message);
 
-      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getPrice(p) }));
+      const items = checkoutProducts.map((p) => ({ order_id: order.id, product_id: p.id, quantity: p.qty, price: getCheckoutPrice(p) }));
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
