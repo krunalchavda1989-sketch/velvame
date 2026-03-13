@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+
 import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
