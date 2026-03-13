@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,26 @@ const Register = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [otp, setOtp] = useState("");
   const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
     referralCode: searchParams.get("ref") || "",
   });
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +74,7 @@ const Register = () => {
       if (error) throw error;
       toast.success("Verification code sent to your email!");
       setStep("otp");
+      setCooldown(30);
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
     } finally {
@@ -90,6 +105,7 @@ const Register = () => {
   };
 
   const handleResendOtp = async () => {
+    if (cooldown > 0 || resendCount >= 5) return;
     setResending(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -97,9 +113,11 @@ const Register = () => {
         email: form.email,
       });
       if (error) throw error;
-      toast.success("New verification code sent!");
+      toast.success(`New verification code sent to ${form.email}!`);
+      setResendCount((c) => c + 1);
+      setCooldown(30);
     } catch (err: any) {
-      toast.error(err.message || "Failed to resend code");
+      toast.error(err.message || "Failed to send OTP. Please try again.");
     } finally {
       setResending(false);
     }
@@ -250,17 +268,25 @@ const Register = () => {
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Didn't receive the code?{" "}
-                <button
-                  onClick={handleResendOtp}
-                  disabled={resending}
-                  className="text-primary hover:underline font-medium disabled:opacity-50"
-                >
-                  {resending ? "Sending..." : "Resend Code"}
-                </button>
+                Didn't receive the OTP?{" "}
+                {resendCount >= 5 ? (
+                  <span className="text-destructive font-medium">Maximum resend attempts reached</span>
+                ) : cooldown > 0 ? (
+                  <span className="text-muted-foreground font-medium">
+                    Resend OTP in 0:{cooldown.toString().padStart(2, "0")}
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={resending}
+                    className="text-primary hover:underline font-medium disabled:opacity-50"
+                  >
+                    {resending ? "Sending..." : "Resend OTP"}
+                  </button>
+                )}
               </p>
               <button
-                onClick={() => { setStep("form"); setOtp(""); }}
+                onClick={() => { setStep("form"); setOtp(""); setCooldown(0); setResendCount(0); }}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
