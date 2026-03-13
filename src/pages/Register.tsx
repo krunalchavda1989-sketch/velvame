@@ -74,6 +74,7 @@ const Register = () => {
       if (error) throw error;
       toast.success("Verification code sent to your email!");
       setStep("otp");
+      setCooldown(30);
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
     } finally {
