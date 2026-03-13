@@ -153,7 +153,7 @@ const Register = () => {
           ) : (
             <>
               <h1 className="text-2xl font-display font-bold text-foreground">Verify Your Email</h1>
-              <p className="text-sm text-muted-foreground mt-1">We sent a 6-digit code to</p>
+              <p className="text-sm text-muted-foreground mt-1">A verification link has been sent to</p>
               <p className="text-sm font-medium text-primary mt-0.5">{form.email}</p>
             </>
           )}
