@@ -20,6 +20,8 @@ const Register = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [otp, setOtp] = useState("");
   const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
