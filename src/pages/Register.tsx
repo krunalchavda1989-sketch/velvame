@@ -268,17 +268,25 @@ const Register = () => {
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Didn't receive the code?{" "}
-                <button
-                  onClick={handleResendOtp}
-                  disabled={resending}
-                  className="text-primary hover:underline font-medium disabled:opacity-50"
-                >
-                  {resending ? "Sending..." : "Resend Code"}
-                </button>
+                Didn't receive the OTP?{" "}
+                {resendCount >= 5 ? (
+                  <span className="text-destructive font-medium">Maximum resend attempts reached</span>
+                ) : cooldown > 0 ? (
+                  <span className="text-muted-foreground font-medium">
+                    Resend OTP in 0:{cooldown.toString().padStart(2, "0")}
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={resending}
+                    className="text-primary hover:underline font-medium disabled:opacity-50"
+                  >
+                    {resending ? "Sending..." : "Resend OTP"}
+                  </button>
+                )}
               </p>
               <button
-                onClick={() => { setStep("form"); setOtp(""); }}
+                onClick={() => { setStep("form"); setOtp(""); setCooldown(0); setResendCount(0); }}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
