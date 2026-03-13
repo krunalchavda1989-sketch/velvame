@@ -248,42 +248,38 @@ const Register = () => {
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                We sent a verification email to <span className="font-medium text-primary">{form.email}</span>.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Open your inbox and click <span className="font-medium text-foreground">"Verify Email"</span>.
+              </p>
             </div>
 
             <Button
-              onClick={handleVerifyOtp}
-              disabled={loading || otp.length !== 6}
+              onClick={handleContinueAfterVerification}
+              disabled={loading}
               className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
             >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Verifying...
+                  Checking...
                 </>
               ) : (
-                "Verify Email"
+                "I Have Verified Email"
               )}
             </Button>
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Didn't receive the OTP?{" "}
+                Didn&apos;t receive the email?{" "}
                 {resendCount >= 5 ? (
                   <span className="text-destructive font-medium">Maximum resend attempts reached</span>
                 ) : cooldown > 0 ? (
                   <span className="text-muted-foreground font-medium">
-                    Resend OTP in 0:{cooldown.toString().padStart(2, "0")}
+                    Resend in 0:{cooldown.toString().padStart(2, "0")}
                   </span>
                 ) : (
                   <button
@@ -291,12 +287,12 @@ const Register = () => {
                     disabled={resending}
                     className="text-primary hover:underline font-medium disabled:opacity-50"
                   >
-                    {resending ? "Sending..." : "Resend OTP"}
+                    {resending ? "Sending..." : "Resend verification email"}
                   </button>
                 )}
               </p>
               <button
-                onClick={() => { setStep("form"); setOtp(""); setCooldown(0); setResendCount(0); }}
+                onClick={() => { setStep("form"); setCooldown(0); setResendCount(0); }}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
