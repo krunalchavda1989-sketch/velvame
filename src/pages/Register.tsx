@@ -20,7 +20,6 @@ const Register = () => {
   const [step, setStep] = useState<"form" | "verifyEmail">("form");
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [cooldown, setCooldown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
   const [form, setForm] = useState({
     fullName: "",
