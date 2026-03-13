@@ -105,6 +105,7 @@ const Register = () => {
   };
 
   const handleResendOtp = async () => {
+    if (cooldown > 0 || resendCount >= 5) return;
     setResending(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -112,9 +113,11 @@ const Register = () => {
         email: form.email,
       });
       if (error) throw error;
-      toast.success("New verification code sent!");
+      toast.success(`New verification code sent to ${form.email}!`);
+      setResendCount((c) => c + 1);
+      setCooldown(30);
     } catch (err: any) {
-      toast.error(err.message || "Failed to resend code");
+      toast.error(err.message || "Failed to send OTP. Please try again.");
     } finally {
       setResending(false);
     }
