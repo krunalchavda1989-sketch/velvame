@@ -81,23 +81,34 @@ const Register = () => {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter the 6-digit code");
-      return;
-    }
+  const handleContinueAfterVerification = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (sessionData.session) {
+        toast.success("Email verified! Welcome to " + brand.brand_name + "!");
+        navigate("/dashboard");
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
         email: form.email,
-        token: otp,
-        type: "signup",
+        password: form.password,
       });
-      if (error) throw error;
+
+      if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          toast.error("Please click the verification link in your email first.");
+          return;
+        }
+        throw error;
+      }
+
       toast.success("Email verified! Welcome to " + brand.brand_name + "!");
       navigate("/dashboard");
     } catch (err: any) {
-      toast.error(err.message || "Invalid verification code");
+      toast.error(err.message || "Unable to continue. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -112,11 +123,11 @@ const Register = () => {
         email: form.email,
       });
       if (error) throw error;
-      toast.success(`New verification code sent to ${form.email}!`);
+      toast.success(`Verification email sent successfully to ${form.email}`);
       setResendCount((c) => c + 1);
       setCooldown(30);
     } catch (err: any) {
-      toast.error(err.message || "Failed to send OTP. Please try again.");
+      toast.error(err.message || "Failed to send verification email. Please try again.");
     } finally {
       setResending(false);
     }
