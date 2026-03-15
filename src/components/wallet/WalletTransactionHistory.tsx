@@ -15,6 +15,7 @@ interface WalletTransaction {
   description: string;
   order_id: string | null;
   closing_balance: number;
+  balance_type: string;
   created_at: string;
 }
 
