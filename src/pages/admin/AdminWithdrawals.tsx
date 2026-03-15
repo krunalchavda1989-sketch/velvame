@@ -84,22 +84,34 @@ const AdminWithdrawals = () => {
       return;
     }
 
-    // If approved, deduct from wallet
+    // If approved, deduct from commission_balance only
     if (action === "approve") {
       // Get current wallet
       const { data: wallet } = await supabase
         .from("wallets")
-        .select("id, balance, total_withdrawn")
+        .select("id, balance, commission_balance, total_withdrawn")
         .eq("user_id", selected.user_id)
         .single();
 
       if (wallet) {
+        const commBal = Number((wallet as any).commission_balance) || 0;
+        if (commBal < selected.amount) {
+          toast.error("User does not have sufficient Commission Balance for this withdrawal");
+          setProcessing(false);
+          return;
+        }
+
+        const newCommBalance = commBal - selected.amount;
         const newBalance = Math.max(0, wallet.balance - selected.amount);
         const newWithdrawn = wallet.total_withdrawn + selected.amount;
 
         const { error: walletErr } = await supabase
           .from("wallets")
-          .update({ balance: newBalance, total_withdrawn: newWithdrawn })
+          .update({
+            balance: newBalance,
+            commission_balance: newCommBalance,
+            total_withdrawn: newWithdrawn,
+          } as any)
           .eq("id", wallet.id);
 
         if (walletErr) {

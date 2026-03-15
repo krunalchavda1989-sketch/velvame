@@ -54,6 +54,7 @@ const AdminWalletManagement = () => {
   // Adjust dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [adjustType, setAdjustType] = useState<"credit" | "debit">("credit");
+  const [adjustBalanceType, setAdjustBalanceType] = useState<"commission" | "subscription">("commission");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDesc, setAdjustDesc] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -138,6 +139,7 @@ const AdminWalletManagement = () => {
       _amount: amount,
       _type: adjustType,
       _description: adjustDesc.trim(),
+      _balance_type: adjustBalanceType,
     });
 
     if (error || !(data as any)?.success) {
@@ -221,7 +223,7 @@ const AdminWalletManagement = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-2">
                     <Label>Type</Label>
                     <Select value={adjustType} onValueChange={(v) => setAdjustType(v as "credit" | "debit")}>
@@ -229,6 +231,16 @@ const AdminWalletManagement = () => {
                       <SelectContent>
                         <SelectItem value="credit">Credit (+)</SelectItem>
                         <SelectItem value="debit">Debit (−)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Balance Bucket</Label>
+                    <Select value={adjustBalanceType} onValueChange={(v) => setAdjustBalanceType(v as "commission" | "subscription")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="commission">Commission</SelectItem>
+                        <SelectItem value="subscription">Subscription</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

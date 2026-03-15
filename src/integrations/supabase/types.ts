@@ -1550,6 +1550,7 @@ export type Database = {
       wallet_transactions: {
         Row: {
           amount: number
+          balance_type: string
           closing_balance: number
           created_at: string
           description: string
@@ -1560,6 +1561,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          balance_type?: string
           closing_balance?: number
           created_at?: string
           description?: string
@@ -1570,6 +1572,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          balance_type?: string
           closing_balance?: number
           created_at?: string
           description?: string
@@ -1591,8 +1594,10 @@ export type Database = {
       wallets: {
         Row: {
           balance: number
+          commission_balance: number
           created_at: string
           id: string
+          subscription_balance: number
           total_earned: number
           total_withdrawn: number
           updated_at: string
@@ -1600,8 +1605,10 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          commission_balance?: number
           created_at?: string
           id?: string
+          subscription_balance?: number
           total_earned?: number
           total_withdrawn?: number
           updated_at?: string
@@ -1609,8 +1616,10 @@ export type Database = {
         }
         Update: {
           balance?: number
+          commission_balance?: number
           created_at?: string
           id?: string
+          subscription_balance?: number
           total_earned?: number
           total_withdrawn?: number
           updated_at?: string
@@ -1710,15 +1719,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_wallet_adjust: {
-        Args: {
-          _amount: number
-          _description: string
-          _type: string
-          _user_id: string
-        }
-        Returns: Json
-      }
+      admin_wallet_adjust:
+        | {
+            Args: {
+              _amount: number
+              _description: string
+              _type: string
+              _user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _amount: number
+              _balance_type?: string
+              _description: string
+              _type: string
+              _user_id: string
+            }
+            Returns: Json
+          }
       cancel_order_and_refund_wallet: {
         Args: { _order_id: string; _user_id: string }
         Returns: Json
@@ -1762,6 +1782,10 @@ export type Database = {
         Returns: boolean
       }
       validate_referral_code: { Args: { _code: string }; Returns: boolean }
+      validate_withdrawal: {
+        Args: { _amount: number; _user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
