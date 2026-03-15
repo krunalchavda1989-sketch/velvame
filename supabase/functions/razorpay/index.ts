@@ -69,13 +69,14 @@ async function processCommissions(serviceClient: any, orderId: string) {
     for (const { user_id, amount } of walletUpdates) {
       const { data: wallet } = await serviceClient
         .from("wallets")
-        .select("balance, total_earned")
+        .select("balance, total_earned, commission_balance")
         .eq("user_id", user_id)
         .single();
       if (wallet) {
         await serviceClient.from("wallets").update({
           balance: Number(wallet.balance) + amount,
           total_earned: Number(wallet.total_earned) + amount,
+          commission_balance: Number(wallet.commission_balance) + amount,
         }).eq("user_id", user_id);
       }
     }
