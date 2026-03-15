@@ -139,6 +139,7 @@ const AdminWalletManagement = () => {
       _amount: amount,
       _type: adjustType,
       _description: adjustDesc.trim(),
+      _balance_type: adjustBalanceType,
     });
 
     if (error || !(data as any)?.success) {
