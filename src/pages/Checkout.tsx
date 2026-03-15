@@ -104,6 +104,8 @@ const Checkout = () => {
 
   // Wallet
   const [walletBalance, setWalletBalance] = useState(0);
+  const [subscriptionBalance, setSubscriptionBalance] = useState(0);
+  const [commissionBalance, setCommissionBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
 
   // Shipping
