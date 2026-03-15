@@ -186,8 +186,10 @@ const Checkout = () => {
     });
 
     // Fetch wallet
-    supabase.from("wallets").select("balance").eq("user_id", user.id).single().then(({ data }) => {
+    supabase.from("wallets").select("balance, subscription_balance, commission_balance").eq("user_id", user.id).single().then(({ data }) => {
       setWalletBalance(data ? Number(data.balance) : 0);
+      setSubscriptionBalance(data ? Number((data as any).subscription_balance) : 0);
+      setCommissionBalance(data ? Number((data as any).commission_balance) : 0);
     });
 
     // Fetch addresses
