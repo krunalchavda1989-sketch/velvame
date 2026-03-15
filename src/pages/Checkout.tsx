@@ -639,15 +639,24 @@ const Checkout = () => {
 
                   {/* Wallet */}
                   {user && walletBalance > 0 && (
-                    <div className="flex items-center justify-between p-4 rounded-lg border-2 border-gray-200">
-                      <div className="flex items-center gap-3">
-                        <Wallet className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Use Wallet Balance</p>
-                          <p className="text-xs text-gray-500">Available: {fc(walletBalance)}{useWallet && walletDeduction > 0 && <span className="text-primary ml-1">(-{fc(walletDeduction)})</span>}</p>
+                    <div className="p-4 rounded-lg border-2 border-gray-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Wallet className="h-5 w-5 text-gray-500" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Use Wallet Balance</p>
+                            <p className="text-xs text-gray-500">
+                              Total: {fc(walletBalance)}
+                              {useWallet && walletDeduction > 0 && <span className="text-primary ml-1">(-{fc(walletDeduction)})</span>}
+                            </p>
+                          </div>
                         </div>
+                        <Switch checked={useWallet} onCheckedChange={setUseWallet} />
                       </div>
-                      <Switch checked={useWallet} onCheckedChange={setUseWallet} />
+                      <div className="text-[11px] text-gray-400 space-y-0.5 pl-8">
+                        <div>Subscription: {fc(subscriptionBalance)} <span className="text-yellow-600">(orders only)</span></div>
+                        <div>Commission: {fc(commissionBalance)} <span className="text-green-600">(withdrawable)</span></div>
+                      </div>
                     </div>
                   )}
 
