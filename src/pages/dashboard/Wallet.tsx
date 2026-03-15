@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import WalletTransactionHistory from "@/components/wallet/WalletTransactionHistory";
 import {
   Wallet as WalletIcon, TrendingUp, ArrowDownToLine, Clock,
-  DollarSign, Send, AlertCircle, CheckCircle2, XCircle,
+  DollarSign, Send, AlertCircle, CheckCircle2, XCircle, Info, ShoppingBag, Banknote,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,12 +17,17 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface WalletData {
   balance: number;
   total_earned: number;
   total_withdrawn: number;
+  subscription_balance: number;
+  commission_balance: number;
 }
 
 interface Commission {
@@ -57,16 +62,19 @@ const WalletPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [upiId, setUpiId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+
+  const commissionBalance = wallet?.commission_balance ?? 0;
 
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
     const [walletRes, commissionsRes, withdrawalsRes] = await Promise.all([
-      supabase.from("wallets").select("balance, total_earned, total_withdrawn").eq("user_id", user.id).single(),
+      supabase.from("wallets").select("balance, total_earned, total_withdrawn, subscription_balance, commission_balance").eq("user_id", user.id).single(),
       supabase.from("commissions").select("id, amount, rate, level, commission_type, status, created_at").eq("beneficiary_id", user.id).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawal_requests").select("id, amount, status, upi_id, admin_note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
     ]);
-    setWallet(walletRes.data);
+    setWallet(walletRes.data as any);
     setCommissions((commissionsRes.data as Commission[]) || []);
     setWithdrawals((withdrawalsRes.data as WithdrawalRequest[]) || []);
     setLoading(false);
@@ -76,14 +84,28 @@ const WalletPage = () => {
     if (user) fetchData();
   }, [user]);
 
+  // Validate withdrawal amount on change
+  useEffect(() => {
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) {
+      setWithdrawError("");
+      return;
+    }
+    if (amount > commissionBalance) {
+      setWithdrawError("Withdrawal is not allowed from Subscription Balance. Only your Commission Balance is available for withdrawal. Please use your Subscription Balance for placing orders.");
+    } else {
+      setWithdrawError("");
+    }
+  }, [withdrawAmount, commissionBalance]);
+
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
       toast.error("Enter a valid amount");
       return;
     }
-    if (amount > (wallet?.balance ?? 0)) {
-      toast.error("Insufficient balance");
+    if (amount > commissionBalance) {
+      toast.error("Withdrawal is not allowed from Subscription Balance. Only your Commission Balance is available for withdrawal.");
       return;
     }
     if (!upiId.trim()) {
@@ -92,6 +114,19 @@ const WalletPage = () => {
     }
 
     setSubmitting(true);
+
+    // Server-side validation
+    const { data: validation } = await supabase.rpc("validate_withdrawal" as any, {
+      _user_id: user!.id,
+      _amount: amount,
+    });
+
+    if (validation && !(validation as any).valid) {
+      toast.error((validation as any).error || "Withdrawal validation failed");
+      setSubmitting(false);
+      return;
+    }
+
     const { error } = await supabase.from("withdrawal_requests").insert({
       user_id: user!.id,
       amount,
@@ -105,6 +140,7 @@ const WalletPage = () => {
       setDialogOpen(false);
       setWithdrawAmount("");
       setUpiId("");
+      setWithdrawError("");
       fetchData();
     }
     setSubmitting(false);
@@ -133,12 +169,6 @@ const WalletPage = () => {
     }
   };
 
-  const stats = [
-    { label: "Available Balance", value: wallet?.balance ?? 0, icon: WalletIcon, highlight: true },
-    { label: "Total Earned", value: wallet?.total_earned ?? 0, icon: TrendingUp },
-    { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine },
-  ];
-
   return (
     <DashboardLayout>
       <div className="p-6 lg:p-8 max-w-5xl">
@@ -148,9 +178,9 @@ const WalletPage = () => {
             <p className="text-sm text-muted-foreground mt-1">Track your balance, earnings and commissions</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setWithdrawError(""); setWithdrawAmount(""); } }}>
             <DialogTrigger asChild>
-              <Button className="gap-2" disabled={!wallet || wallet.balance <= 0}>
+              <Button className="gap-2" disabled={!wallet || commissionBalance <= 0}>
                 <Send className="h-4 w-4" /> Withdraw
               </Button>
             </DialogTrigger>
@@ -158,7 +188,7 @@ const WalletPage = () => {
               <DialogHeader>
                 <DialogTitle>Request Withdrawal</DialogTitle>
                 <DialogDescription>
-                  Available balance: {formatCurrency(wallet?.balance ?? 0)}
+                  Commission Balance available: {formatCurrency(commissionBalance)}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
@@ -171,8 +201,14 @@ const WalletPage = () => {
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     min={1}
-                    max={wallet?.balance ?? 0}
+                    max={commissionBalance}
                   />
+                  {withdrawError && (
+                    <div className="flex items-start gap-2 text-xs text-red-600 bg-red-500/10 p-3 rounded-lg">
+                      <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span>{withdrawError}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="upi">UPI ID</Label>
@@ -186,12 +222,12 @@ const WalletPage = () => {
                 </div>
                 <div className="flex items-start gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>Withdrawals are reviewed by the admin and typically processed within 24-48 hours.</span>
+                  <span>Only your Commission Balance can be withdrawn. Subscription Balance can only be used for placing orders. Withdrawals are reviewed within 24-48 hours.</span>
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleWithdraw} disabled={submitting}>
+                <Button onClick={handleWithdraw} disabled={submitting || !!withdrawError}>
                   {submitting ? "Submitting…" : "Submit Request"}
                 </Button>
               </DialogFooter>
@@ -205,27 +241,78 @@ const WalletPage = () => {
           </div>
         ) : (
           <>
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              {stats.map((s, i) => (
+            {/* Balance Segregation Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-primary/20 bg-primary/5 p-5 mb-6"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <WalletIcon className="h-5 w-5 text-primary" />
+                <h2 className="font-display font-bold text-foreground text-lg">💰 My Wallet</h2>
+              </div>
+
+              <div className="space-y-3">
+                <TooltipProvider>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Subscription Balance</span>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-[200px] text-xs">This balance can only be used for placing orders and cannot be withdrawn.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-yellow-500/10 text-yellow-700 border-yellow-500/20">Only for Orders</Badge>
+                    </div>
+                    <span className="text-lg font-display font-bold text-foreground">{formatCurrency(wallet?.subscription_balance ?? 0)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Banknote className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">Commission Balance</span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-green-500/10 text-green-700 border-green-500/20">Withdrawable</Badge>
+                    </div>
+                    <span className="text-lg font-display font-bold text-green-600">{formatCurrency(wallet?.commission_balance ?? 0)}</span>
+                  </div>
+                </TooltipProvider>
+
+                <div className="border-t border-border pt-3 flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Total Wallet Balance</span>
+                  <span className="text-xl font-display font-bold text-primary">{formatCurrency(wallet?.balance ?? 0)}</span>
+                </div>
+              </div>
+
+              {commissionBalance <= 0 && (
+                <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span>You have no Commission Balance available for withdrawal.</span>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {[
+                { label: "Total Earned", value: wallet?.total_earned ?? 0, icon: TrendingUp },
+                { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine },
+              ].map((s, i) => (
                 <motion.div
                   key={s.label}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className={`flex items-center gap-4 p-4 rounded-xl border ${
-                    s.highlight ? "bg-primary/5 border-primary/20" : "bg-card border-border"
-                  }`}
+                  className="flex items-center gap-4 p-4 rounded-xl border bg-card border-border"
                 >
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                    s.highlight ? "bg-primary/10" : "bg-secondary"
-                  }`}>
-                    <s.icon className={`h-5 w-5 ${s.highlight ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-secondary">
+                    <s.icon className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <div className="text-2xl font-display font-bold text-foreground">
-                      {formatCurrency(s.value)}
-                    </div>
+                    <div className="text-2xl font-display font-bold text-foreground">{formatCurrency(s.value)}</div>
                     <div className="text-xs text-muted-foreground">{s.label}</div>
                   </div>
                 </motion.div>
