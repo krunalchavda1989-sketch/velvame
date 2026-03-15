@@ -54,6 +54,7 @@ const AdminWalletManagement = () => {
   // Adjust dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [adjustType, setAdjustType] = useState<"credit" | "debit">("credit");
+  const [adjustBalanceType, setAdjustBalanceType] = useState<"commission" | "subscription">("commission");
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDesc, setAdjustDesc] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
