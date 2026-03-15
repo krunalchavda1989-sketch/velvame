@@ -131,6 +131,15 @@ const WalletTransactionHistory = () => {
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-foreground flex items-center gap-2">
                         {tx.description}
+                        {tx.balance_type && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                            tx.balance_type === 'subscription' 
+                              ? 'bg-yellow-500/10 text-yellow-700' 
+                              : 'bg-green-500/10 text-green-700'
+                          }`}>
+                            {tx.balance_type === 'subscription' ? 'Subscription' : 'Commission'}
+                          </span>
+                        )}
                         {tx.order_id && (
                           <Link
                             to={`/dashboard/orders/${tx.order_id}`}
