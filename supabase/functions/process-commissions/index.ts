@@ -205,18 +205,30 @@ Deno.serve(async (req: Request) => {
       for (const { user_id, amount } of walletUpdates) {
         const { data: wallet } = await supabase
           .from("wallets")
-          .select("balance, total_earned")
+          .select("balance, total_earned, commission_balance")
           .eq("user_id", user_id)
           .single();
 
         if (wallet) {
+          const newBalance = Number(wallet.balance) + amount;
           await supabase
             .from("wallets")
             .update({
-              balance: Number(wallet.balance) + amount,
+              balance: newBalance,
               total_earned: Number(wallet.total_earned) + amount,
+              commission_balance: Number(wallet.commission_balance) + amount,
             })
             .eq("user_id", user_id);
+
+          // Log commission credit transaction
+          await supabase.from("wallet_transactions").insert({
+            user_id,
+            type: "credit",
+            amount,
+            description: "Commission Earned",
+            closing_balance: newBalance,
+            balance_type: "commission",
+          });
         }
       }
     }

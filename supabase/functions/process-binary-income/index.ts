@@ -135,21 +135,33 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      // Credit wallet
+      // Credit wallet (commission balance bucket)
       const { data: wallet } = await supabase
         .from("wallets")
-        .select("balance, total_earned")
+        .select("balance, total_earned, commission_balance")
         .eq("user_id", pos.user_id)
         .single();
 
       if (wallet) {
+        const newBalance = Number(wallet.balance) + payout;
         await supabase
           .from("wallets")
           .update({
-            balance: Number(wallet.balance) + payout,
+            balance: newBalance,
             total_earned: Number(wallet.total_earned) + payout,
+            commission_balance: Number(wallet.commission_balance) + payout,
           })
           .eq("user_id", pos.user_id);
+
+        // Log binary income transaction
+        await supabase.from("wallet_transactions").insert({
+          user_id: pos.user_id,
+          type: "credit",
+          amount: payout,
+          description: "Binary Matching Income",
+          closing_balance: newBalance,
+          balance_type: "commission",
+        });
       }
 
       results.push({

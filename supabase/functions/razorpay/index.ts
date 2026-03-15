@@ -318,10 +318,10 @@ Deno.serve(async (req) => {
           })
           .eq("user_id", payment.user_id);
 
-        // Credit subscription amount to wallet
+        // Credit subscription amount to wallet (subscription_balance bucket)
         const { data: wallet } = await serviceClient
           .from("wallets")
-          .select("balance, total_earned")
+          .select("balance, total_earned, subscription_balance")
           .eq("user_id", payment.user_id)
           .single();
 
@@ -338,7 +338,18 @@ Deno.serve(async (req) => {
           await serviceClient.from("wallets").update({
             balance: Number(wallet.balance) + subAmount,
             total_earned: Number(wallet.total_earned) + subAmount,
+            subscription_balance: Number(wallet.subscription_balance) + subAmount,
           }).eq("user_id", payment.user_id);
+
+          // Log subscription credit transaction
+          await serviceClient.from("wallet_transactions").insert({
+            user_id: payment.user_id,
+            type: "credit",
+            amount: subAmount,
+            description: "Membership Activation - Subscription Credit",
+            closing_balance: Number(wallet.balance) + subAmount,
+            balance_type: "subscription",
+          });
         }
       }
 
