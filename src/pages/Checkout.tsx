@@ -84,7 +84,7 @@ const Checkout = () => {
   const checkoutProducts = isBuyNow ? (buyNowProduct ? [buyNowProduct] : []) : cartProducts;
   const checkoutTotal = checkoutProducts.reduce((sum, p) => sum + getCheckoutPrice(p) * p.qty, 0);
 
-  const [step, setStep] = useState<"information" | "shipping" | "payment" | "processing">("information");
+  const [step, setStep] = useState<"cart" | "information" | "shipping" | "payment" | "processing">("cart");
   const [processing, setProcessing] = useState(false);
 
   // Payment gateways
