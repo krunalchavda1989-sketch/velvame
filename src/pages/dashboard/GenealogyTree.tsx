@@ -406,7 +406,7 @@ const GenealogyTree = () => {
               />
             </div>
           ) : (
-            <HorizontalTreeGraph
+            <VerticalTreeGraph
               tree={tree}
               searchQuery={searchQuery}
               onEnterTree={handleEnterTree}
