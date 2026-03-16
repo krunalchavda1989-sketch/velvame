@@ -427,13 +427,15 @@ const Checkout = () => {
       {/* Breadcrumb Steps */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-2 text-sm">
-          <Link to="/shop" className="text-primary hover:underline">Cart</Link>
-          <span className="text-gray-400">›</span>
-          <button onClick={() => setStep("information")} className={`${stepIndex >= 0 ? "text-gray-900 font-medium" : "text-gray-400"}`}>Information</button>
-          <span className="text-gray-400">›</span>
-          <button onClick={() => stepIndex >= 1 && setStep("shipping")} className={`${stepIndex >= 1 ? "text-gray-900 font-medium" : "text-gray-400"}`}>Shipping</button>
-          <span className="text-gray-400">›</span>
-          <span className={`${stepIndex >= 2 ? "text-gray-900 font-medium" : "text-gray-400"}`}>Payment</span>
+          <Link to="/shop" className="text-primary hover:underline">Shop</Link>
+          <span className="text-muted-foreground">›</span>
+          <button onClick={() => setStep("cart")} className={`${stepIndex >= 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>Cart</button>
+          <span className="text-muted-foreground">›</span>
+          <button onClick={() => stepIndex >= 1 && setStep("information")} className={`${stepIndex >= 1 ? "text-foreground font-medium" : "text-muted-foreground"}`}>Information</button>
+          <span className="text-muted-foreground">›</span>
+          <button onClick={() => stepIndex >= 2 && setStep("shipping")} className={`${stepIndex >= 2 ? "text-foreground font-medium" : "text-muted-foreground"}`}>Shipping</button>
+          <span className="text-muted-foreground">›</span>
+          <span className={`${stepIndex >= 3 ? "text-foreground font-medium" : "text-muted-foreground"}`}>Payment</span>
         </div>
       </div>
 
