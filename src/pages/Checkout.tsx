@@ -450,6 +450,91 @@ const Checkout = () => {
               </div>
             )}
 
+            {/* CART STEP */}
+            {step === "cart" && (
+              <Card className="shadow-sm border-border">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg text-foreground flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5 text-muted-foreground" /> Your Cart ({checkoutProducts.length} items)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {checkoutProducts.length === 0 ? (
+                    <div className="text-center py-12">
+                      <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">Your cart is empty</p>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate("/shop")}>
+                        Continue Shopping
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {checkoutProducts.map((p) => (
+                        <div key={p.id} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-secondary/30">
+                          <div className="w-16 h-16 rounded-lg border border-border bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+                            {p.image_url?.startsWith("http") ? (
+                              <img src={p.image_url} alt={p.name} className="w-full h-full object-cover rounded-lg" />
+                            ) : (
+                              <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                            <p className="text-sm text-primary font-semibold">{fc(getCheckoutPrice(p))}</p>
+                          </div>
+                          {!isBuyNow && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8"
+                                onClick={() => updateQty(p.id, -1)}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="w-8 text-center text-sm font-medium text-foreground">{p.qty}</span>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-8 w-8"
+                                onClick={() => updateQty(p.id, 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                          <p className="text-sm font-semibold text-foreground shrink-0 w-20 text-right">
+                            {fc(getCheckoutPrice(p) * p.qty)}
+                          </p>
+                          {!isBuyNow && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => removeItem(p.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {checkoutProducts.length > 0 && (
+                    <div className="flex justify-between pt-4 border-t border-border">
+                      <Button variant="ghost" className="text-muted-foreground gap-2" onClick={() => navigate("/shop")}>
+                        <ArrowLeft className="h-4 w-4" /> Continue Shopping
+                      </Button>
+                      <Button onClick={() => setStep("information")}>
+                        Continue to Information
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* INFORMATION STEP */}
             {step === "information" && (
               <Card className="shadow-sm border-gray-200">
