@@ -616,8 +616,8 @@ const Checkout = () => {
                   )}
 
                   <div className="flex justify-between pt-4">
-                    <Button variant="ghost" className="text-gray-600 gap-2" onClick={() => navigate("/shop")}>
-                      <ArrowLeft className="h-4 w-4" /> Return to shop
+                    <Button variant="ghost" className="text-muted-foreground gap-2" onClick={() => setStep("cart")}>
+                      <ArrowLeft className="h-4 w-4" /> Return to cart
                     </Button>
                     <Button onClick={() => {
                       const addr = getShippingAddress();
