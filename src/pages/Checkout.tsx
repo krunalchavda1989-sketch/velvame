@@ -40,7 +40,7 @@ interface ShippingMethod {
 
 const Checkout = () => {
   const { user, profile } = useAuth();
-  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts, isMember } = useCart();
+  const { cartProducts, totalPrice, clearCart, getPrice, products: allProducts, isMember, updateQty, removeItem } = useCart();
   const { currencySymbol, taxEnabled, taxRate, taxLabel } = useLocalization();
   const brand = useBrand();
   const navigate = useNavigate();
