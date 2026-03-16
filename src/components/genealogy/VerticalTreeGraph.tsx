@@ -318,12 +318,11 @@ const VerticalTreeGraph = ({
 
       <div
         ref={containerRef}
-        className="w-full h-[500px] lg:h-[650px] cursor-grab active:cursor-grabbing select-none"
+        className="w-full h-[500px] lg:h-[650px] cursor-grab active:cursor-grabbing select-none overflow-hidden"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
