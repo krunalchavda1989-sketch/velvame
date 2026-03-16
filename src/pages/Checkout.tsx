@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingBag, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, Zap, Building2, Package, AlertTriangle } from "lucide-react";
+import { ShoppingBag, Loader2, Ticket, X, CheckCircle, Wallet, MapPin, Truck, ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, Zap, Building2, Package, AlertTriangle, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
