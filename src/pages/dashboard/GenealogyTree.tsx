@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import HorizontalTreeGraph from "@/components/genealogy/HorizontalTreeGraph";
+import VerticalTreeGraph from "@/components/genealogy/VerticalTreeGraph";
 
 interface TreeMember {
   profile_id: string;
