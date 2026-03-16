@@ -403,7 +403,7 @@ const Checkout = () => {
 
   if (!user || checkoutProducts.length === 0) return null;
 
-  const stepIndex = step === "information" ? 0 : step === "shipping" ? 1 : step === "payment" ? 2 : 3;
+  const stepIndex = step === "cart" ? 0 : step === "information" ? 1 : step === "shipping" ? 2 : step === "payment" ? 3 : 4;
 
   return (
     <div className="min-h-screen bg-gray-50">
