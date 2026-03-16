@@ -234,10 +234,34 @@ const VerticalTreeGraph = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
-    setZoom((z) => Math.min(2, Math.max(0.15, z - e.deltaY * 0.001)));
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const oldZoom = zoom;
+    const newZoom = Math.min(2, Math.max(0.1, oldZoom - e.deltaY * 0.001));
+    
+    // Zoom toward mouse position
+    const scale = newZoom / oldZoom;
+    setPan(prev => ({
+      x: mouseX - (mouseX - prev.x) * scale,
+      y: mouseY - (mouseY - prev.y) * scale,
+    }));
+    setZoom(newZoom);
+  }, [zoom]);
+
+  // Use native wheel event to allow preventDefault on passive listener
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheel as any, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel as any);
+  }, [handleWheel]);
 
   const fitToScreen = () => {
     if (!containerRef.current) return;
