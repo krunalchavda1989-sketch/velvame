@@ -168,20 +168,22 @@ const Index = () => {
                 View All <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((cat, i) => (
                 <motion.div key={cat.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
                   <Link to={`/shop?category=${encodeURIComponent(cat.name)}`}
-                    className="flex flex-col items-center p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-md transition-all group"
+                    className="flex flex-col items-center group"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
+                    <div className="w-full rounded-2xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-lg transition-all">
                       {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.name} className="w-10 h-10 object-contain rounded" />
+                        <img src={cat.image_url} alt={cat.name} className="w-full h-auto object-cover" />
                       ) : (
-                        <ShoppingBag className="h-6 w-6 text-primary" />
+                        <div className="w-full aspect-[4/3] bg-primary/5 flex items-center justify-center">
+                          <ShoppingBag className="h-12 w-12 text-primary/40" />
+                        </div>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-foreground text-center">{cat.name}</span>
+                    <span className="mt-3 text-base font-display font-semibold text-foreground group-hover:text-primary transition-colors text-center">{cat.name}</span>
                   </Link>
                 </motion.div>
               ))}
