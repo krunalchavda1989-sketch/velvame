@@ -1766,6 +1766,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_earnings_report: {
+        Args: { _end_date?: string; _start_date?: string; _user_id: string }
+        Returns: {
+          amount: number
+          commission_id: string
+          commission_type: string
+          created_at: string
+          level: number
+          order_amount: number
+          order_id: string
+          order_number: string
+          rate: number
+          source_referral_code: string
+          source_user_id: string
+          source_user_name: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
