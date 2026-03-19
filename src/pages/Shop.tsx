@@ -46,17 +46,7 @@ const Shop = () => {
               ? `Exclusive distributor prices for members${taxEnabled ? ` (Prices excl. ${taxLabel})` : ""}`
               : `Quality products at retail prices${taxEnabled ? ` (Prices excl. ${taxLabel})` : ""}`
           }
-        >
-          <Button variant="outline" className="relative border-border" onClick={() => setCartOpen(true)}>
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Cart
-            {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-                {totalItems}
-              </span>
-            )}
-          </Button>
-        </PageBreadcrumb>
+        />
 
         <div className="container px-4 pt-8">
           <OffersCarousel />
