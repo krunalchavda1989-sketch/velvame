@@ -101,6 +101,7 @@ const AdminProductForm = () => {
         image_url: data.image_url || "",
         rating: data.rating || 0,
         active: data.active ?? true,
+        allow_backorder: (data as any).allow_backorder ?? false,
         seo_title: (data as any).seo_title || "",
         seo_slug: (data as any).seo_slug || "",
         seo_description: (data as any).seo_description || "",
