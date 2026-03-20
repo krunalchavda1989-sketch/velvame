@@ -409,4 +409,44 @@ const ProductDetail = () => {
   );
 };
 
+const ProductShareSection = ({ productName, productId, user }: { productName: string; productId: string; user: any }) => {
+  const { data: profile } = useQuery({
+    queryKey: ["share-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("referral_code")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const baseUrl = `${window.location.origin}/product/${productId}`;
+  const shareLink = user && profile?.referral_code
+    ? `${baseUrl}?ref=${profile.referral_code}`
+    : baseUrl;
+
+  return (
+    <div className="flex justify-end mb-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-72">
+          <p className="text-sm font-medium text-foreground mb-3">Share "{productName}"</p>
+          <SocialShareButtons
+            referralLink={shareLink}
+            referralCode={user && profile?.referral_code ? profile.referral_code : undefined}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 export default ProductDetail;
