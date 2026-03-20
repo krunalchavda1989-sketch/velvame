@@ -241,6 +241,7 @@ const AdminProductForm = () => {
       image_url: form.image_url,
       rating: form.rating,
       active: form.active,
+      allow_backorder: form.allow_backorder,
       seo_title: form.seo_title,
       seo_slug: form.seo_slug,
       seo_description: form.seo_description,
