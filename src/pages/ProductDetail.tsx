@@ -15,6 +15,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
+import { getProductUrl } from "@/lib/productUrl";
 
 const ProductShareSection = ({ productName, productId, user }: { productName: string; productId: string; user: any }) => {
   const { data: profile } = useQuery({
