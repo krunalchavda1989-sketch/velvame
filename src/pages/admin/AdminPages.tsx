@@ -344,24 +344,67 @@ const AdminPages = () => {
                             <div>
                               <p className="font-semibold text-foreground">{p.title}</p>
                               <div className="flex items-center gap-2 mt-0.5">
-                                <p className="text-xs text-muted-foreground">/{p.page_slug}</p>
+                                <p className="text-xs text-muted-foreground font-mono">/{p.page_slug}</p>
                                 {p.meta_title && (
                                   <Badge variant="outline" className="text-[9px] px-1.5 py-0">SEO</Badge>
                                 )}
                               </div>
+                              <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                {new Date(p.updated_at).toLocaleDateString()}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={p.is_published ? "default" : "secondary"}>
+                          <div className="flex items-center gap-1">
+                            <Badge variant={p.is_published ? "default" : "secondary"} className="mr-1">
                               {p.is_published ? "Published" : "Draft"}
                             </Badge>
-                            <Button variant="ghost" size="icon" onClick={() => togglePublish(p)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Preview"
+                              onClick={() => window.open(`/${p.page_slug}`, "_blank")}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Copy URL"
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/${p.page_slug}`);
+                                toast.success("URL copied to clipboard");
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Toggle publish" onClick={() => togglePublish(p)}>
                               {p.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openEditCustomPage(p)}>
+                            <Button variant="ghost" size="icon" title="Edit" onClick={() => openEditCustomPage(p)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => deleteCustomPage(p)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Duplicate"
+                              onClick={async () => {
+                                const body = typeof p.content === "object" && p.content?.body ? p.content.body : "";
+                                const newSlug = p.page_slug + "-copy";
+                                const { error } = await supabase.from("pages_content").insert({
+                                  title: p.title + " (Copy)",
+                                  page_slug: newSlug,
+                                  content: { body } as any,
+                                  meta_title: p.meta_title,
+                                  meta_description: p.meta_description,
+                                  is_published: false,
+                                } as any);
+                                if (error) toast.error("Failed to duplicate");
+                                else { toast.success("Page duplicated as draft"); fetchData(); }
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Delete" onClick={() => deleteCustomPage(p)}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
