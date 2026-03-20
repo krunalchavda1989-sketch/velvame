@@ -629,7 +629,7 @@ const AdminProductForm = () => {
                   {form.seo_title || form.name || "Product Title"}
                 </p>
                 <p className="text-xs text-green-700 truncate">
-                  yoursite.com/products/{form.seo_slug || "product-slug"}
+                  yoursite.com/product/{form.seo_slug || generateSlugFromName(form.name) || "product-slug"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   {form.seo_description || form.description || "Product description will appear here..."}
