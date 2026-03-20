@@ -66,6 +66,7 @@ import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
 import AdminWalletManagement from "./pages/admin/AdminWalletManagement";
+import AdminFooterSettings from "./pages/admin/AdminFooterSettings";
 
 const queryClient = new QueryClient();
 
