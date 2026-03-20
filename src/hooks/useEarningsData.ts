@@ -112,22 +112,32 @@ export function useEarningsData() {
   const { levelSummaries, repurchaseSummaries } = useMemo(() => {
     const build = (type: "level" | "repurchase"): LevelSummary[] => {
       const filtered = earnings.filter(e => e.commission_type === type);
-      const configMax = commissionLevels
-        .filter(cl => cl.commission_type === type)
-        .reduce((max, cl) => Math.max(max, cl.level), 0);
+      const configLevels = commissionLevels.filter(cl => cl.commission_type === type);
+      
+      // For repurchase, master admin stores levels as 101,102,103 etc.
+      // Normalize to display levels 1,2,3 by detecting offset
+      const hasOffset = type === "repurchase" && configLevels.length > 0 && configLevels.every(cl => cl.level >= 100);
+      const offset = hasOffset ? 100 : 0;
+      
+      // Get normalized config levels (subtract offset)
+      const normalizedConfigLevels = configLevels.map(cl => cl.level - offset);
+      const configMax = normalizedConfigLevels.length > 0 ? Math.max(...normalizedConfigLevels) : 0;
       const dataMax = filtered.reduce((max, e) => Math.max(max, e.level), 0);
       const maxLevel = Math.max(configMax, dataMax);
-      if (maxLevel === 0) return [];
+      if (maxLevel === 0 && configLevels.length === 0) return [];
 
       const result: LevelSummary[] = [];
-      for (let lvl = 1; lvl <= maxLevel; lvl++) {
+      const levelCount = Math.max(maxLevel, configLevels.length > 0 ? configLevels.length : 0);
+      for (let lvl = 1; lvl <= levelCount; lvl++) {
         const txns = filtered.filter(e => e.level === lvl);
+        // Look up master admin rate using the offset
+        const configLevel = commissionLevels.find(cl => cl.level === (lvl + offset) && cl.commission_type === type);
         result.push({
           level: lvl,
           activeMembers: new Set(txns.map(e => e.source_user_id)).size,
           totalBusinessVolume: txns.reduce((s, e) => s + Number(e.order_amount || 0), 0),
           incomeEarned: txns.reduce((s, e) => s + Number(e.amount), 0),
-          rate: txns[0]?.rate || commissionLevels.find(cl => cl.level === lvl && cl.commission_type === type)?.rate || 0,
+          rate: configLevel?.rate || txns[0]?.rate || 0,
           transactions: txns,
         });
       }
