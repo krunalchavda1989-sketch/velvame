@@ -106,13 +106,13 @@ Deno.serve(async (req: Request) => {
     // Fetch dynamic min monthly purchase from settings
     let minMonthlyPurchase = 1000; // fallback default
     if (isRepurchase) {
-      const { data: bSettings } = await supabase
-        .from("binary_settings")
+      const { data: commSettings } = await supabase
+        .from("commission_settings")
         .select("min_monthly_purchase")
         .limit(1)
         .single();
-      if (bSettings?.min_monthly_purchase != null) {
-        minMonthlyPurchase = Number(bSettings.min_monthly_purchase);
+      if (commSettings?.min_monthly_purchase != null) {
+        minMonthlyPurchase = Number(commSettings.min_monthly_purchase);
       }
     }
 
