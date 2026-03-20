@@ -131,7 +131,7 @@ const ProductDetail = () => {
         const { data: images } = await supabase
           .from("product_images")
           .select("image_url")
-          .eq("product_id", id)
+          .eq("product_id", data.id)
           .order("sort_order");
         const allImages: string[] = [];
         if (data.image_url && isImageUrl(data.image_url)) allImages.push(data.image_url);
@@ -146,12 +146,12 @@ const ProductDetail = () => {
           .select("*")
           .eq("active", true)
           .eq("category", data.category)
-          .neq("id", id)
+          .neq("id", data.id)
           .limit(4);
         
         let items = rec || [];
         if (items.length < 4) {
-          const excludeIds = [id, ...items.map((p: any) => p.id)];
+          const excludeIds = [data.id, ...items.map((p: any) => p.id)];
           const { data: more } = await supabase
             .from("products")
             .select("*")
@@ -165,7 +165,7 @@ const ProductDetail = () => {
     };
     fetchProduct();
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [slug]);
 
   const isImageUrl = (url: string) =>
     url?.startsWith("http") || url?.startsWith("/") || url?.startsWith("data:");
