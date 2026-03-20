@@ -225,7 +225,7 @@ const Index = () => {
                   </Link>
                   <div className="p-4">
                     <p className="text-xs text-muted-foreground mb-1">{product.category}</p>
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={getProductUrl(product)}>
                       <h3 className="font-display font-semibold text-foreground text-sm truncate hover:text-primary transition-colors">{product.name}</h3>
                     </Link>
                     <div className="flex items-center gap-1 my-1.5">
