@@ -358,6 +358,140 @@ export type Database = {
         }
         Relationships: []
       }
+      footer_menu_items: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          open_in_new_tab: boolean
+          section_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          open_in_new_tab?: boolean
+          section_id: string
+          url?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          open_in_new_tab?: boolean
+          section_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "footer_menu_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "footer_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      footer_sections: {
+        Row: {
+          created_at: string
+          display_order: number
+          heading: string
+          heading_color: string
+          heading_font_size: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          width_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          heading?: string
+          heading_color?: string
+          heading_font_size?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          width_percentage?: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          heading?: string
+          heading_color?: string
+          heading_font_size?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          width_percentage?: number
+        }
+        Relationships: []
+      }
+      footer_settings: {
+        Row: {
+          bg_color: string
+          border_color: string
+          copyright_text: string
+          created_at: string
+          heading_color: string
+          id: string
+          layout_sections: number
+          link_color: string
+          link_hover_color: string
+          show_visit_counter: boolean
+          text_color: string
+          updated_at: string
+          visit_counter_base: number
+          visit_counter_format: string
+          visit_counter_label: string
+          visit_counter_total: number
+        }
+        Insert: {
+          bg_color?: string
+          border_color?: string
+          copyright_text?: string
+          created_at?: string
+          heading_color?: string
+          id?: string
+          layout_sections?: number
+          link_color?: string
+          link_hover_color?: string
+          show_visit_counter?: boolean
+          text_color?: string
+          updated_at?: string
+          visit_counter_base?: number
+          visit_counter_format?: string
+          visit_counter_label?: string
+          visit_counter_total?: number
+        }
+        Update: {
+          bg_color?: string
+          border_color?: string
+          copyright_text?: string
+          created_at?: string
+          heading_color?: string
+          id?: string
+          layout_sections?: number
+          link_color?: string
+          link_hover_color?: string
+          show_visit_counter?: boolean
+          text_color?: string
+          updated_at?: string
+          visit_counter_base?: number
+          visit_counter_format?: string
+          visit_counter_label?: string
+          visit_counter_total?: number
+        }
+        Relationships: []
+      }
       hero_stats: {
         Row: {
           created_at: string
