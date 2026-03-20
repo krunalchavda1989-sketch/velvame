@@ -42,17 +42,30 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
       .single()
       .then(({ data }) => {
         if (data) {
+          const d = data as any;
           setBrand({
-            brand_name: data.brand_name || defaultBrand.brand_name,
-            tagline: data.tagline || defaultBrand.tagline,
-            logo_url: data.logo_url || "",
-            email: data.email || "",
-            phone: data.phone || "",
-            address: data.address || "",
-            gst_number: data.gst_number || "",
-            website: data.website || "",
+            brand_name: d.brand_name || defaultBrand.brand_name,
+            tagline: d.tagline || defaultBrand.tagline,
+            logo_url: d.logo_url || "",
+            favicon_url: d.favicon_url || "",
+            footer_logo_url: d.footer_logo_url || "",
+            email: d.email || "",
+            phone: d.phone || "",
+            address: d.address || "",
+            gst_number: d.gst_number || "",
+            website: d.website || "",
           });
-          document.title = data.brand_name || defaultBrand.brand_name;
+          document.title = d.brand_name || defaultBrand.brand_name;
+          // Set favicon dynamically
+          if (d.favicon_url) {
+            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (!link) {
+              link = document.createElement("link");
+              link.rel = "icon";
+              document.head.appendChild(link);
+            }
+            link.href = d.favicon_url;
+          }
         }
       });
   }, []);
