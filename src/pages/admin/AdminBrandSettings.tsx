@@ -49,12 +49,12 @@ const AdminBrandSettings = () => {
     setSaving(false);
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo_url' | 'favicon_url' | 'footer_logo_url') => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     const ext = file.name.split(".").pop();
-    const path = `brand/logo-${Date.now()}.${ext}`;
+    const path = `brand/${field.replace('_url', '')}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("product-images").upload(path, file);
     if (error) {
       toast.error("Upload failed");
@@ -62,9 +62,9 @@ const AdminBrandSettings = () => {
       return;
     }
     const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-    setSettings({ ...settings, logo_url: urlData.publicUrl });
+    setSettings({ ...settings, [field]: urlData.publicUrl });
     setUploading(false);
-    toast.success("Logo uploaded!");
+    toast.success("Uploaded successfully!");
   };
 
   const update = (key: keyof BrandSettings, value: string) => setSettings({ ...settings, [key]: value });
