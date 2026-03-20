@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
-  Layers, RefreshCw, GitBranch, Repeat, BarChart3, Trophy,
+  Layers, RefreshCw, Repeat, BarChart3, Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -77,32 +77,27 @@ const AdminCommissions = () => {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(new Date());
   const [commissions, setCommissions] = useState<any[]>([]);
-  const [binaryPayouts, setBinaryPayouts] = useState<any[]>([]);
   const [profileMap, setProfileMap] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
-  const [selectedBin, setSelectedBin] = useState<Set<string>>(new Set());
-  const [bulkDialog, setBulkDialog] = useState<"commission" | "binary" | null>(null);
+  const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-    const [commRes, binaryRes, profilesRes] = await Promise.all([
+    const [commRes, profilesRes] = await Promise.all([
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
-      supabase.from("binary_payouts").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
     ]);
     const pMap = new Map<string, any>();
     (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
     setProfileMap(pMap);
     setCommissions(commRes.data || []);
-    setBinaryPayouts(binaryRes.data || []);
     setSelectedComm(new Set());
-    setSelectedBin(new Set());
     setLoading(false);
   }, [from, to]);
 
@@ -118,26 +113,15 @@ const AdminCommissions = () => {
     else { toast.success(`${ids.length} commission(s) marked as paid`); fetchData(); }
   };
 
-  const bulkApproveBinary = async () => {
-    setBulkUpdating(true);
-    const ids = Array.from(selectedBin);
-    const { error } = await supabase.from("binary_payouts").update({ status: "paid" }).in("id", ids);
-    setBulkUpdating(false);
-    setBulkDialog(null);
-    if (error) { toast.error("Failed to update binary payouts"); }
-    else { toast.success(`${ids.length} binary payout(s) marked as paid`); fetchData(); }
-  };
-
   // Derived
   const levelCommissions = useMemo(() => commissions.filter((c) => c.commission_type === "level"), [commissions]);
   const repurchaseCommissions = useMemo(() => commissions.filter((c) => c.commission_type === "repurchase"), [commissions]);
 
-  const totalAll = commissions.reduce((s, c) => s + Number(c.amount), 0) + binaryPayouts.reduce((s, b) => s + Number(b.matching_amount), 0);
+  const totalAll = commissions.reduce((s, c) => s + Number(c.amount), 0);
   const totalLevel = levelCommissions.reduce((s, c) => s + Number(c.amount), 0);
   const totalRepurchase = repurchaseCommissions.reduce((s, c) => s + Number(c.amount), 0);
-  const totalBinary = binaryPayouts.reduce((s, b) => s + Number(b.matching_amount), 0);
-  const totalPending = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0) + binaryPayouts.filter((b) => b.status === "pending").reduce((s, b) => s + Number(b.matching_amount), 0);
-  const totalPaid = commissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0) + binaryPayouts.filter((b) => b.status === "paid").reduce((s, b) => s + Number(b.matching_amount), 0);
+  const totalPending = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0);
+  const totalPaid = commissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0);
 
   const getName = (id: string) => profileMap.get(id)?.full_name || "—";
 
@@ -145,49 +129,38 @@ const AdminCommissions = () => {
     { icon: DollarSign, label: "Total Commissions", value: `₹${totalAll.toLocaleString()}`, color: "text-primary" },
     { icon: Layers, label: "Level Income", value: `₹${totalLevel.toLocaleString()}`, color: "text-blue-500" },
     { icon: Repeat, label: "Repurchase Income", value: `₹${totalRepurchase.toLocaleString()}`, color: "text-emerald-500" },
-    { icon: GitBranch, label: "Binary Income", value: `₹${totalBinary.toLocaleString()}`, color: "text-purple-500" },
     { icon: Clock, label: "Pending", value: `₹${totalPending.toLocaleString()}`, color: "text-amber-500" },
     { icon: TrendingUp, label: "Paid Out", value: `₹${totalPaid.toLocaleString()}`, color: "text-green-500" },
   ];
 
   const typeDistribution = useMemo(() => [
-    { name: "Level", value: totalLevel }, { name: "Repurchase", value: totalRepurchase }, { name: "Binary", value: totalBinary },
-  ].filter((d) => d.value > 0), [totalLevel, totalRepurchase, totalBinary]);
+    { name: "Level", value: totalLevel }, { name: "Repurchase", value: totalRepurchase },
+  ].filter((d) => d.value > 0), [totalLevel, totalRepurchase]);
 
   const statusDistribution = useMemo(() => [
     { name: "Pending", value: totalPending }, { name: "Paid", value: totalPaid },
   ].filter((d) => d.value > 0), [totalPending, totalPaid]);
 
   const trendData = useMemo(() => {
-    const allItems = [
-      ...commissions.map((c) => ({ created_at: c.created_at, amount: Number(c.amount) })),
-      ...binaryPayouts.map((b) => ({ created_at: b.created_at, amount: Number(b.matching_amount) })),
-    ];
+    const allItems = commissions.map((c) => ({ created_at: c.created_at, amount: Number(c.amount) }));
     return groupByDate(allItems, "created_at", from, to);
-  }, [commissions, binaryPayouts, from, to]);
+  }, [commissions, from, to]);
 
   const topEarners = useMemo(() => {
-    const earnerMap = new Map<string, { level: number; repurchase: number; binary: number; total: number }>();
+    const earnerMap = new Map<string, { level: number; repurchase: number; total: number }>();
     commissions.forEach((c) => {
-      const prev = earnerMap.get(c.beneficiary_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
+      const prev = earnerMap.get(c.beneficiary_id) || { level: 0, repurchase: 0, total: 0 };
       const amt = Number(c.amount);
       if (c.commission_type === "level") prev.level += amt;
       else if (c.commission_type === "repurchase") prev.repurchase += amt;
       prev.total += amt;
       earnerMap.set(c.beneficiary_id, prev);
     });
-    binaryPayouts.forEach((b) => {
-      const prev = earnerMap.get(b.user_id) || { level: 0, repurchase: 0, binary: 0, total: 0 };
-      const amt = Number(b.matching_amount);
-      prev.binary += amt;
-      prev.total += amt;
-      earnerMap.set(b.user_id, prev);
-    });
     return Array.from(earnerMap.entries())
       .map(([id, stats]) => ({ id, name: getName(id), ...stats }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
-  }, [commissions, binaryPayouts, profileMap]);
+  }, [commissions, profileMap]);
 
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
@@ -196,7 +169,6 @@ const AdminCommissions = () => {
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
-  const pendingSelectedBin = Array.from(selectedBin).filter((id) => binaryPayouts.find((b) => b.id === id)?.status === "pending").length;
 
   return (
     <AdminLayout>
@@ -217,7 +189,7 @@ const AdminCommissions = () => {
         <DateRangeFilter from={from} to={to} onRangeChange={(f, t) => { setFrom(f); setTo(t); }} />
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {summaryCards.map((c, i) => (
             <motion.div key={c.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-xl bg-card border border-border">
               <c.icon className={`h-4 w-4 ${c.color} mb-2`} />
@@ -279,7 +251,6 @@ const AdminCommissions = () => {
                         <TableHead>User</TableHead>
                         <TableHead className="text-right">Level</TableHead>
                         <TableHead className="text-right">Repurchase</TableHead>
-                        <TableHead className="text-right">Binary</TableHead>
                         <TableHead className="text-right">Total Earned</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -300,7 +271,6 @@ const AdminCommissions = () => {
                           <TableCell className="font-medium text-foreground">{earner.name}</TableCell>
                           <TableCell className="text-right text-muted-foreground">₹{earner.level.toLocaleString()}</TableCell>
                           <TableCell className="text-right text-muted-foreground">₹{earner.repurchase.toLocaleString()}</TableCell>
-                          <TableCell className="text-right text-muted-foreground">₹{earner.binary.toLocaleString()}</TableCell>
                           <TableCell className="text-right font-bold text-primary">₹{earner.total.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
@@ -333,10 +303,9 @@ const AdminCommissions = () => {
         ) : (
           <Tabs defaultValue="all" className="space-y-4">
             <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
-              <TabsTrigger value="all" className="gap-1.5 text-xs"><DollarSign className="h-3.5 w-3.5" /> All ({commissions.length + binaryPayouts.length})</TabsTrigger>
+              <TabsTrigger value="all" className="gap-1.5 text-xs"><DollarSign className="h-3.5 w-3.5" /> All ({commissions.length})</TabsTrigger>
               <TabsTrigger value="level" className="gap-1.5 text-xs"><Layers className="h-3.5 w-3.5" /> Level Income ({levelCommissions.length})</TabsTrigger>
               <TabsTrigger value="repurchase" className="gap-1.5 text-xs"><Repeat className="h-3.5 w-3.5" /> Repurchase ({repurchaseCommissions.length})</TabsTrigger>
-              <TabsTrigger value="binary" className="gap-1.5 text-xs"><GitBranch className="h-3.5 w-3.5" /> Binary ({binaryPayouts.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -363,18 +332,6 @@ const AdminCommissions = () => {
                 pendingCount={pendingSelectedComm}
               />
             </TabsContent>
-            <TabsContent value="binary">
-              <BinaryTable
-                data={binaryPayouts.filter((b) => {
-                  const name = getName(b.user_id)?.toLowerCase() || "";
-                  return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || b.status === statusFilter);
-                })}
-                getName={getName}
-                selected={selectedBin} setSelected={setSelectedBin}
-                onBulkApprove={pendingSelectedBin > 0 ? () => setBulkDialog("binary") : undefined}
-                pendingCount={pendingSelectedBin}
-              />
-            </TabsContent>
           </Tabs>
         )}
 
@@ -385,18 +342,13 @@ const AdminCommissions = () => {
               <AlertDialogTitle>Mark as Paid</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to mark{" "}
-                <span className="font-semibold text-foreground">
-                  {bulkDialog === "commission" ? pendingSelectedComm : pendingSelectedBin}
-                </span>{" "}
-                pending {bulkDialog === "binary" ? "binary payout" : "commission"}(s) as paid? This action will update their status immediately.
+                <span className="font-semibold text-foreground">{pendingSelectedComm}</span>{" "}
+                pending commission(s) as paid? This action will update their status immediately.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={bulkUpdating}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={bulkUpdating}
-                onClick={bulkDialog === "commission" ? bulkApproveCommissions : bulkApproveBinary}
-              >
+              <AlertDialogAction disabled={bulkUpdating} onClick={bulkApproveCommissions}>
                 {bulkUpdating ? "Updating..." : "Mark as Paid"}
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -529,108 +481,6 @@ const CommissionTable = ({
                       <Badge className={c.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>{c.status}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{format(new Date(c.created_at), "dd MMM yyyy")}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ─── Binary Payouts Table ─── */
-const BinaryTable = ({ data, getName, selected, setSelected, onBulkApprove, pendingCount }: {
-  data: any[]; getName: (id: string) => string;
-  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
-  onBulkApprove?: () => void; pendingCount: number;
-}) => {
-  const totalMatching = data.reduce((s, b) => s + Number(b.matching_amount), 0);
-  const totalWeakBV = data.reduce((s, b) => s + Number(b.weak_leg_bv), 0);
-  const totalStrongBV = data.reduce((s, b) => s + Number(b.strong_leg_bv), 0);
-
-  const allSelected = data.length > 0 && data.every((b) => selected.has(b.id));
-  const toggleAll = () => {
-    if (allSelected) { setSelected((prev) => { const n = new Set(prev); data.forEach((b) => n.delete(b.id)); return n; }); }
-    else { setSelected((prev) => { const n = new Set(prev); data.forEach((b) => n.add(b.id)); return n; }); }
-  };
-  const toggle = (id: string) => setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-
-  const handleExport = () => {
-    const cols = ["User", "Weak Leg BV", "Strong Leg BV", "Matching %", "Matching Amount", "Status", "Period", "Date"];
-    const rows = data.map((b) => [getName(b.user_id), String(b.weak_leg_bv), String(b.strong_leg_bv), `${b.payout_percentage}%`, `₹${Number(b.matching_amount).toLocaleString()}`, b.status, b.period_start && b.period_end ? `${format(new Date(b.period_start), "dd MMM")} - ${format(new Date(b.period_end), "dd MMM")}` : "—", format(new Date(b.created_at), "dd MMM yyyy")]);
-    exportCsv(cols, rows, "binary_payouts");
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <div className="text-xs text-muted-foreground mb-1">Total Binary Income</div>
-          <div className="text-lg font-display font-bold text-primary">₹{totalMatching.toLocaleString()}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <div className="text-xs text-muted-foreground mb-1">Total Weak Leg BV</div>
-          <div className="text-lg font-display font-bold text-foreground">{totalWeakBV.toLocaleString()}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <div className="text-xs text-muted-foreground mb-1">Total Strong Leg BV</div>
-          <div className="text-lg font-display font-bold text-foreground">{totalStrongBV.toLocaleString()}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <div className="text-xs text-muted-foreground mb-1">Total Payouts</div>
-          <div className="text-lg font-display font-bold text-foreground">{data.length}</div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap justify-between items-center gap-2">
-        <p className="text-sm text-muted-foreground">{data.length} record(s){selected.size > 0 && ` · ${selected.size} selected`}</p>
-        <div className="flex items-center gap-2">
-          {onBulkApprove && (
-            <Button size="sm" onClick={onBulkApprove} className="gap-1.5">
-              <CheckCircle className="h-4 w-4" /> Mark as Paid ({pendingCount})
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1.5" /> Export CSV</Button>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Weak Leg BV</TableHead>
-                <TableHead>Strong Leg BV</TableHead>
-                <TableHead>Matching %</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No binary payouts found</TableCell></TableRow>
-              ) : (
-                data.map((b) => (
-                  <TableRow key={b.id} className={`hover:bg-secondary/30 ${selected.has(b.id) ? "bg-primary/5" : ""}`}>
-                    <TableCell><Checkbox checked={selected.has(b.id)} onCheckedChange={() => toggle(b.id)} /></TableCell>
-                    <TableCell className="font-medium text-foreground">{getName(b.user_id)}</TableCell>
-                    <TableCell className="text-muted-foreground">{Number(b.weak_leg_bv).toLocaleString()}</TableCell>
-                    <TableCell className="text-muted-foreground">{Number(b.strong_leg_bv).toLocaleString()}</TableCell>
-                    <TableCell>{b.payout_percentage}%</TableCell>
-                    <TableCell className="font-semibold text-primary">₹{Number(b.matching_amount).toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge className={b.status === "paid" ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-amber-500/15 text-amber-600 border-amber-500/30"}>{b.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {b.period_start && b.period_end ? `${format(new Date(b.period_start), "dd MMM")} – ${format(new Date(b.period_end), "dd MMM")}` : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{format(new Date(b.created_at), "dd MMM yyyy")}</TableCell>
                   </TableRow>
                 ))
               )}
