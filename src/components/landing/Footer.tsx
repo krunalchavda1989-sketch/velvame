@@ -40,6 +40,8 @@ interface FooterSettingsData {
   visit_counter_base: number;
   visit_counter_total: number;
   copyright_text: string;
+  show_brand_section: boolean;
+  brand_description: string;
 }
 
 interface FooterSectionData {
@@ -101,13 +103,45 @@ const Footer = () => {
   if (footerSettings && sections.length > 0) {
     const fs = footerSettings;
     const totalVisits = fs.visit_counter_base + fs.visit_counter_total;
+    const brandDesc = fs.brand_description || brand.tagline || "Build your network, grow your income.";
+
+    const BrandColumn = () => (
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          {(brand.footer_logo_url || brand.logo_url) ? (
+            <img src={brand.footer_logo_url || brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
+          ) : (
+            <>
+              <Crown className="h-6 w-6" style={{ color: fs.heading_color }} />
+              <span className="font-display text-lg font-bold" style={{ color: fs.heading_color }}>{brand.brand_name}</span>
+            </>
+          )}
+        </div>
+        <p className="text-sm leading-relaxed" style={{ color: fs.text_color, opacity: 0.85 }}>{brandDesc}</p>
+        {/* Social links inside brand column */}
+        {socialLinks.length > 0 && (
+          <div className="flex items-center gap-3 mt-4">
+            {socialLinks.map((link) => (
+              <a key={link.icon} href={link.url} target="_blank" rel="noopener noreferrer" style={{ color: fs.link_color }} className="hover:opacity-80 transition-opacity" title={link.platform}>
+                <SocialIcon icon={link.icon} className="h-5 w-5" />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
 
     return (
       <footer style={{ backgroundColor: fs.bg_color, color: fs.text_color, borderTop: `1px solid ${fs.border_color}` }} className="py-12">
         <div className="container px-4">
-          <div className="grid grid-cols-1 md:grid-cols-none gap-8" style={{ display: "grid", gridTemplateColumns: `repeat(1, 1fr)` }}>
-            {/* Desktop: dynamic grid; Mobile: stacked */}
-            <div className="hidden md:flex gap-4" style={{ width: "100%" }}>
+          {/* Desktop */}
+          <div className="hidden md:flex gap-8">
+            {fs.show_brand_section && (
+              <div style={{ width: "30%", minWidth: 200 }}>
+                <BrandColumn />
+              </div>
+            )}
+            <div className="flex gap-4 flex-1">
               {sections.map(section => {
                 const items = getSectionItems(section.id);
                 return (
@@ -142,32 +176,33 @@ const Footer = () => {
                 );
               })}
             </div>
-            {/* Mobile: stacked */}
-            <div className="md:hidden space-y-8">
-              {sections.map(section => {
-                const items = getSectionItems(section.id);
-                return (
-                  <div key={section.id}>
-                    <h4 style={{ color: section.heading_color || fs.heading_color, fontSize: section.heading_font_size }} className="font-semibold mb-3">{section.heading}</h4>
-                    <ul className="space-y-2">
-                      {items.map(item => (
-                        <li key={item.id}>
-                          {item.url.startsWith("http") ? (
-                            <a href={item.url} target={item.open_in_new_tab ? "_blank" : "_self"} rel={item.open_in_new_tab ? "noopener noreferrer" : undefined} style={{ color: fs.link_color }} className="text-sm">{item.label}</a>
-                          ) : (
-                            <Link to={item.url} style={{ color: fs.link_color }} className="text-sm">{item.label}</Link>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
+          </div>
+          {/* Mobile: stacked */}
+          <div className="md:hidden space-y-8">
+            {fs.show_brand_section && <BrandColumn />}
+            {sections.map(section => {
+              const items = getSectionItems(section.id);
+              return (
+                <div key={section.id}>
+                  <h4 style={{ color: section.heading_color || fs.heading_color, fontSize: section.heading_font_size }} className="font-semibold mb-3">{section.heading}</h4>
+                  <ul className="space-y-2">
+                    {items.map(item => (
+                      <li key={item.id}>
+                        {item.url.startsWith("http") ? (
+                          <a href={item.url} target={item.open_in_new_tab ? "_blank" : "_self"} rel={item.open_in_new_tab ? "noopener noreferrer" : undefined} style={{ color: fs.link_color }} className="text-sm">{item.label}</a>
+                        ) : (
+                          <Link to={item.url} style={{ color: fs.link_color }} className="text-sm">{item.label}</Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Social links */}
-          {socialLinks.length > 0 && (
+          {/* Social links (shown centered if brand section is hidden) */}
+          {!fs.show_brand_section && socialLinks.length > 0 && (
             <div className="flex items-center justify-center gap-4 mt-8">
               {socialLinks.map((link) => (
                 <a key={link.icon} href={link.url} target="_blank" rel="noopener noreferrer" style={{ color: fs.link_color }} className="hover:opacity-80 transition-opacity" title={link.platform}>

@@ -27,6 +27,8 @@ interface FooterSettings {
   visit_counter_base: number;
   visit_counter_total: number;
   copyright_text: string;
+  show_brand_section: boolean;
+  brand_description: string;
 }
 
 interface FooterSection {
@@ -55,6 +57,7 @@ const defaultSettings: FooterSettings = {
   link_color: "#cccccc", link_hover_color: "#ff6600", heading_color: "#ffffff",
   border_color: "#333333", show_visit_counter: false, visit_counter_label: "Website Visits:",
   visit_counter_format: "formatted", visit_counter_base: 0, visit_counter_total: 0, copyright_text: "",
+  show_brand_section: true, brand_description: "",
 };
 
 const AdminFooterSettings = () => {
@@ -93,8 +96,8 @@ const AdminFooterSettings = () => {
 
   const saveSettings = async () => {
     setSaving(true);
-    const { id, visit_counter_total, ...rest } = settings;
-    const { error } = await supabase.from("footer_settings").update({ ...rest, updated_at: new Date().toISOString() }).eq("id", id);
+    const { id, visit_counter_total, show_brand_section, brand_description, ...rest } = settings;
+    const { error } = await supabase.from("footer_settings").update({ ...rest, show_brand_section, brand_description, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error("Failed to save settings");
     else toast.success("Footer settings saved!");
     setSaving(false);
@@ -222,6 +225,32 @@ const AdminFooterSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Brand Identity Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Brand Identity in Footer</CardTitle>
+              <CardDescription>Show your logo and brand description as the first footer column</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch checked={settings.show_brand_section} onCheckedChange={v => setSettings(p => ({ ...p, show_brand_section: v }))} />
+                <Label>Show Brand Section</Label>
+              </div>
+              <div>
+                <Label className="text-xs">Brand Description</Label>
+                <Input
+                  value={settings.brand_description}
+                  onChange={e => setSettings(p => ({ ...p, brand_description: e.target.value }))}
+                  placeholder="Build your network, grow your income. The premium MLM platform."
+                />
+                <p className="text-xs text-muted-foreground mt-1">Displayed below the footer logo. Leave empty to use the brand tagline.</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The footer logo is managed from <span className="font-medium">Brand Settings → Brand Identity</span>. Social media icons are managed from <span className="font-medium">Social Media Settings</span>.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Layout Configuration */}
           <Card>
             <CardHeader>
@@ -251,13 +280,13 @@ const AdminFooterSettings = () => {
           </Card>
 
           {/* Appearance Settings */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg">Appearance Settings</CardTitle>
               <CardDescription>Colors for the footer</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {([
                   ["bg_color", "Background"],
                   ["text_color", "Text"],
