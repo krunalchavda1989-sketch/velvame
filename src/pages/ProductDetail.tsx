@@ -387,6 +387,11 @@ const ProductDetail = () => {
                     ? `${product.stock} units available`
                     : "Currently out of stock"}
                 </p>
+
+                {/* Share */}
+                <div className="mt-4">
+                  <ProductShareSection productName={product.name} productId={product.id} user={user} />
+                </div>
               </div>
             </motion.div>
 
