@@ -63,7 +63,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         .from("products")
         .select("*")
         .eq("active", true)
-        .order("created_at");
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
       setProducts((data as Product[]) || []);
     };
     fetchProducts();
