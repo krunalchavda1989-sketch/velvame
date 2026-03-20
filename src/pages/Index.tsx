@@ -13,6 +13,7 @@ import Footer from "@/components/landing/Footer";
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { getProductUrl } from "@/lib/productUrl";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
