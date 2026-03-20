@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_seo_slug ON products(seo_slug) WHERE seo_slug IS NOT NULL AND seo_slug != '';
