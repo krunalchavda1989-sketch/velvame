@@ -356,19 +356,8 @@ const ProductDetail = () => {
                   )}
                 </div>
 
-                {/* Description */}
-                {product.description && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
-                    <div
-                      className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5"
-                      dangerouslySetInnerHTML={{ __html: product.description }}
-                    />
-                  </div>
-                )}
-
                 {/* Quantity & Add to Cart & Buy Now */}
-                <div className="flex items-center gap-4 mt-auto pt-4">
+                <div className="flex items-center gap-4">
                   <div className="flex items-center border border-border rounded-lg">
                     <button
                       onClick={() => setQty((q) => Math.max(1, q - 1))}
@@ -416,16 +405,27 @@ const ProductDetail = () => {
                 </div>
 
                 {/* Stock info */}
-                <p className="text-xs text-muted-foreground mt-4">
+                <p className="text-xs text-muted-foreground mt-3">
                   {product.stock > 0
                     ? `${product.stock} units available`
                     : "Currently out of stock"}
                 </p>
 
                 {/* Share */}
-                <div className="mt-4">
+                <div className="mt-3">
                   <ProductShareSection productName={product.name} productId={product.id} user={user} />
                 </div>
+
+                {/* Description */}
+                {product.description && (
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+                    <div
+                      className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
 
