@@ -201,8 +201,8 @@ const Footer = () => {
             })}
           </div>
 
-          {/* Social links */}
-          {socialLinks.length > 0 && (
+          {/* Social links (shown centered if brand section is hidden) */}
+          {!fs.show_brand_section && socialLinks.length > 0 && (
             <div className="flex items-center justify-center gap-4 mt-8">
               {socialLinks.map((link) => (
                 <a key={link.icon} href={link.url} target="_blank" rel="noopener noreferrer" style={{ color: fs.link_color }} className="hover:opacity-80 transition-opacity" title={link.platform}>
