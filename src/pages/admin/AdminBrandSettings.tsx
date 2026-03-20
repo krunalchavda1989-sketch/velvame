@@ -28,7 +28,7 @@ const AdminBrandSettings = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [settings, setSettings] = useState<BrandSettings>({
-    id: "", brand_name: "", logo_url: "", tagline: "", address: "", phone: "", email: "", website: "", gst_number: "",
+    id: "", brand_name: "", logo_url: "", favicon_url: "", footer_logo_url: "", tagline: "", address: "", phone: "", email: "", website: "", gst_number: "",
   });
 
   useEffect(() => {
