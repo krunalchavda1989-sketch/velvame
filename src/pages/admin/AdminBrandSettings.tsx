@@ -13,6 +13,8 @@ interface BrandSettings {
   id: string;
   brand_name: string;
   logo_url: string;
+  favicon_url: string;
+  footer_logo_url: string;
   tagline: string;
   address: string;
   phone: string;
