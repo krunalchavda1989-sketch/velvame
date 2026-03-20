@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import { motion } from "framer-motion";
-import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowLeftRight } from "lucide-react";
+import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check } from "lucide-react";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
