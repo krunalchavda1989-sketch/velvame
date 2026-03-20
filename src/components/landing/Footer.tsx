@@ -27,21 +27,173 @@ const SocialIcon = ({ icon, className }: { icon: string; className?: string }) =
   );
 };
 
+interface FooterSettingsData {
+  bg_color: string;
+  text_color: string;
+  link_color: string;
+  link_hover_color: string;
+  heading_color: string;
+  border_color: string;
+  show_visit_counter: boolean;
+  visit_counter_label: string;
+  visit_counter_format: string;
+  visit_counter_base: number;
+  visit_counter_total: number;
+  copyright_text: string;
+}
+
+interface FooterSectionData {
+  id: string;
+  heading: string;
+  heading_color: string;
+  heading_font_size: string;
+  width_percentage: number;
+  display_order: number;
+}
+
+interface FooterMenuItemData {
+  id: string;
+  section_id: string;
+  label: string;
+  url: string;
+  open_in_new_tab: boolean;
+  display_order: number;
+  is_active: boolean;
+}
+
+const formatCount = (num: number, format: string) => {
+  if (format === "formatted") return num.toLocaleString("en-IN");
+  return String(num);
+};
+
 const Footer = () => {
   const brand = useBrand();
   const [socialLinks, setSocialLinks] = useState<{ platform: string; url: string; icon: string }[]>([]);
+  const [footerSettings, setFooterSettings] = useState<FooterSettingsData | null>(null);
+  const [sections, setSections] = useState<FooterSectionData[]>([]);
+  const [menuItems, setMenuItems] = useState<FooterMenuItemData[]>([]);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("social_media_links")
-      .select("platform, url, icon")
-      .eq("is_active", true)
-      .order("sort_order")
-      .then(({ data }) => {
-        if (data) setSocialLinks(data.filter((l: any) => l.url && l.url.trim() !== "") as any);
-      });
+    Promise.all([
+      supabase.from("social_media_links").select("platform, url, icon").eq("is_active", true).order("sort_order"),
+      supabase.from("footer_settings").select("*").limit(1).single(),
+      supabase.from("footer_sections").select("*").eq("is_active", true).order("display_order"),
+      supabase.from("footer_menu_items").select("*").eq("is_active", true).order("display_order"),
+    ]).then(([socialRes, settingsRes, sectionsRes, itemsRes]) => {
+      if (socialRes.data) setSocialLinks(socialRes.data.filter((l: any) => l.url && l.url.trim() !== "") as any);
+      if (settingsRes.data) setFooterSettings(settingsRes.data as any);
+      if (sectionsRes.data) setSections(sectionsRes.data as any);
+      if (itemsRes.data) setMenuItems(itemsRes.data as any);
+    });
+
+    // Track visit (session-based)
+    if (!sessionStorage.getItem("_visit_tracked")) {
+      sessionStorage.setItem("_visit_tracked", "1");
+      supabase.functions.invoke("track-visit").catch(() => {});
+    }
   }, []);
 
+  const getSectionItems = (sectionId: string) =>
+    menuItems.filter(i => i.section_id === sectionId).sort((a, b) => a.display_order - b.display_order);
+
+  // If dynamic footer is configured, use it
+  if (footerSettings && sections.length > 0) {
+    const fs = footerSettings;
+    const totalVisits = fs.visit_counter_base + fs.visit_counter_total;
+
+    return (
+      <footer style={{ backgroundColor: fs.bg_color, color: fs.text_color, borderTop: `1px solid ${fs.border_color}` }} className="py-12">
+        <div className="container px-4">
+          <div className="grid grid-cols-1 md:grid-cols-none gap-8" style={{ display: "grid", gridTemplateColumns: `repeat(1, 1fr)` }}>
+            {/* Desktop: dynamic grid; Mobile: stacked */}
+            <div className="hidden md:flex gap-4" style={{ width: "100%" }}>
+              {sections.map(section => {
+                const items = getSectionItems(section.id);
+                return (
+                  <div key={section.id} style={{ width: `${section.width_percentage}%` }}>
+                    <h4 style={{ color: section.heading_color || fs.heading_color, fontSize: section.heading_font_size }} className="font-semibold mb-4">{section.heading}</h4>
+                    <ul className="space-y-2">
+                      {items.map(item => (
+                        <li key={item.id}>
+                          {item.url.startsWith("http") ? (
+                            <a
+                              href={item.url}
+                              target={item.open_in_new_tab ? "_blank" : "_self"}
+                              rel={item.open_in_new_tab ? "noopener noreferrer" : undefined}
+                              style={{ color: hoveredLink === item.id ? fs.link_hover_color : fs.link_color }}
+                              className="text-sm transition-colors"
+                              onMouseEnter={() => setHoveredLink(item.id)}
+                              onMouseLeave={() => setHoveredLink(null)}
+                            >{item.label}</a>
+                          ) : (
+                            <Link
+                              to={item.url}
+                              style={{ color: hoveredLink === item.id ? fs.link_hover_color : fs.link_color }}
+                              className="text-sm transition-colors"
+                              onMouseEnter={() => setHoveredLink(item.id)}
+                              onMouseLeave={() => setHoveredLink(null)}
+                            >{item.label}</Link>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Mobile: stacked */}
+            <div className="md:hidden space-y-8">
+              {sections.map(section => {
+                const items = getSectionItems(section.id);
+                return (
+                  <div key={section.id}>
+                    <h4 style={{ color: section.heading_color || fs.heading_color, fontSize: section.heading_font_size }} className="font-semibold mb-3">{section.heading}</h4>
+                    <ul className="space-y-2">
+                      {items.map(item => (
+                        <li key={item.id}>
+                          {item.url.startsWith("http") ? (
+                            <a href={item.url} target={item.open_in_new_tab ? "_blank" : "_self"} rel={item.open_in_new_tab ? "noopener noreferrer" : undefined} style={{ color: fs.link_color }} className="text-sm">{item.label}</a>
+                          ) : (
+                            <Link to={item.url} style={{ color: fs.link_color }} className="text-sm">{item.label}</Link>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Social links */}
+          {socialLinks.length > 0 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+              {socialLinks.map((link) => (
+                <a key={link.icon} href={link.url} target="_blank" rel="noopener noreferrer" style={{ color: fs.link_color }} className="hover:opacity-80 transition-opacity" title={link.platform}>
+                  <SocialIcon icon={link.icon} className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Visit counter */}
+          {fs.show_visit_counter && (
+            <div className="mt-6 text-center text-sm" style={{ color: fs.text_color }}>
+              🌐 {fs.visit_counter_label} {formatCount(totalVisits, fs.visit_counter_format)}
+            </div>
+          )}
+
+          {/* Copyright */}
+          <div className="mt-8 pt-4 text-center text-sm" style={{ borderTop: `1px solid ${fs.border_color}`, color: fs.text_color, opacity: 0.7 }}>
+            {fs.copyright_text || `© ${new Date().getFullYear()} ${brand.brand_name}. All rights reserved.`}
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  // Fallback static footer
   return (
     <footer className="border-t border-border py-12">
       <div className="container px-4">
@@ -60,81 +212,32 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground">
               {brand.tagline || "Build your network, grow your income. The premium MLM platform."}
             </p>
-            {brand.email && (
-              <p className="text-sm text-muted-foreground mt-2">📧 {brand.email}</p>
-            )}
-            {brand.phone && (
-              <p className="text-sm text-muted-foreground mt-1">📞 {brand.phone}</p>
-            )}
-
-            {socialLinks.length > 0 && (
-              <div className="flex items-center gap-3 mt-4">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.icon}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    title={link.platform}
-                  >
-                    <SocialIcon icon={link.icon} className="h-5 w-5" />
-                  </a>
-                ))}
-              </div>
-            )}
           </div>
-
           <div>
             <h4 className="font-display font-semibold text-foreground mb-4">Platform</h4>
             <ul className="space-y-2">
-              {[
-                { label: "Shop", href: "/shop" },
-                { label: "Dashboard", href: "/dashboard" },
-                { label: "FAQ", href: "/faq" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
+              {[{ label: "Shop", href: "/shop" }, { label: "Dashboard", href: "/dashboard" }, { label: "FAQ", href: "/faq" }].map((link) => (
+                <li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>
               ))}
             </ul>
           </div>
-
           <div>
             <h4 className="font-display font-semibold text-foreground mb-4">Company</h4>
             <ul className="space-y-2">
-              {[
-                { label: "About", href: "/about" },
-                { label: "Contact", href: "/contact" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
+              {[{ label: "About", href: "/about" }, { label: "Contact", href: "/contact" }].map((link) => (
+                <li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>
               ))}
             </ul>
           </div>
-
           <div>
             <h4 className="font-display font-semibold text-foreground mb-4">Get Started</h4>
             <ul className="space-y-2">
-              {[
-                { label: "Register", href: "/register" },
-                { label: "Login", href: "/login" },
-              ].map((link) => (
-                <li key={link.label}>
-                  <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
+              {[{ label: "Register", href: "/register" }, { label: "Login", href: "/login" }].map((link) => (
+                <li key={link.label}><Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link></li>
               ))}
             </ul>
           </div>
         </div>
-
         <div className="mt-12 pt-6 border-t border-border text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} {brand.brand_name}. All rights reserved.
         </div>
