@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, Plus, Minus, Package, Tag, Zap } from "lucide-react";
+import { Star, ShoppingCart, Plus, Minus, Package, Tag, Zap, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -12,6 +14,7 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import SocialShareButtons from "@/components/share/SocialShareButtons";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
