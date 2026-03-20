@@ -235,6 +235,7 @@ const App = () => (
             <Route path="/admin/social-media" element={<AdminRoute><AdminSocialMedia /></AdminRoute>} />
             <Route path="/admin/wallet-management" element={<AdminRoute><AdminWalletManagement /></AdminRoute>} />
             <Route path="/admin/footer-settings" element={<AdminRoute><AdminFooterSettings /></AdminRoute>} />
+            <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>
