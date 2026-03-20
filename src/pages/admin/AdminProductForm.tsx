@@ -42,6 +42,7 @@ const emptyForm = {
   image_url: "",
   rating: 0,
   active: true,
+  allow_backorder: false,
   seo_title: "",
   seo_slug: "",
   seo_description: "",
