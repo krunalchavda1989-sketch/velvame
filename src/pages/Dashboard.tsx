@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
-import { Progress } from "@/components/ui/progress";
+
 
 const COLORS = [
   "hsl(var(--primary))",
