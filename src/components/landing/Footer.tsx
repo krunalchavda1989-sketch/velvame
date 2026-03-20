@@ -40,6 +40,8 @@ interface FooterSettingsData {
   visit_counter_base: number;
   visit_counter_total: number;
   copyright_text: string;
+  show_brand_section: boolean;
+  brand_description: string;
 }
 
 interface FooterSectionData {

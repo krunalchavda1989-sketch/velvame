@@ -96,8 +96,8 @@ const AdminFooterSettings = () => {
 
   const saveSettings = async () => {
     setSaving(true);
-    const { id, visit_counter_total, ...rest } = settings;
-    const { error } = await supabase.from("footer_settings").update({ ...rest, updated_at: new Date().toISOString() }).eq("id", id);
+    const { id, visit_counter_total, show_brand_section, brand_description, ...rest } = settings;
+    const { error } = await supabase.from("footer_settings").update({ ...rest, show_brand_section, brand_description, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) toast.error("Failed to save settings");
     else toast.success("Footer settings saved!");
     setSaving(false);
