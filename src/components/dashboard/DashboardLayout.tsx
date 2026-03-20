@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package,
+  Crown, LayoutDashboard, Users, Wallet, ShoppingBag, Package, Home,
   BarChart3, Settings, Link2, LogOut, ChevronLeft, ChevronRight, Award, GitBranch, CreditCard, MapPin,
   Menu, X
 } from "lucide-react";
@@ -11,6 +11,7 @@ import { useBrand } from "@/contexts/BrandContext";
 
 
 const menuItems = [
+  { icon: Home, label: "Home", href: "/" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "My Team", href: "/dashboard/team" },
   { icon: GitBranch, label: "Genealogy", href: "/dashboard/genealogy" },
