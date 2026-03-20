@@ -31,7 +31,10 @@ const ProductShareSection = ({ productName, productId, user }: { productName: st
     enabled: !!user,
   });
 
-  const baseUrl = `${window.location.origin}/product/${productId}`;
+  const baseUrl = `${window.location.origin}${getProductUrl({ id: productId, seo_slug: undefined })}`;
+  // Use current page URL for sharing (which already has the SEO slug)
+  const currentUrl = window.location.href.split('?')[0];
+  const shareUrl = currentUrl;
   const shareLink = user && profile?.referral_code
     ? `${baseUrl}?ref=${profile.referral_code}`
     : baseUrl;
