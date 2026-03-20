@@ -119,28 +119,6 @@ const Dashboard = () => {
         Object.entries(typeMap).map(([name, value]) => ({ name, value: Math.round(value) }))
       );
 
-      // Binary position & payouts
-      const { data: binPos } = await supabase
-        .from("binary_positions")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      setBinaryPosition(binPos);
-
-      const { data: binPayouts } = await supabase
-        .from("binary_payouts")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      setBinaryPayouts(binPayouts || []);
-
-      const { data: binSettings } = await supabase
-        .from("binary_settings")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
-      setBinarySettings(binSettings);
     };
 
     fetchData();
