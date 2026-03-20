@@ -57,6 +57,7 @@ const defaultSettings: FooterSettings = {
   link_color: "#cccccc", link_hover_color: "#ff6600", heading_color: "#ffffff",
   border_color: "#333333", show_visit_counter: false, visit_counter_label: "Website Visits:",
   visit_counter_format: "formatted", visit_counter_base: 0, visit_counter_total: 0, copyright_text: "",
+  show_brand_section: true, brand_description: "",
 };
 
 const AdminFooterSettings = () => {
