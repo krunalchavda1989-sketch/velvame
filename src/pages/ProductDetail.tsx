@@ -143,15 +143,34 @@ const ProductDetail = () => {
             >
               {/* Image Gallery */}
               <div>
-                <div className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center min-h-[320px] lg:min-h-[450px]">
+                <div
+                  ref={imgContainerRef}
+                  className="rounded-2xl bg-secondary border border-border overflow-hidden flex items-center justify-center cursor-crosshair relative"
+                  style={{ height: 'auto', maxHeight: '70vh' }}
+                  onMouseEnter={() => setIsZooming(true)}
+                  onMouseLeave={() => setIsZooming(false)}
+                  onMouseMove={handleMouseMove}
+                >
                   {selectedImage && isImageUrl(selectedImage) ? (
                     <img
                       src={selectedImage}
                       alt={product.name}
-                      className="w-full h-full object-contain max-h-[450px]"
+                      className="w-full h-auto object-contain max-h-[70vh] pointer-events-none select-none"
+                      draggable={false}
                     />
                   ) : (
                     <span className="text-8xl">{product.image_url || "📦"}</span>
+                  )}
+                  {isZooming && selectedImage && isImageUrl(selectedImage) && (
+                    <div
+                      className="absolute inset-0 z-10"
+                      style={{
+                        backgroundImage: `url(${selectedImage})`,
+                        backgroundSize: '250%',
+                        backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                        backgroundRepeat: 'no-repeat',
+                      }}
+                    />
                   )}
                 </div>
                 {productImages.length > 1 && (
