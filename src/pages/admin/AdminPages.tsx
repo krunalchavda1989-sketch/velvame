@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Pencil, Loader2, Save, Plus, Trash2, Eye, EyeOff, Globe, Search as SearchIcon } from "lucide-react";
+import { FileText, Pencil, Loader2, Save, Plus, Trash2, Eye, EyeOff, Globe, Search as SearchIcon, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
