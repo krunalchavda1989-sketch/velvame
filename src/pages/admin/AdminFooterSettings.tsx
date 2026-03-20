@@ -225,6 +225,32 @@ const AdminFooterSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Brand Identity Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Brand Identity in Footer</CardTitle>
+              <CardDescription>Show your logo and brand description as the first footer column</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch checked={settings.show_brand_section} onCheckedChange={v => setSettings(p => ({ ...p, show_brand_section: v }))} />
+                <Label>Show Brand Section</Label>
+              </div>
+              <div>
+                <Label className="text-xs">Brand Description</Label>
+                <Input
+                  value={settings.brand_description}
+                  onChange={e => setSettings(p => ({ ...p, brand_description: e.target.value }))}
+                  placeholder="Build your network, grow your income. The premium MLM platform."
+                />
+                <p className="text-xs text-muted-foreground mt-1">Displayed below the footer logo. Leave empty to use the brand tagline.</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The footer logo is managed from <span className="font-medium">Brand Settings → Brand Identity</span>. Social media icons are managed from <span className="font-medium">Social Media Settings</span>.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Layout Configuration */}
           <Card>
             <CardHeader>
@@ -254,13 +280,13 @@ const AdminFooterSettings = () => {
           </Card>
 
           {/* Appearance Settings */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg">Appearance Settings</CardTitle>
               <CardDescription>Colors for the footer</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {([
                   ["bg_color", "Background"],
                   ["text_color", "Text"],
