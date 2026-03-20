@@ -214,7 +214,7 @@ const Index = () => {
                 <motion.div key={product.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                   className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 hover:shadow-lg transition-all"
                 >
-                  <Link to={`/product/${product.id}`}>
+                  <Link to={getProductUrl(product)}>
                     <div className="bg-secondary flex items-center justify-center overflow-hidden">
                       {product.image_url?.startsWith("http") ? (
                         <img src={product.image_url} alt={product.name} className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300" />
