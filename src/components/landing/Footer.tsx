@@ -48,8 +48,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              {brand.logo_url ? (
-                <img src={brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
+              {(brand.footer_logo_url || brand.logo_url) ? (
+                <img src={brand.footer_logo_url || brand.logo_url} alt={brand.brand_name} className="h-10 w-auto max-w-[160px] object-contain" />
               ) : (
                 <>
                   <Crown className="h-6 w-6 text-primary" />

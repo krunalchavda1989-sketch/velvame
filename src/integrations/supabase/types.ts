@@ -149,6 +149,8 @@ export type Database = {
           brand_name: string
           created_at: string
           email: string | null
+          favicon_url: string | null
+          footer_logo_url: string | null
           gst_number: string | null
           id: string
           logo_url: string | null
@@ -162,6 +164,8 @@ export type Database = {
           brand_name?: string
           created_at?: string
           email?: string | null
+          favicon_url?: string | null
+          footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
           logo_url?: string | null
@@ -175,6 +179,8 @@ export type Database = {
           brand_name?: string
           created_at?: string
           email?: string | null
+          favicon_url?: string | null
+          footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
           logo_url?: string | null
