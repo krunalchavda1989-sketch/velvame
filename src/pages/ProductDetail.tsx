@@ -236,7 +236,6 @@ const ProductDetail = () => {
               </div>
 
               {/* Details */}
-              <ProductShareSection productName={product.name} productId={product.id} user={user} />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <Badge variant="outline" className="text-muted-foreground border-border">
