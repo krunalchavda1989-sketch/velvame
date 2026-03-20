@@ -446,7 +446,7 @@ const ProductDetail = () => {
                         transition={{ delay: i * 0.05 }}
                       >
                         <Link
-                          to={`/product/${item.id}`}
+                          to={getProductUrl(item)}
                           className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
                         >
                           <div className="bg-secondary flex items-center justify-center text-5xl">
