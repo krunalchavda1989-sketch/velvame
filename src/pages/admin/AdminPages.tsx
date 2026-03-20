@@ -478,14 +478,11 @@ const AdminPages = () => {
               {/* Page Content Editor */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Page Content</Label>
-                <Textarea
+                <RichTextEditor
                   value={customPageForm.content_body}
-                  onChange={(e) => setCustomPageForm((prev) => ({ ...prev, content_body: e.target.value }))}
-                  placeholder="Write your page content here... You can use HTML for formatting."
-                  rows={12}
-                  className="font-mono text-sm leading-relaxed"
+                  onChange={(val) => setCustomPageForm((prev) => ({ ...prev, content_body: val }))}
+                  placeholder="Write your page content here..."
                 />
-                <p className="text-xs text-muted-foreground">Supports HTML tags for rich formatting (headings, lists, links, etc.)</p>
               </div>
 
               <Separator />
