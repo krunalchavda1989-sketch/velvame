@@ -11,6 +11,7 @@ import { useBrand } from "@/contexts/BrandContext";
 
 
 const menuItems = [
+  { icon: Home, label: "Home", href: "/" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "My Team", href: "/dashboard/team" },
   { icon: GitBranch, label: "Genealogy", href: "/dashboard/genealogy" },
