@@ -36,8 +36,8 @@ const ProductShareSection = ({ productName, productId, user }: { productName: st
   const currentUrl = window.location.href.split('?')[0];
   const shareUrl = currentUrl;
   const shareLink = user && profile?.referral_code
-    ? `${baseUrl}?ref=${profile.referral_code}`
-    : baseUrl;
+    ? `${shareUrl}?ref=${profile.referral_code}`
+    : shareUrl;
 
   return (
     <div className="flex justify-end mb-2">
