@@ -118,14 +118,20 @@ const Shop = () => {
                             </div>
                           )}
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
-                          className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-1" />
-                          Add to Cart
-                        </Button>
+                        {product.stock <= 0 && !(product as any).allow_backorder ? (
+                          <Button size="sm" disabled className="opacity-50 cursor-not-allowed">
+                            Out of Stock
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
+                            className="bg-gradient-gold text-primary-foreground hover:opacity-90"
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-1" />
+                            {product.stock <= 0 ? "Pre-Order" : "Add to Cart"}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </motion.div>

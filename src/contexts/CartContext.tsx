@@ -15,6 +15,7 @@ interface Product {
   rating: number | null;
   active: boolean;
   description: string | null;
+  allow_backorder: boolean;
 }
 
 interface CartContextType {
