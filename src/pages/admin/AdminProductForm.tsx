@@ -589,6 +589,27 @@ const AdminProductForm = () => {
               {form.stock > 0 && form.stock <= 10 && (
                 <p className="text-xs text-orange-500 mt-2">⚠ Low stock — only {form.stock} units remaining</p>
               )}
+
+              {/* Back Order Toggle */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <PackageX className="h-4 w-4 text-primary" />
+                      Allow Back Orders
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {form.allow_backorder
+                        ? "Customers can place orders even when this product is out of stock"
+                        : "Orders are blocked when stock reaches zero"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.allow_backorder}
+                    onCheckedChange={(v) => setForm({ ...form, allow_backorder: v })}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* SEO Card */}
