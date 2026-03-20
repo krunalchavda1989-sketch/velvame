@@ -110,9 +110,9 @@ const AdminCommissionLevels = () => {
   const handleSaveMinPurchase = async () => {
     if (!settingsId) return;
     setSavingSettings(true);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("commission_settings")
-      .update({ min_monthly_purchase: minMonthlyPurchase } as any)
+      .update({ min_monthly_purchase: minMonthlyPurchase })
       .eq("id", settingsId);
     setSavingSettings(false);
     if (error) toast.error("Failed to update"); else toast.success("Minimum monthly purchase updated!");
