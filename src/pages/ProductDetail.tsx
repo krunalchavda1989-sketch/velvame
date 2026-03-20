@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, Plus, Minus, Package, Tag, Zap } from "lucide-react";
+import { Star, ShoppingCart, Plus, Minus, Package, Tag, Zap, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -12,6 +14,7 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import SocialShareButtons from "@/components/share/SocialShareButtons";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -193,6 +196,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Details */}
+              <ProductShareSection productName={product.name} productId={product.id} user={user} />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
                   <Badge variant="outline" className="text-muted-foreground border-border">
@@ -401,6 +405,46 @@ const ProductDetail = () => {
         )}
       </div>
       <Footer />
+    </div>
+  );
+};
+
+const ProductShareSection = ({ productName, productId, user }: { productName: string; productId: string; user: any }) => {
+  const { data: profile } = useQuery({
+    queryKey: ["share-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("referral_code")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const baseUrl = `${window.location.origin}/product/${productId}`;
+  const shareLink = user && profile?.referral_code
+    ? `${baseUrl}?ref=${profile.referral_code}`
+    : baseUrl;
+
+  return (
+    <div className="flex justify-end mb-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-72">
+          <p className="text-sm font-medium text-foreground mb-3">Share "{productName}"</p>
+          <SocialShareButtons
+            referralLink={shareLink}
+            referralCode={user && profile?.referral_code ? profile.referral_code : undefined}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
