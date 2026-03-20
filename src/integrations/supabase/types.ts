@@ -146,14 +146,19 @@ export type Database = {
       brand_settings: {
         Row: {
           address: string | null
+          brand_color: string | null
           brand_name: string
+          button_color: string | null
           created_at: string
           email: string | null
           favicon_url: string | null
+          font_body: string | null
+          font_heading: string | null
           footer_logo_url: string | null
           gst_number: string | null
           id: string
           logo_url: string | null
+          og_image_url: string | null
           phone: string | null
           tagline: string | null
           updated_at: string
@@ -161,14 +166,19 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          brand_color?: string | null
           brand_name?: string
+          button_color?: string | null
           created_at?: string
           email?: string | null
           favicon_url?: string | null
+          font_body?: string | null
+          font_heading?: string | null
           footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
           logo_url?: string | null
+          og_image_url?: string | null
           phone?: string | null
           tagline?: string | null
           updated_at?: string
@@ -176,14 +186,19 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          brand_color?: string | null
           brand_name?: string
+          button_color?: string | null
           created_at?: string
           email?: string | null
           favicon_url?: string | null
+          font_body?: string | null
+          font_heading?: string | null
           footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
           logo_url?: string | null
+          og_image_url?: string | null
           phone?: string | null
           tagline?: string | null
           updated_at?: string
