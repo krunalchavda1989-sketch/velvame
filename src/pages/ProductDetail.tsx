@@ -283,9 +283,10 @@ const ProductDetail = () => {
                 {product.description && (
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {product.description}
-                    </p>
+                    <div
+                      className="text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
                   </div>
                 )}
 
