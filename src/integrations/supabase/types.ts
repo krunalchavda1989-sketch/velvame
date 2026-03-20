@@ -1160,6 +1160,7 @@ export type Database = {
           seo_description: string | null
           seo_slug: string | null
           seo_title: string | null
+          sort_order: number
           stock: number
         }
         Insert: {
@@ -1177,6 +1178,7 @@ export type Database = {
           seo_description?: string | null
           seo_slug?: string | null
           seo_title?: string | null
+          sort_order?: number
           stock?: number
         }
         Update: {
@@ -1194,6 +1196,7 @@ export type Database = {
           seo_description?: string | null
           seo_slug?: string | null
           seo_title?: string | null
+          sort_order?: number
           stock?: number
         }
         Relationships: []
