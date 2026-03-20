@@ -232,6 +232,8 @@ const AdminProductForm = () => {
     if (!form.retail_price || !form.distributor_price) { toast.error("Prices are required"); return; }
 
     setSaving(true);
+    // Auto-generate slug from name if empty
+    const finalSlug = form.seo_slug.trim() || generateSlugFromName(form.name);
     const payload: any = {
       name: form.name,
       category: form.category,
@@ -243,8 +245,8 @@ const AdminProductForm = () => {
       rating: form.rating,
       active: form.active,
       allow_backorder: form.allow_backorder,
-      seo_title: form.seo_title,
-      seo_slug: form.seo_slug,
+      seo_title: form.seo_title || form.name,
+      seo_slug: finalSlug,
       seo_description: form.seo_description,
     };
 
