@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, Plus, X, Save, Loader2, Tag, Layers, Globe, PackageX } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { toast } from "sonner";
+import { generateSlugFromName } from "@/lib/productUrl";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import SortableImageItem from "@/components/admin/SortableImageItem";
@@ -231,6 +232,8 @@ const AdminProductForm = () => {
     if (!form.retail_price || !form.distributor_price) { toast.error("Prices are required"); return; }
 
     setSaving(true);
+    // Auto-generate slug from name if empty
+    const finalSlug = form.seo_slug.trim() || generateSlugFromName(form.name);
     const payload: any = {
       name: form.name,
       category: form.category,
@@ -242,8 +245,8 @@ const AdminProductForm = () => {
       rating: form.rating,
       active: form.active,
       allow_backorder: form.allow_backorder,
-      seo_title: form.seo_title,
-      seo_slug: form.seo_slug,
+      seo_title: form.seo_title || form.name,
+      seo_slug: finalSlug,
       seo_description: form.seo_description,
     };
 
@@ -626,7 +629,7 @@ const AdminProductForm = () => {
                   {form.seo_title || form.name || "Product Title"}
                 </p>
                 <p className="text-xs text-green-700 truncate">
-                  yoursite.com/products/{form.seo_slug || "product-slug"}
+                  yoursite.com/product/{form.seo_slug || generateSlugFromName(form.name) || "product-slug"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                   {form.seo_description || form.description || "Product description will appear here..."}

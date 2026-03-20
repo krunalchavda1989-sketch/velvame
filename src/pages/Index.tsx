@@ -13,6 +13,7 @@ import Footer from "@/components/landing/Footer";
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { getProductUrl } from "@/lib/productUrl";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -213,7 +214,7 @@ const Index = () => {
                 <motion.div key={product.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                   className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 hover:shadow-lg transition-all"
                 >
-                  <Link to={`/product/${product.id}`}>
+                  <Link to={getProductUrl(product)}>
                     <div className="bg-secondary flex items-center justify-center overflow-hidden">
                       {product.image_url?.startsWith("http") ? (
                         <img src={product.image_url} alt={product.name} className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300" />
@@ -224,7 +225,7 @@ const Index = () => {
                   </Link>
                   <div className="p-4">
                     <p className="text-xs text-muted-foreground mb-1">{product.category}</p>
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={getProductUrl(product)}>
                       <h3 className="font-display font-semibold text-foreground text-sm truncate hover:text-primary transition-colors">{product.name}</h3>
                     </Link>
                     <div className="flex items-center gap-1 my-1.5">

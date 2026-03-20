@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import { getProductUrl } from "@/lib/productUrl";
 
 
 const Shop = () => {
@@ -84,7 +85,7 @@ const Shop = () => {
                     transition={{ delay: i * 0.05 }}
                     className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer"
                   >
-                    <Link to={`/product/${product.id}`}>
+                    <Link to={getProductUrl(product)}>
                       <div className="bg-secondary flex items-center justify-center text-5xl">
                         {product.image_url?.startsWith("http") ? (
                           <img src={product.image_url} alt={product.name} className="w-full h-auto object-contain" />
