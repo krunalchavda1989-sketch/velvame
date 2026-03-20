@@ -67,6 +67,7 @@ import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
 import AdminWalletManagement from "./pages/admin/AdminWalletManagement";
 import AdminFooterSettings from "./pages/admin/AdminFooterSettings";
+import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
 
@@ -234,6 +235,7 @@ const App = () => (
             <Route path="/admin/social-media" element={<AdminRoute><AdminSocialMedia /></AdminRoute>} />
             <Route path="/admin/wallet-management" element={<AdminRoute><AdminWalletManagement /></AdminRoute>} />
             <Route path="/admin/footer-settings" element={<AdminRoute><AdminFooterSettings /></AdminRoute>} />
+            <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </CartProvider>
