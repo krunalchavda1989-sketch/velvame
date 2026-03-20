@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, Plus, X, Save, Loader2, Tag, Layers, Globe, PackageX } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { toast } from "sonner";
+import { generateSlugFromName } from "@/lib/productUrl";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import SortableImageItem from "@/components/admin/SortableImageItem";
