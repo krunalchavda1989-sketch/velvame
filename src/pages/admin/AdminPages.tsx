@@ -504,16 +504,20 @@ const AdminPages = () => {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">URL Slug</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">/</span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">{window.location.origin}/</span>
                   <Input
                     value={customPageForm.page_slug}
                     onChange={(e) => setCustomPageForm((prev) => ({ ...prev, page_slug: generateSlug(e.target.value) }))}
                     placeholder="terms-and-conditions"
                     className="font-mono text-sm"
-                    disabled={isEditingCustomPage}
                     maxLength={60}
                   />
                 </div>
+                {customPageForm.page_slug && (
+                  <p className="text-xs text-muted-foreground">
+                    Live URL: <span className="font-mono text-primary">{window.location.origin}/{customPageForm.page_slug}</span>
+                  </p>
+                )}
               </div>
 
               <Separator />
