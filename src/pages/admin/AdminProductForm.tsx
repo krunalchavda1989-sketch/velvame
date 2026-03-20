@@ -352,13 +352,13 @@ const AdminProductForm = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium text-foreground">Description</Label>
-                <Textarea
-                  value={form.description || ""}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Write a detailed description of the product..."
-                  rows={6}
-                  className="mt-1.5 bg-background border-border resize-none"
-                />
+                <div className="mt-1.5">
+                  <RichTextEditor
+                    value={form.description || ""}
+                    onChange={(val) => setForm({ ...form, description: val })}
+                    placeholder="Write a detailed description of the product..."
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground mt-1.5">Describe the product in detail for better SEO and customer experience.</p>
               </div>
             </div>
