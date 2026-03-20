@@ -5,6 +5,8 @@ interface BrandSettings {
   brand_name: string;
   tagline: string;
   logo_url: string;
+  favicon_url: string;
+  footer_logo_url: string;
   email: string;
   phone: string;
   address: string;
@@ -16,6 +18,8 @@ const defaultBrand: BrandSettings = {
   brand_name: "NexaMLM",
   tagline: "Build your network, grow your income.",
   logo_url: "",
+  favicon_url: "",
+  footer_logo_url: "",
   email: "",
   phone: "",
   address: "",
