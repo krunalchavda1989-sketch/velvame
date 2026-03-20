@@ -57,7 +57,7 @@ const ProductShareSection = ({ productName, productId, user }: { productName: st
 };
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { addToCart, isMember, getPrice } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -80,17 +80,47 @@ const ProductDetail = () => {
     setZoomPos({ x, y });
   }, []);
 
+  // Update document title & meta for SEO
+  useEffect(() => {
+    if (!product) return;
+    const title = product.seo_title || product.name;
+    const desc = product.seo_description || (product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || '');
+    document.title = title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', desc);
+    else {
+      const meta = document.createElement('meta');
+      meta.name = 'description';
+      meta.content = desc;
+      document.head.appendChild(meta);
+    }
+    return () => { document.title = 'Shop'; };
+  }, [product]);
+
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) return;
+      if (!slug) return;
       setLoading(true);
       setQty(1);
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) {
+
+      // Try seo_slug first, then fall back to id (UUID)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      let data: any = null;
+      let error: any = null;
+
+      if (!isUUID) {
+        const res = await supabase.from("products").select("*").eq("seo_slug", slug).single();
+        data = res.data;
+        error = res.error;
+      }
+
+      if (!data) {
+        const res = await supabase.from("products").select("*").eq("id", slug).single();
+        data = res.data;
+        error = res.error;
+      }
+
+      if (error || !data) {
         toast.error("Product not found");
       }
       setProduct(data);
