@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Upload, Plus, X, Save, Loader2, Tag, Layers, Globe } from "lucide-react";
+import { ArrowLeft, Upload, Plus, X, Save, Loader2, Tag, Layers, Globe, PackageX } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { toast } from "sonner";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
@@ -41,6 +42,7 @@ const emptyForm = {
   image_url: "",
   rating: 0,
   active: true,
+  allow_backorder: false,
   seo_title: "",
   seo_slug: "",
   seo_description: "",
@@ -99,6 +101,7 @@ const AdminProductForm = () => {
         image_url: data.image_url || "",
         rating: data.rating || 0,
         active: data.active ?? true,
+        allow_backorder: (data as any).allow_backorder ?? false,
         seo_title: (data as any).seo_title || "",
         seo_slug: (data as any).seo_slug || "",
         seo_description: (data as any).seo_description || "",
@@ -238,6 +241,7 @@ const AdminProductForm = () => {
       image_url: form.image_url,
       rating: form.rating,
       active: form.active,
+      allow_backorder: form.allow_backorder,
       seo_title: form.seo_title,
       seo_slug: form.seo_slug,
       seo_description: form.seo_description,
@@ -348,13 +352,13 @@ const AdminProductForm = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium text-foreground">Description</Label>
-                <Textarea
-                  value={form.description || ""}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Write a detailed description of the product..."
-                  rows={6}
-                  className="mt-1.5 bg-background border-border resize-none"
-                />
+                <div className="mt-1.5">
+                  <RichTextEditor
+                    value={form.description || ""}
+                    onChange={(val) => setForm({ ...form, description: val })}
+                    placeholder="Write a detailed description of the product..."
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground mt-1.5">Describe the product in detail for better SEO and customer experience.</p>
               </div>
             </div>
@@ -585,6 +589,27 @@ const AdminProductForm = () => {
               {form.stock > 0 && form.stock <= 10 && (
                 <p className="text-xs text-orange-500 mt-2">⚠ Low stock — only {form.stock} units remaining</p>
               )}
+
+              {/* Back Order Toggle */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                      <PackageX className="h-4 w-4 text-primary" />
+                      Allow Back Orders
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {form.allow_backorder
+                        ? "Customers can place orders even when this product is out of stock"
+                        : "Orders are blocked when stock reaches zero"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={form.allow_backorder}
+                    onCheckedChange={(v) => setForm({ ...form, allow_backorder: v })}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* SEO Card */}
