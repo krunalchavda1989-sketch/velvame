@@ -439,6 +439,7 @@ export type Database = {
         Row: {
           bg_color: string
           border_color: string
+          brand_description: string
           copyright_text: string
           created_at: string
           heading_color: string
@@ -446,6 +447,7 @@ export type Database = {
           layout_sections: number
           link_color: string
           link_hover_color: string
+          show_brand_section: boolean
           show_visit_counter: boolean
           text_color: string
           updated_at: string
@@ -457,6 +459,7 @@ export type Database = {
         Insert: {
           bg_color?: string
           border_color?: string
+          brand_description?: string
           copyright_text?: string
           created_at?: string
           heading_color?: string
@@ -464,6 +467,7 @@ export type Database = {
           layout_sections?: number
           link_color?: string
           link_hover_color?: string
+          show_brand_section?: boolean
           show_visit_counter?: boolean
           text_color?: string
           updated_at?: string
@@ -475,6 +479,7 @@ export type Database = {
         Update: {
           bg_color?: string
           border_color?: string
+          brand_description?: string
           copyright_text?: string
           created_at?: string
           heading_color?: string
@@ -482,6 +487,7 @@ export type Database = {
           layout_sections?: number
           link_color?: string
           link_hover_color?: string
+          show_brand_section?: boolean
           show_visit_counter?: boolean
           text_color?: string
           updated_at?: string
