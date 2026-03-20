@@ -40,7 +40,7 @@ const AdminCommissionLevels = () => {
   const fetchLevels = async () => {
     const [{ data }, { data: settings }] = await Promise.all([
       supabase.from("commission_levels").select("*").order("commission_type").order("level"),
-      supabase.from("commission_settings").select("*").limit(1).single(),
+      (supabase as any).from("commission_settings").select("*").limit(1).single(),
     ]);
     setLevels((data as unknown as CommLevel[]) || []);
     if (settings) {
