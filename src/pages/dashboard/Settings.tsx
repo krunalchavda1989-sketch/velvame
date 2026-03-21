@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -40,6 +40,7 @@ const Settings = () => {
   const [branchName, setBranchName] = useState("");
   const [upiId, setUpiId] = useState("");
   const [bankDetailsLoaded, setBankDetailsLoaded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["settings-profile", user?.id],
@@ -70,25 +71,29 @@ const Settings = () => {
   });
 
   // Sync profile form
-  const profileLoaded = profile && fullName === "" && phone === "";
-  if (profileLoaded) {
-    setFullName(profile.full_name || "");
-    setPhone(profile.phone || "");
-  }
+  useEffect(() => {
+    if (profile && !profileLoaded) {
+      setFullName(profile.full_name || "");
+      setPhone(profile.phone || "");
+      setProfileLoaded(true);
+    }
+  }, [profile, profileLoaded]);
 
   // Sync bank details form
-  if (bankDetails && !bankDetailsLoaded) {
-    setAccountHolderName(bankDetails.account_holder_name || "");
-    setBankName(bankDetails.bank_name || "");
-    setAccountNumber(bankDetails.account_number || "");
-    setIfscCode(bankDetails.ifsc_code || "");
-    setBranchName(bankDetails.branch_name || "");
-    setUpiId(bankDetails.upi_id || "");
-    setBankDetailsLoaded(true);
-  }
-  if (!bankDetails && !bankLoading && !bankDetailsLoaded) {
-    setBankDetailsLoaded(true);
-  }
+  useEffect(() => {
+    if (bankDetails && !bankDetailsLoaded) {
+      setAccountHolderName(bankDetails.account_holder_name || "");
+      setBankName(bankDetails.bank_name || "");
+      setAccountNumber(bankDetails.account_number || "");
+      setIfscCode(bankDetails.ifsc_code || "");
+      setBranchName(bankDetails.branch_name || "");
+      setUpiId(bankDetails.upi_id || "");
+      setBankDetailsLoaded(true);
+    }
+    if (!bankDetails && !bankLoading && !bankDetailsLoaded) {
+      setBankDetailsLoaded(true);
+    }
+  }, [bankDetails, bankLoading, bankDetailsLoaded]);
 
   const updateProfile = useMutation({
     mutationFn: async () => {
