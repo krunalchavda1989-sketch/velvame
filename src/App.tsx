@@ -67,6 +67,7 @@ import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminSocialMedia from "./pages/admin/AdminSocialMedia";
 import AdminWalletManagement from "./pages/admin/AdminWalletManagement";
 import AdminFooterSettings from "./pages/admin/AdminFooterSettings";
+import AdminBreadcrumbSettings from "./pages/admin/AdminBreadcrumbSettings";
 import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
