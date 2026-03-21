@@ -51,6 +51,8 @@ const defaultSettings: BreadcrumbSettings = {
   overlay_opacity: 40,
   section_height: "medium",
   custom_height: 100,
+  padding_top: 16,
+  padding_bottom: 16,
   title_font_size: 32,
   title_font_weight: "bold",
   title_color: "#ffffff",

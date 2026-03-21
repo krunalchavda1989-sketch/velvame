@@ -328,6 +328,16 @@ const AdminBreadcrumbSettings = () => {
                 <span className="text-sm text-muted-foreground">px</span>
               </div>
             )}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label className="text-xs">Padding Top (px)</Label>
+                <Input type="number" value={settings.padding_top} onChange={e => update("padding_top", Number(e.target.value))} min={0} max={100} />
+              </div>
+              <div>
+                <Label className="text-xs">Padding Bottom (px)</Label>
+                <Input type="number" value={settings.padding_bottom} onChange={e => update("padding_bottom", Number(e.target.value))} min={0} max={100} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
