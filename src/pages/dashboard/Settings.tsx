@@ -40,6 +40,7 @@ const Settings = () => {
   const [branchName, setBranchName] = useState("");
   const [upiId, setUpiId] = useState("");
   const [bankDetailsLoaded, setBankDetailsLoaded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["settings-profile", user?.id],
