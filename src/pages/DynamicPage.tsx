@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 
 interface PageData {
   id: string;
@@ -144,14 +145,13 @@ const DynamicPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pt-24 pb-16">
-        <div className="container mx-auto max-w-4xl px-4">
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
-            {page.title}
-          </h1>
-          {page.subtitle && (
-            <p className="text-lg text-muted-foreground mb-6">{page.subtitle}</p>
-          )}
+      <main className="flex-1 pt-20">
+        <PageBreadcrumb
+          title={page.title}
+          subtitle={page.subtitle || undefined}
+          pageType="cms"
+        />
+        <div className="container mx-auto max-w-4xl px-4 py-8">
           <div
             className="prose prose-sm md:prose-base max-w-none text-foreground
               [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3

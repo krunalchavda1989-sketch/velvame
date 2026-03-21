@@ -206,6 +206,108 @@ export type Database = {
         }
         Relationships: []
       }
+      breadcrumb_settings: {
+        Row: {
+          background_type: string
+          bg_color: string
+          bg_image_url: string
+          bg_position: string
+          bg_repeat: string
+          bg_size: string
+          created_at: string
+          crumb_active_color: string
+          crumb_font_size: number
+          crumb_font_weight: string
+          crumb_inactive_color: string
+          custom_height: number
+          gradient_direction: string
+          gradient_stops: Json
+          gradient_type: string
+          id: string
+          overlay_color: string
+          overlay_enabled: boolean
+          overlay_opacity: number
+          section_height: string
+          separator_color: string
+          separator_symbol: string
+          text_alignment: string
+          title_color: string
+          title_font_size: number
+          title_font_weight: string
+          title_letter_spacing: number
+          title_transform: string
+          updated_at: string
+          vertical_position: string
+          visibility_settings: Json
+        }
+        Insert: {
+          background_type?: string
+          bg_color?: string
+          bg_image_url?: string
+          bg_position?: string
+          bg_repeat?: string
+          bg_size?: string
+          created_at?: string
+          crumb_active_color?: string
+          crumb_font_size?: number
+          crumb_font_weight?: string
+          crumb_inactive_color?: string
+          custom_height?: number
+          gradient_direction?: string
+          gradient_stops?: Json
+          gradient_type?: string
+          id?: string
+          overlay_color?: string
+          overlay_enabled?: boolean
+          overlay_opacity?: number
+          section_height?: string
+          separator_color?: string
+          separator_symbol?: string
+          text_alignment?: string
+          title_color?: string
+          title_font_size?: number
+          title_font_weight?: string
+          title_letter_spacing?: number
+          title_transform?: string
+          updated_at?: string
+          vertical_position?: string
+          visibility_settings?: Json
+        }
+        Update: {
+          background_type?: string
+          bg_color?: string
+          bg_image_url?: string
+          bg_position?: string
+          bg_repeat?: string
+          bg_size?: string
+          created_at?: string
+          crumb_active_color?: string
+          crumb_font_size?: number
+          crumb_font_weight?: string
+          crumb_inactive_color?: string
+          custom_height?: number
+          gradient_direction?: string
+          gradient_stops?: Json
+          gradient_type?: string
+          id?: string
+          overlay_color?: string
+          overlay_enabled?: boolean
+          overlay_opacity?: number
+          section_height?: string
+          separator_color?: string
+          separator_symbol?: string
+          text_alignment?: string
+          title_color?: string
+          title_font_size?: number
+          title_font_weight?: string
+          title_letter_spacing?: number
+          title_transform?: string
+          updated_at?: string
+          vertical_position?: string
+          visibility_settings?: Json
+        }
+        Relationships: []
+      }
       commission_levels: {
         Row: {
           commission_type: string
