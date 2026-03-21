@@ -17,6 +17,8 @@ export interface BreadcrumbSettings {
   overlay_opacity: number;
   section_height: string;
   custom_height: number;
+  padding_top: number;
+  padding_bottom: number;
   title_font_size: number;
   title_font_weight: string;
   title_color: string;
