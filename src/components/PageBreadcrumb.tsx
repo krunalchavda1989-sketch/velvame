@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useBreadcrumbSettings, getHeightPx, getBackgroundStyle } from "@/hooks/useBreadcrumbSettings";
-import { Helmet } from "react-helmet-async";
 
 interface BreadcrumbItem {
   label: string;
