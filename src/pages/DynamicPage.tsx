@@ -151,6 +151,7 @@ const DynamicPage = () => {
           subtitle={page.subtitle || undefined}
           pageType="cms"
         />
+        <div className="container mx-auto max-w-4xl px-4 py-8">
           <div
             className="prose prose-sm md:prose-base max-w-none text-foreground
               [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3
