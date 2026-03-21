@@ -147,7 +147,7 @@ const AdminBreadcrumbSettings = () => {
   const alignItems = settings.vertical_position === "top" ? "flex-start" : settings.vertical_position === "bottom" ? "flex-end" : "center";
   const textAlign = settings.text_alignment as any;
 
-  if (loading) return <AdminLayout title="Breadcrumb Settings"><div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;
 
   return (
     <AdminLayout title="Breadcrumb Settings">
