@@ -174,7 +174,7 @@ const AdminBreadcrumbSettings = () => {
                 {settings.background_type === "image" && settings.overlay_enabled && (
                   <div className="absolute inset-0" style={{ backgroundColor: settings.overlay_color, opacity: settings.overlay_opacity / 100 }} />
                 )}
-                <div className="relative z-10 px-6 py-4 w-full" style={{ textAlign }}>
+                <div className="relative z-10 px-6 w-full" style={{ textAlign, paddingTop: `${settings.padding_top}px`, paddingBottom: `${settings.padding_bottom}px` }}>
                   <div className="mb-2" style={{ display: "flex", justifyContent: textAlign === "center" ? "center" : textAlign === "right" ? "flex-end" : "flex-start" }}>
                     <div className="flex items-center" style={{ gap: "6px", fontSize: `${settings.crumb_font_size}px`, fontWeight: settings.crumb_font_weight }}>
                       <span style={{ color: settings.crumb_active_color }}>Home</span>
