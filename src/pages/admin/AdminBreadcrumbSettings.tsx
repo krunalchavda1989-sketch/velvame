@@ -150,7 +150,7 @@ const AdminBreadcrumbSettings = () => {
   if (loading) return <AdminLayout><div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;
 
   return (
-    <AdminLayout title="Breadcrumb Settings">
+    <AdminLayout>
       <div className="space-y-6 max-w-5xl">
         {/* Live Preview */}
         <Card>
