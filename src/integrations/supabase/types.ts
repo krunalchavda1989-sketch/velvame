@@ -227,6 +227,8 @@ export type Database = {
           overlay_color: string
           overlay_enabled: boolean
           overlay_opacity: number
+          padding_bottom: number
+          padding_top: number
           section_height: string
           separator_color: string
           separator_symbol: string
@@ -260,6 +262,8 @@ export type Database = {
           overlay_color?: string
           overlay_enabled?: boolean
           overlay_opacity?: number
+          padding_bottom?: number
+          padding_top?: number
           section_height?: string
           separator_color?: string
           separator_symbol?: string
@@ -293,6 +297,8 @@ export type Database = {
           overlay_color?: string
           overlay_enabled?: boolean
           overlay_opacity?: number
+          padding_bottom?: number
+          padding_top?: number
           section_height?: string
           separator_color?: string
           separator_symbol?: string

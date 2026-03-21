@@ -30,6 +30,8 @@ const defaultSettings: BreadcrumbSettings = {
   overlay_opacity: 40,
   section_height: "medium",
   custom_height: 100,
+  padding_top: 16,
+  padding_bottom: 16,
   title_font_size: 32,
   title_font_weight: "bold",
   title_color: "#ffffff",
@@ -172,7 +174,7 @@ const AdminBreadcrumbSettings = () => {
                 {settings.background_type === "image" && settings.overlay_enabled && (
                   <div className="absolute inset-0" style={{ backgroundColor: settings.overlay_color, opacity: settings.overlay_opacity / 100 }} />
                 )}
-                <div className="relative z-10 px-6 py-4 w-full" style={{ textAlign }}>
+                <div className="relative z-10 px-6 w-full" style={{ textAlign, paddingTop: `${settings.padding_top}px`, paddingBottom: `${settings.padding_bottom}px` }}>
                   <div className="mb-2" style={{ display: "flex", justifyContent: textAlign === "center" ? "center" : textAlign === "right" ? "flex-end" : "flex-start" }}>
                     <div className="flex items-center" style={{ gap: "6px", fontSize: `${settings.crumb_font_size}px`, fontWeight: settings.crumb_font_weight }}>
                       <span style={{ color: settings.crumb_active_color }}>Home</span>
@@ -326,6 +328,16 @@ const AdminBreadcrumbSettings = () => {
                 <span className="text-sm text-muted-foreground">px</span>
               </div>
             )}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label className="text-xs">Padding Top (px)</Label>
+                <Input type="number" value={settings.padding_top} onChange={e => update("padding_top", Number(e.target.value))} min={0} max={100} />
+              </div>
+              <div>
+                <Label className="text-xs">Padding Bottom (px)</Label>
+                <Input type="number" value={settings.padding_bottom} onChange={e => update("padding_bottom", Number(e.target.value))} min={0} max={100} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 

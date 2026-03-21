@@ -64,7 +64,7 @@ const PageBreadcrumb = ({ title, subtitle, breadcrumbs, children, pageType = "cm
           />
         )}
 
-        <div className="container px-4 relative z-10 py-4 w-full" style={{ textAlign }}>
+        <div className="container px-4 relative z-10 w-full" style={{ textAlign, paddingTop: `${s.padding_top}px`, paddingBottom: `${s.padding_bottom}px` }}>
           {/* Breadcrumb trail */}
           <nav aria-label="Breadcrumb" className="mb-2" style={{ display: "flex", justifyContent: textAlign === "center" ? "center" : textAlign === "right" ? "flex-end" : "flex-start" }}>
             <ol className="flex flex-wrap items-center" style={{ gap: "6px", fontSize: `${s.crumb_font_size}px`, fontWeight: s.crumb_font_weight }}>
