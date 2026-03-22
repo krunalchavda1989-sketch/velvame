@@ -39,7 +39,7 @@ const Shop = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="pt-24 pb-16">
+      <div className="pt-20 pb-16">
         <PageBreadcrumb
           title="Shop Products"
           subtitle={
@@ -47,6 +47,7 @@ const Shop = () => {
               ? `Exclusive distributor prices for members${taxEnabled ? ` (Prices excl. ${taxLabel})` : ""}`
               : `Quality products at retail prices${taxEnabled ? ` (Prices excl. ${taxLabel})` : ""}`
           }
+          pageType="category"
         />
 
         <div className="container px-4 pt-8">

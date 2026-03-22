@@ -192,8 +192,8 @@ const ProductDetail = () => {
             { label: "Shop", href: "/shop" },
             { label: product?.name || "Product" },
           ]}
+          pageType="product"
         />
-      </div>
       <div className="container px-4 py-10">
 
         {loading ? (

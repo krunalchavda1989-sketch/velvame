@@ -40,10 +40,11 @@ const FAQPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16">
+      <div className="pt-20 pb-16">
         <PageBreadcrumb
           title="Frequently Asked Questions"
           subtitle="Everything you need to know about our platform"
+          pageType="cms"
         >
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
