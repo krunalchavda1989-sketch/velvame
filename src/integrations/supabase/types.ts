@@ -391,6 +391,69 @@ export type Database = {
           },
         ]
       }
+      contact_form_fields: {
+        Row: {
+          created_at: string
+          field_type: string
+          id: string
+          is_active: boolean
+          is_protected: boolean
+          is_required: boolean
+          label: string
+          options: Json
+          placeholder: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_protected?: boolean
+          is_required?: boolean
+          label: string
+          options?: Json
+          placeholder?: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_protected?: boolean
+          is_required?: boolean
+          label?: string
+          options?: Json
+          placeholder?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          status: string
+          submitted_data: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          status?: string
+          submitted_data?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          status?: string
+          submitted_data?: Json
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
