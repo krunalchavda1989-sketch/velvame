@@ -54,10 +54,11 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16">
+      <div className="pt-20 pb-16">
         <PageBreadcrumb
           title={page?.title || "Contact Us"}
           subtitle={page?.subtitle || "Get in Touch"}
+          pageType="contact"
         />
 
         <section className="py-16">

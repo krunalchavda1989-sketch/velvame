@@ -185,13 +185,14 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20">
+      <div className="pt-20 pb-16">
         <PageBreadcrumb
           title={product?.name || "Product Details"}
           breadcrumbs={[
             { label: "Shop", href: "/shop" },
             { label: product?.name || "Product" },
           ]}
+          pageType="product"
         />
       </div>
       <div className="container px-4 py-10">
