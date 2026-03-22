@@ -239,6 +239,8 @@ const App = () => (
             <Route path="/admin/wallet-management" element={<AdminRoute><AdminWalletManagement /></AdminRoute>} />
             <Route path="/admin/footer-settings" element={<AdminRoute><AdminFooterSettings /></AdminRoute>} />
             <Route path="/admin/breadcrumb-settings" element={<AdminRoute><AdminBreadcrumbSettings /></AdminRoute>} />
+            <Route path="/admin/contact-form" element={<AdminRoute><AdminContactForm /></AdminRoute>} />
+            <Route path="/admin/contact-submissions" element={<AdminRoute><AdminContactSubmissions /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
