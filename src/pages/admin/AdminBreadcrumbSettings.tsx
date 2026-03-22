@@ -149,11 +149,11 @@ const AdminBreadcrumbSettings = () => {
   const alignItems = settings.vertical_position === "top" ? "flex-start" : settings.vertical_position === "bottom" ? "flex-end" : "center";
   const textAlign = settings.text_alignment as any;
 
-  if (loading) return <AdminLayout><div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="flex justify-center py-12 p-6"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;
 
   return (
     <AdminLayout>
-      <div className="space-y-6 max-w-5xl">
+      <div className="p-6 space-y-6 max-w-5xl">
         {/* Live Preview */}
         <Card>
           <CardHeader>
