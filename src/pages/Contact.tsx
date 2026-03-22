@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -12,26 +14,154 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
 
+interface FormField {
+  id: string;
+  label: string;
+  field_type: string;
+  placeholder: string;
+  is_required: boolean;
+  is_active: boolean;
+  sort_order: number;
+  options: any;
+}
+
 const Contact = () => {
   const brand = useBrand();
   const [page, setPage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [fields, setFields] = useState<FormField[]>([]);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from("pages_content").select("*").eq("page_slug", "contact").maybeSingle();
-      setPage(data);
+    const init = async () => {
+      const [pageRes, fieldsRes] = await Promise.all([
+        supabase.from("pages_content").select("*").eq("page_slug", "contact").maybeSingle(),
+        supabase.from("contact_form_fields").select("*").eq("is_active", true).order("sort_order"),
+      ]);
+      setPage(pageRes.data);
+      if (fieldsRes.data) setFields(fieldsRes.data);
       setLoading(false);
     };
-    fetch();
+    init();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (fieldLabel: string, value: string) => {
+    setFormData(prev => ({ ...prev, [fieldLabel]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) { toast.error("All fields are required"); return; }
-    toast.success("Message sent! We'll get back to you soon.");
-    setForm({ name: "", email: "", message: "" });
+
+    // Validate required fields
+    for (const field of fields) {
+      if (field.is_required && !formData[field.label]?.trim()) {
+        toast.error(`${field.label} is required`);
+        return;
+      }
+    }
+
+    // Email validation
+    const emailField = fields.find(f => f.field_type === "email");
+    if (emailField && formData[emailField.label]) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData[emailField.label])) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    const { error } = await supabase.from("contact_submissions").insert({
+      submitted_data: formData,
+    });
+
+    if (error) {
+      toast.error("Failed to send message. Please try again.");
+    } else {
+      toast.success("Message sent! We'll get back to you soon.");
+      setFormData({});
+    }
+    setSubmitting(false);
+  };
+
+  const renderField = (field: FormField) => {
+    const value = formData[field.label] || "";
+
+    switch (field.field_type) {
+      case "textarea":
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => handleChange(field.label, e.target.value)}
+            placeholder={field.placeholder}
+            rows={5}
+            required={field.is_required}
+          />
+        );
+      case "dropdown":
+        return (
+          <Select value={value} onValueChange={(v) => handleChange(field.label, v)}>
+            <SelectTrigger>
+              <SelectValue placeholder={field.placeholder || "Select..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {(Array.isArray(field.options) ? field.options : []).map((opt: string) => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "checkbox":
+        return (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={value === "true"}
+              onCheckedChange={(checked) => handleChange(field.label, checked ? "true" : "false")}
+            />
+            <span className="text-sm text-muted-foreground">{field.placeholder}</span>
+          </div>
+        );
+      case "date":
+        return (
+          <Input
+            type="date"
+            value={value}
+            onChange={(e) => handleChange(field.label, e.target.value)}
+            required={field.is_required}
+          />
+        );
+      case "email":
+        return (
+          <Input
+            type="email"
+            value={value}
+            onChange={(e) => handleChange(field.label, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.is_required}
+          />
+        );
+      case "phone":
+        return (
+          <Input
+            type="tel"
+            value={value}
+            onChange={(e) => handleChange(field.label, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.is_required}
+          />
+        );
+      default:
+        return (
+          <Input
+            type="text"
+            value={value}
+            onChange={(e) => handleChange(field.label, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.is_required}
+          />
+        );
+    }
   };
 
   if (loading) {
@@ -87,20 +217,18 @@ const Contact = () => {
               <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
                 <form onSubmit={handleSubmit} className="p-8 rounded-2xl bg-card border border-border space-y-4">
                   <h3 className="text-lg font-display font-bold text-foreground mb-2">Send a Message</h3>
-                  <div className="space-y-2">
-                    <Label>Your Name</Label>
-                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email Address</Label>
-                    <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Message</Label>
-                    <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} placeholder="How can we help?" />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90">
-                    <Send className="h-4 w-4 mr-2" /> Send Message
+                  {fields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label>
+                        {field.label}
+                        {field.is_required && <span className="text-destructive ml-1">*</span>}
+                      </Label>
+                      {renderField(field)}
+                    </div>
+                  ))}
+                  <Button type="submit" className="w-full bg-gradient-gold text-primary-foreground hover:opacity-90" disabled={submitting}>
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                    Send Message
                   </Button>
                 </form>
               </motion.div>
