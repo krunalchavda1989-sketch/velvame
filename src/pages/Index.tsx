@@ -69,10 +69,11 @@ const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
+  const [heroSectionEnabled, setHeroSectionEnabled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }] = await Promise.all([
         supabase
           .from("product_categories")
           .select("id, name, image_url")
@@ -91,10 +92,16 @@ const Index = () => {
           .eq("is_active", true)
           .order("sort_order")
           .limit(4),
+        supabase
+          .from("banner_settings")
+          .select("hero_section_enabled")
+          .limit(1)
+          .single(),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
       setHeroStats((stats as unknown as HeroStat[]) || []);
+      setHeroSectionEnabled((bannerSettings as any)?.hero_section_enabled ?? true);
     };
     fetchData();
   }, []);
@@ -109,6 +116,7 @@ const Index = () => {
       </div>
 
       {/* ===== HERO ===== */}
+      {heroSectionEnabled && heroStats.length > 0 && (
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${heroBg})` }} />
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/70" />
@@ -213,6 +221,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== Shop by Category ===== */}
       {categories.length > 0 && (

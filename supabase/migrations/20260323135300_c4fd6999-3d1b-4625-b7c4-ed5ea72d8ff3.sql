@@ -1,0 +1,1 @@
+ALTER TABLE public.banner_settings ADD COLUMN hero_section_enabled boolean NOT NULL DEFAULT true;
