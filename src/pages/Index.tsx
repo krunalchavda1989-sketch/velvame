@@ -116,6 +116,7 @@ const Index = () => {
       </div>
 
       {/* ===== HERO ===== */}
+      {heroSectionEnabled && heroStats.length > 0 && (
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{ backgroundImage: `url(${heroBg})` }} />
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background/70" />
