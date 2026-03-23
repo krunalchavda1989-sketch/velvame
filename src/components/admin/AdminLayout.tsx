@@ -47,6 +47,7 @@ const menuItems: MenuItem[] = [
       { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
+      { icon: PanelTop, label: "Banners", href: "/admin/banners" },
       { icon: Mail, label: "Contact Form", href: "/admin/contact-form" },
       { icon: Mail, label: "Contact Submissions", href: "/admin/contact-submissions" },
     ],

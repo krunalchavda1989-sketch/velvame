@@ -197,7 +197,12 @@ const AdminBanners = () => {
 
   const handleSave = async () => {
     if (!form.desktop_image_url && !form.mobile_image_url) { toast.error("Please upload at least one image"); return; }
-    const payload = { ...form, custom_duration: useCustomDuration ? form.custom_duration : null };
+    const payload = {
+      ...form,
+      desktop_display_mode: form.desktop_display_mode === "global" ? "" : form.desktop_display_mode,
+      mobile_display_mode: form.mobile_display_mode === "global" ? "" : form.mobile_display_mode,
+      custom_duration: useCustomDuration ? form.custom_duration : null,
+    };
 
     if (editing) {
       const { error } = await supabase.from("banners").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editing.id);
