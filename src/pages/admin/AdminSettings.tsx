@@ -54,6 +54,7 @@ const SETTINGS_TABS = [
   { key: "captcha", label: "reCAPTCHA", icon: ShieldCheck },
   { key: "membership", label: "Membership", icon: DollarSign },
   { key: "ordernumber", label: "Order Number", icon: Hash },
+  { key: "referralcode", label: "Referral Code", icon: Shield },
 ];
 
 const AdminSettings = () => {
@@ -77,6 +78,7 @@ const AdminSettings = () => {
       case "captcha": return <CaptchaTab />;
       case "membership": return <MembershipTab />;
       case "ordernumber": return <OrderNumberTab />;
+      case "referralcode": return <ReferralCodeTab />;
       default: return <PaymentTab />;
     }
   };
@@ -2895,6 +2897,125 @@ const WhatsAppTab = () => {
       <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
         {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
         Save WhatsApp Settings
+      </Button>
+    </div>
+  );
+};
+
+
+/* ───────── Referral Code Settings Tab ───────── */
+const ReferralCodeTab = () => {
+  const [prefix, setPrefix] = useState("VEL");
+  const [padding, setPadding] = useState(6);
+  const [nextNumber, setNextNumber] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("referral_code_settings" as any)
+        .select("*")
+        .limit(1)
+        .single();
+      if (data) {
+        const d = data as any;
+        setSettingsId(d.id);
+        setPrefix(d.prefix || "VEL");
+        setPadding(d.padding || 6);
+        setNextNumber(d.next_number || 1);
+      }
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const previewCode = prefix + String(nextNumber).padStart(padding, "0");
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (settingsId) {
+        await supabase
+          .from("referral_code_settings" as any)
+          .update({ prefix, padding, next_number: nextNumber, updated_at: new Date().toISOString() } as any)
+          .eq("id", settingsId);
+      } else {
+        await supabase
+          .from("referral_code_settings" as any)
+          .insert({ prefix, padding, next_number: nextNumber } as any);
+      }
+      toast.success("Referral code settings saved successfully");
+    } catch {
+      toast.error("Failed to save settings");
+    }
+    setSaving(false);
+  };
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Referral Code Format
+          </CardTitle>
+          <CardDescription>Configure how referral codes are generated for new users</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Prefix</Label>
+              <Input
+                value={prefix}
+                onChange={(e) => setPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                placeholder="e.g. VEL"
+                maxLength={10}
+              />
+              <p className="text-xs text-muted-foreground">Letters/numbers that appear at the start of every referral code</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Number Padding (digits)</Label>
+              <Input
+                type="number"
+                min={3}
+                max={10}
+                value={padding}
+                onChange={(e) => setPadding(Math.max(3, Math.min(10, parseInt(e.target.value) || 6)))}
+              />
+              <p className="text-xs text-muted-foreground">How many digits the numeric part should have (zero-padded)</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Next Number</Label>
+            <Input
+              type="number"
+              min={1}
+              value={nextNumber}
+              onChange={(e) => setNextNumber(Math.max(1, parseInt(e.target.value) || 1))}
+            />
+            <p className="text-xs text-muted-foreground">The next number that will be assigned to a new user's referral code</p>
+          </div>
+
+          <Separator />
+
+          <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+            <p className="text-xs text-muted-foreground mb-2">Preview — Next referral code will be:</p>
+            <p className="text-2xl font-mono font-bold text-primary">{previewCode}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Pattern: <span className="font-mono">{prefix}</span> + <span className="font-mono">{padding}-digit number</span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button onClick={handleSave} disabled={saving} className="bg-gradient-gold text-primary-foreground hover:opacity-90">
+        {saving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+        Save Referral Code Settings
       </Button>
     </div>
   );

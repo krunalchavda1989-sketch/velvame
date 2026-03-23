@@ -11,11 +11,13 @@ import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import { useAuth } from "@/contexts/AuthContext";
 import { getProductUrl } from "@/lib/productUrl";
 
 
 const Shop = () => {
   const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
+  const { user } = useAuth();
   const { currencySymbol, taxEnabled, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -114,7 +116,7 @@ const Shop = () => {
                               {formatPrice(otherPrice, currencySymbol)}
                             </div>
                           )}
-                          {!isMember && product.distributor_price < product.retail_price && (
+                          {!isMember && !!user && product.distributor_price < product.retail_price && (
                             <div className="text-xs text-muted-foreground">
                               Member price: {formatPrice(product.distributor_price, currencySymbol)}
                             </div>
