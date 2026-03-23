@@ -54,6 +54,7 @@ const SETTINGS_TABS = [
   { key: "captcha", label: "reCAPTCHA", icon: ShieldCheck },
   { key: "membership", label: "Membership", icon: DollarSign },
   { key: "ordernumber", label: "Order Number", icon: Hash },
+  { key: "referralcode", label: "Referral Code", icon: Shield },
 ];
 
 const AdminSettings = () => {
