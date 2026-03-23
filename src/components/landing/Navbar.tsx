@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart, BadgeCheck, ShieldAlert } from "lucide-react";
+import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart, BadgeCheck, ShieldAlert, UserCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useMembershipAmount } from "@/hooks/useMembershipAmount";
+
 import CartDrawer from "@/components/shop/CartDrawer";
 import AnnouncementBar from "@/components/dashboard/AnnouncementBar";
 
@@ -25,7 +25,7 @@ const Navbar = () => {
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems, cartOpen, setCartOpen } = useCart();
   const brand = useBrand();
-  const { amount: membershipAmount } = useMembershipAmount();
+  
   const [navLinks, setNavLinks] = useState(fallbackLinks);
 
   useEffect(() => {
@@ -130,8 +130,8 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
-                    Join Now — ₹{membershipAmount.toLocaleString("en-IN")}
+                  <Button size="icon" variant="outline" className="rounded-full">
+                    <UserCircle className="h-5 w-5" />
                   </Button>
                 </Link>
               </>
@@ -211,7 +211,7 @@ const Navbar = () => {
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground">Login</Button>
                     </Link>
                     <Link to="/register" onClick={() => setOpen(false)}>
-                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now — ₹{membershipAmount.toLocaleString("en-IN")}</Button>
+                      <Button className="w-full bg-gradient-gold text-primary-foreground font-semibold">Join Now</Button>
                     </Link>
                   </>
                 )}
