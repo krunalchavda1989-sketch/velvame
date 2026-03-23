@@ -123,9 +123,20 @@ const AdminHeroStats = () => {
               Configure the statistics displayed in the homepage hero section
             </p>
           </div>
-          <Button onClick={openAdd} disabled={items.length >= 6}>
-            <Plus className="h-4 w-4 mr-2" /> Add Stat
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 border rounded-lg px-4 py-2">
+              <Label htmlFor="hero-toggle" className="text-sm font-medium">Hero Section</Label>
+              <Switch
+                id="hero-toggle"
+                checked={heroEnabled}
+                disabled={togglingHero}
+                onCheckedChange={toggleHeroSection}
+              />
+            </div>
+            <Button onClick={openAdd} disabled={items.length >= 6}>
+              <Plus className="h-4 w-4 mr-2" /> Add Stat
+            </Button>
+          </div>
         </div>
 
         {loading ? (
