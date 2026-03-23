@@ -42,17 +42,31 @@ const AdminHeroStats = () => {
   const [editing, setEditing] = useState<HeroStat | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [heroEnabled, setHeroEnabled] = useState(true);
+  const [togglingHero, setTogglingHero] = useState(false);
 
   const fetchData = async () => {
-    const { data } = await supabase
-      .from("hero_stats")
-      .select("*")
-      .order("sort_order");
+    const [{ data }, { data: settings }] = await Promise.all([
+      supabase.from("hero_stats").select("*").order("sort_order"),
+      supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
+    ]);
     setItems((data as unknown as HeroStat[]) || []);
+    setHeroEnabled((settings as any)?.hero_section_enabled ?? true);
     setLoading(false);
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const toggleHeroSection = async (enabled: boolean) => {
+    setTogglingHero(true);
+    const { data: row } = await supabase.from("banner_settings").select("id").limit(1).single();
+    if (row) {
+      await supabase.from("banner_settings").update({ hero_section_enabled: enabled } as any).eq("id", (row as any).id);
+    }
+    setHeroEnabled(enabled);
+    setTogglingHero(false);
+    toast.success(enabled ? "Hero section enabled" : "Hero section disabled");
+  };
 
   const openAdd = () => {
     setEditing(null);
