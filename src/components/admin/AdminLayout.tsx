@@ -47,6 +47,7 @@ const menuItems: MenuItem[] = [
       { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
+      { icon: PanelTop, label: "Banners", href: "/admin/banners" },
       { icon: Mail, label: "Contact Form", href: "/admin/contact-form" },
       { icon: Mail, label: "Contact Submissions", href: "/admin/contact-submissions" },
     ],
@@ -55,7 +56,7 @@ const menuItems: MenuItem[] = [
   { icon: Layers, label: "Commission Levels", href: "/admin/commission-levels" },
   { icon: Trophy, label: "Awards & Rewards", href: "/admin/awards" },
   { icon: Megaphone, label: "Monthly Offers", href: "/admin/offers" },
-  { icon: PanelTop, label: "Banners", href: "/admin/banners" },
+  
   { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
   { icon: TrendingUp, label: "Reports", href: "/admin/reports" },
   { icon: Megaphone, label: "Announcements", href: "/admin/announcements" },

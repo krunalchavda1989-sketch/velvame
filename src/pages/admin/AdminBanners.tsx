@@ -45,7 +45,7 @@ interface Banner {
 }
 
 const displayModes = [
-  { value: "", label: "Use Global Default" },
+  { value: "global", label: "Use Global Default" },
   { value: "cover", label: "Cover" },
   { value: "contain", label: "Contain" },
   { value: "fill", label: "Fill" },
@@ -140,8 +140,8 @@ const AdminBanners = () => {
     alt_text: "",
     is_active: true,
     sort_order: 0,
-    desktop_display_mode: "",
-    mobile_display_mode: "",
+    desktop_display_mode: "global",
+    mobile_display_mode: "global",
     custom_duration: null as number | null,
   });
 
@@ -162,7 +162,7 @@ const AdminBanners = () => {
     setForm({
       desktop_image_url: "", mobile_image_url: "", destination_link: "",
       link_target: "_self", alt_text: "", is_active: true, sort_order: banners.length,
-      desktop_display_mode: "", mobile_display_mode: "", custom_duration: null,
+      desktop_display_mode: "global", mobile_display_mode: "global", custom_duration: null,
     });
     setUseCustomDuration(false);
     setEditing(null);
@@ -176,7 +176,7 @@ const AdminBanners = () => {
       desktop_image_url: b.desktop_image_url, mobile_image_url: b.mobile_image_url,
       destination_link: b.destination_link, link_target: b.link_target,
       alt_text: b.alt_text, is_active: b.is_active, sort_order: b.sort_order,
-      desktop_display_mode: b.desktop_display_mode, mobile_display_mode: b.mobile_display_mode,
+      desktop_display_mode: b.desktop_display_mode || "global", mobile_display_mode: b.mobile_display_mode || "global",
       custom_duration: b.custom_duration,
     });
     setUseCustomDuration(!!b.custom_duration);
@@ -197,7 +197,12 @@ const AdminBanners = () => {
 
   const handleSave = async () => {
     if (!form.desktop_image_url && !form.mobile_image_url) { toast.error("Please upload at least one image"); return; }
-    const payload = { ...form, custom_duration: useCustomDuration ? form.custom_duration : null };
+    const payload = {
+      ...form,
+      desktop_display_mode: form.desktop_display_mode === "global" ? "" : form.desktop_display_mode,
+      mobile_display_mode: form.mobile_display_mode === "global" ? "" : form.mobile_display_mode,
+      custom_duration: useCustomDuration ? form.custom_duration : null,
+    };
 
     if (editing) {
       const { error } = await supabase.from("banners").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editing.id);
