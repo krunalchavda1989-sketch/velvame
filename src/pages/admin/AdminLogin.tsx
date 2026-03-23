@@ -48,7 +48,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
@@ -60,7 +60,9 @@ const AdminLogin = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border shadow-lg">
           <div>
-            <Label htmlFor="admin-email" className="text-foreground text-xs uppercase tracking-wider">Admin Email</Label>
+            <Label htmlFor="admin-email" className="text-foreground text-xs uppercase tracking-wider">
+              Admin Email
+            </Label>
             <Input
               id="admin-email"
               type="email"
@@ -73,7 +75,9 @@ const AdminLogin = () => {
           </div>
 
           <div>
-            <Label htmlFor="admin-password" className="text-foreground text-xs uppercase tracking-wider">Password</Label>
+            <Label htmlFor="admin-password" className="text-foreground text-xs uppercase tracking-wider">
+              Password
+            </Label>
             <div className="relative mt-1">
               <Input
                 id="admin-password"
@@ -94,18 +98,12 @@ const AdminLogin = () => {
             </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-primary-foreground font-semibold"
-          >
+          <Button type="submit" disabled={loading} className="w-full bg-primary text-primary-foreground font-semibold">
             <Lock className="h-4 w-4 mr-2" />
             {loading ? "Verifying..." : "Authenticate"}
           </Button>
 
-          <p className="text-center text-[11px] text-muted-foreground mt-4">
-            This portal is for administrators only.
-          </p>
+          <p className="text-center text-[11px] text-muted-foreground mt-4">This portal is for administrators only.</p>
         </form>
       </div>
     </div>
