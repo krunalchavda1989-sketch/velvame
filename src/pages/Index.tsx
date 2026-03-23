@@ -221,6 +221,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== Shop by Category ===== */}
       {categories.length > 0 && (
