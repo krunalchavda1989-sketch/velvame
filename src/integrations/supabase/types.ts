@@ -601,6 +601,60 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_code_history: {
+        Row: {
+          content: string
+          id: string
+          saved_at: string
+          saved_by: string | null
+          type: string
+        }
+        Insert: {
+          content?: string
+          id?: string
+          saved_at?: string
+          saved_by?: string | null
+          type?: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          saved_at?: string
+          saved_by?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      custom_code_settings: {
+        Row: {
+          css_enabled: boolean
+          custom_css: string
+          custom_js: string
+          id: string
+          js_enabled: boolean
+          js_injection_position: string
+          updated_at: string
+        }
+        Insert: {
+          css_enabled?: boolean
+          custom_css?: string
+          custom_js?: string
+          id?: string
+          js_enabled?: boolean
+          js_injection_position?: string
+          updated_at?: string
+        }
+        Update: {
+          css_enabled?: boolean
+          custom_css?: string
+          custom_js?: string
+          id?: string
+          js_enabled?: boolean
+          js_injection_position?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       faqs: {
         Row: {
           answer: string

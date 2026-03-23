@@ -71,6 +71,8 @@ import AdminBreadcrumbSettings from "./pages/admin/AdminBreadcrumbSettings";
 import AdminContactForm from "./pages/admin/AdminContactForm";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminBanners from "./pages/admin/AdminBanners";
+import AdminCustomCode from "./pages/admin/AdminCustomCode";
+import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
@@ -84,6 +86,7 @@ const App = () => (
         <AuthProvider>
           <BrandProvider>
           <CartProvider>
+          <CustomCodeInjector />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -243,6 +246,7 @@ const App = () => (
             <Route path="/admin/contact-form" element={<AdminRoute><AdminContactForm /></AdminRoute>} />
             <Route path="/admin/contact-submissions" element={<AdminRoute><AdminContactSubmissions /></AdminRoute>} />
             <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
+            <Route path="/admin/custom-code" element={<AdminRoute><AdminCustomCode /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
