@@ -323,12 +323,20 @@ const Index = () => {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div>
-                        <span className="text-base font-display font-bold text-primary">
-                          {formatPrice(product.distributor_price, currencySymbol)}
-                        </span>
-                        <span className="text-xs text-muted-foreground line-through ml-1.5">
-                          {formatPrice(product.retail_price, currencySymbol)}
-                        </span>
+                        {user ? (
+                          <>
+                            <span className="text-base font-display font-bold text-primary">
+                              {formatPrice(product.distributor_price, currencySymbol)}
+                            </span>
+                            <span className="text-xs text-muted-foreground line-through ml-1.5">
+                              {formatPrice(product.retail_price, currencySymbol)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-base font-display font-bold text-primary">
+                            {formatPrice(product.retail_price, currencySymbol)}
+                          </span>
+                        )}
                       </div>
                       <Button
                         size="sm"
