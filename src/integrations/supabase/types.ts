@@ -151,6 +151,7 @@ export type Database = {
           default_mobile_mode: string
           direction: string
           easing: string
+          hero_section_enabled: boolean
           id: string
           loop_enabled: boolean
           pause_on_hover: boolean
@@ -167,6 +168,7 @@ export type Database = {
           default_mobile_mode?: string
           direction?: string
           easing?: string
+          hero_section_enabled?: boolean
           id?: string
           loop_enabled?: boolean
           pause_on_hover?: boolean
@@ -183,6 +185,7 @@ export type Database = {
           default_mobile_mode?: string
           direction?: string
           easing?: string
+          hero_section_enabled?: boolean
           id?: string
           loop_enabled?: boolean
           pause_on_hover?: boolean
