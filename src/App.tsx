@@ -246,6 +246,7 @@ const App = () => (
             <Route path="/admin/contact-form" element={<AdminRoute><AdminContactForm /></AdminRoute>} />
             <Route path="/admin/contact-submissions" element={<AdminRoute><AdminContactSubmissions /></AdminRoute>} />
             <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
+            <Route path="/admin/custom-code" element={<AdminRoute><AdminCustomCode /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
