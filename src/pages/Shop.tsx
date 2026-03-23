@@ -16,6 +16,7 @@ import { getProductUrl } from "@/lib/productUrl";
 
 const Shop = () => {
   const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
+  const { user } = useAuth();
   const { currencySymbol, taxEnabled, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
