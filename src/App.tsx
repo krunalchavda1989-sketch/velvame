@@ -86,6 +86,7 @@ const App = () => (
         <AuthProvider>
           <BrandProvider>
           <CartProvider>
+          <CustomCodeInjector />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
