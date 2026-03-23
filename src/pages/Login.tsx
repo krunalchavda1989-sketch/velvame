@@ -45,7 +45,6 @@ const Login = () => {
             ) : (
               <Crown className="h-8 w-8 text-primary" />
             )}
-            <span className="font-display text-2xl font-bold text-gradient-gold">{brand.brand_name}</span>
           </Link>
           <h1 className="text-2xl font-display font-bold text-foreground">Welcome Back</h1>
           <p className="text-sm text-muted-foreground mt-1">Sign in to your dashboard</p>
@@ -53,7 +52,9 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border">
           <div>
-            <Label htmlFor="email" className="text-foreground">Email</Label>
+            <Label htmlFor="email" className="text-foreground">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -66,7 +67,9 @@ const Login = () => {
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-foreground">Password</Label>
+            <Label htmlFor="password" className="text-foreground">
+              Password
+            </Label>
             <div className="relative mt-1">
               <Input
                 id="password"
@@ -103,7 +106,9 @@ const Login = () => {
 
           <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/register" className="text-primary hover:underline">Join now</Link>
+            <Link to="/register" className="text-primary hover:underline">
+              Join now
+            </Link>
           </p>
         </form>
       </div>
