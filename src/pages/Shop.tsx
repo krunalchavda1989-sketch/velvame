@@ -114,7 +114,7 @@ const Shop = () => {
                               {formatPrice(otherPrice, currencySymbol)}
                             </div>
                           )}
-                          {!isMember && product.distributor_price < product.retail_price && (
+                          {!isMember && !!user && product.distributor_price < product.retail_price && (
                             <div className="text-xs text-muted-foreground">
                               Member price: {formatPrice(product.distributor_price, currencySymbol)}
                             </div>
