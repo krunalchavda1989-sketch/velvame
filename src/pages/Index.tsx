@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import BannerSlider from "@/components/landing/BannerSlider";
 
 
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
