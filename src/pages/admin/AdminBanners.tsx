@@ -140,8 +140,8 @@ const AdminBanners = () => {
     alt_text: "",
     is_active: true,
     sort_order: 0,
-    desktop_display_mode: "",
-    mobile_display_mode: "",
+    desktop_display_mode: "global",
+    mobile_display_mode: "global",
     custom_duration: null as number | null,
   });
 
