@@ -70,6 +70,7 @@ import AdminFooterSettings from "./pages/admin/AdminFooterSettings";
 import AdminBreadcrumbSettings from "./pages/admin/AdminBreadcrumbSettings";
 import AdminContactForm from "./pages/admin/AdminContactForm";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
+import AdminBanners from "./pages/admin/AdminBanners";
 import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
@@ -241,6 +242,7 @@ const App = () => (
             <Route path="/admin/breadcrumb-settings" element={<AdminRoute><AdminBreadcrumbSettings /></AdminRoute>} />
             <Route path="/admin/contact-form" element={<AdminRoute><AdminContactForm /></AdminRoute>} />
             <Route path="/admin/contact-submissions" element={<AdminRoute><AdminContactSubmissions /></AdminRoute>} />
+            <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

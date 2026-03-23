@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import BannerSlider from "@/components/landing/BannerSlider";
 
 
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
@@ -61,7 +62,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+      <div className="pt-16">
+        <BannerSlider />
+      </div>
 
       {/* ===== HERO ===== */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
