@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -66,6 +67,7 @@ const iconMap: Record<string, { Icon: LucideIcon; gradient: string; color: strin
 const Index = () => {
   const { products, addToCart } = useCart();
   const { currencySymbol } = useLocalization();
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
@@ -321,12 +323,20 @@ const Index = () => {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div>
-                        <span className="text-base font-display font-bold text-primary">
-                          {formatPrice(product.distributor_price, currencySymbol)}
-                        </span>
-                        <span className="text-xs text-muted-foreground line-through ml-1.5">
-                          {formatPrice(product.retail_price, currencySymbol)}
-                        </span>
+                        {user ? (
+                          <>
+                            <span className="text-base font-display font-bold text-primary">
+                              {formatPrice(product.distributor_price, currencySymbol)}
+                            </span>
+                            <span className="text-xs text-muted-foreground line-through ml-1.5">
+                              {formatPrice(product.retail_price, currencySymbol)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-base font-display font-bold text-primary">
+                            {formatPrice(product.retail_price, currencySymbol)}
+                          </span>
+                        )}
                       </div>
                       <Button
                         size="sm"
