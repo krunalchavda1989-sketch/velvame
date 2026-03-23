@@ -176,7 +176,7 @@ const AdminBanners = () => {
       desktop_image_url: b.desktop_image_url, mobile_image_url: b.mobile_image_url,
       destination_link: b.destination_link, link_target: b.link_target,
       alt_text: b.alt_text, is_active: b.is_active, sort_order: b.sort_order,
-      desktop_display_mode: b.desktop_display_mode, mobile_display_mode: b.mobile_display_mode,
+      desktop_display_mode: b.desktop_display_mode || "global", mobile_display_mode: b.mobile_display_mode || "global",
       custom_duration: b.custom_duration,
     });
     setUseCustomDuration(!!b.custom_duration);
