@@ -92,10 +92,16 @@ const Index = () => {
           .eq("is_active", true)
           .order("sort_order")
           .limit(4),
+        supabase
+          .from("banner_settings")
+          .select("hero_section_enabled")
+          .limit(1)
+          .single(),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
       setHeroStats((stats as unknown as HeroStat[]) || []);
+      setHeroSectionEnabled((bannerSettings as any)?.hero_section_enabled ?? true);
     };
     fetchData();
   }, []);
