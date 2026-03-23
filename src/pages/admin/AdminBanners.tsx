@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import BannerSliderSettings from "@/components/admin/BannerSliderSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, GripVertical, Image, ExternalLink } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 interface Banner {
   id: string;
@@ -20,7 +39,90 @@ interface Banner {
   alt_text: string;
   is_active: boolean;
   sort_order: number;
+  desktop_display_mode: string;
+  mobile_display_mode: string;
+  custom_duration: number | null;
 }
+
+const displayModes = [
+  { value: "", label: "Use Global Default" },
+  { value: "cover", label: "Cover" },
+  { value: "contain", label: "Contain" },
+  { value: "fill", label: "Fill" },
+  { value: "auto", label: "Auto" },
+];
+
+const SortableBannerRow = ({
+  banner,
+  onEdit,
+  onDelete,
+  onToggle,
+}: {
+  banner: Banner;
+  onEdit: (b: Banner) => void;
+  onDelete: (id: string) => void;
+  onToggle: (id: string, current: boolean) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: banner.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={!banner.is_active ? "opacity-60" : ""}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground">
+              <GripVertical className="h-5 w-5" />
+            </button>
+
+            <div className="flex gap-3 flex-1 min-w-0">
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground uppercase">Desktop</span>
+                {banner.desktop_image_url ? (
+                  <img src={banner.desktop_image_url} alt="Desktop" className="h-16 w-28 object-cover rounded border" />
+                ) : (
+                  <div className="h-16 w-28 bg-muted rounded border flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground uppercase">Mobile</span>
+                {banner.mobile_image_url ? (
+                  <img src={banner.mobile_image_url} alt="Mobile" className="h-16 w-20 object-cover rounded border" />
+                ) : (
+                  <div className="h-16 w-20 bg-muted rounded border flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-sm font-medium truncate">{banner.alt_text || "No alt text"}</p>
+                {banner.destination_link ? (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                    <ExternalLink className="h-3 w-3" /> {banner.destination_link}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No link</p>
+                )}
+                {banner.custom_duration && (
+                  <p className="text-xs text-muted-foreground">Duration: {banner.custom_duration}ms</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch checked={banner.is_active} onCheckedChange={() => onToggle(banner.id, banner.is_active)} />
+              <Button size="icon" variant="ghost" onClick={() => onEdit(banner)}><Pencil className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" className="text-destructive" onClick={() => onDelete(banner.id)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 const AdminBanners = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -28,6 +130,7 @@ const AdminBanners = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Banner | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [useCustomDuration, setUseCustomDuration] = useState(false);
 
   const [form, setForm] = useState({
     desktop_image_url: "",
@@ -37,13 +140,18 @@ const AdminBanners = () => {
     alt_text: "",
     is_active: true,
     sort_order: 0,
+    desktop_display_mode: "",
+    mobile_display_mode: "",
+    custom_duration: null as number | null,
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   const fetchBanners = async () => {
-    const { data } = await supabase
-      .from("banners")
-      .select("*")
-      .order("sort_order");
+    const { data } = await supabase.from("banners").select("*").order("sort_order");
     setBanners((data as any[]) || []);
     setLoading(false);
   };
@@ -52,33 +160,26 @@ const AdminBanners = () => {
 
   const resetForm = () => {
     setForm({
-      desktop_image_url: "",
-      mobile_image_url: "",
-      destination_link: "",
-      link_target: "_self",
-      alt_text: "",
-      is_active: true,
-      sort_order: banners.length,
+      desktop_image_url: "", mobile_image_url: "", destination_link: "",
+      link_target: "_self", alt_text: "", is_active: true, sort_order: banners.length,
+      desktop_display_mode: "", mobile_display_mode: "", custom_duration: null,
     });
+    setUseCustomDuration(false);
     setEditing(null);
   };
 
-  const openAdd = () => {
-    resetForm();
-    setDialogOpen(true);
-  };
+  const openAdd = () => { resetForm(); setDialogOpen(true); };
 
   const openEdit = (b: Banner) => {
     setEditing(b);
     setForm({
-      desktop_image_url: b.desktop_image_url,
-      mobile_image_url: b.mobile_image_url,
-      destination_link: b.destination_link,
-      link_target: b.link_target,
-      alt_text: b.alt_text,
-      is_active: b.is_active,
-      sort_order: b.sort_order,
+      desktop_image_url: b.desktop_image_url, mobile_image_url: b.mobile_image_url,
+      destination_link: b.destination_link, link_target: b.link_target,
+      alt_text: b.alt_text, is_active: b.is_active, sort_order: b.sort_order,
+      desktop_display_mode: b.desktop_display_mode, mobile_display_mode: b.mobile_display_mode,
+      custom_duration: b.custom_duration,
     });
+    setUseCustomDuration(!!b.custom_duration);
     setDialogOpen(true);
   };
 
@@ -87,35 +188,23 @@ const AdminBanners = () => {
     const ext = file.name.split(".").pop();
     const path = `${type}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("banners").upload(path, file);
-    if (error) {
-      toast.error("Upload failed: " + error.message);
-      setUploading(false);
-      return;
-    }
+    if (error) { toast.error("Upload failed: " + error.message); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from("banners").getPublicUrl(path);
-    setForm(prev => ({
-      ...prev,
-      [type === "desktop" ? "desktop_image_url" : "mobile_image_url"]: publicUrl,
-    }));
+    setForm(prev => ({ ...prev, [type === "desktop" ? "desktop_image_url" : "mobile_image_url"]: publicUrl }));
     setUploading(false);
     toast.success(`${type === "desktop" ? "Desktop" : "Mobile"} image uploaded`);
   };
 
   const handleSave = async () => {
-    if (!form.desktop_image_url && !form.mobile_image_url) {
-      toast.error("Please upload at least one image");
-      return;
-    }
+    if (!form.desktop_image_url && !form.mobile_image_url) { toast.error("Please upload at least one image"); return; }
+    const payload = { ...form, custom_duration: useCustomDuration ? form.custom_duration : null };
 
     if (editing) {
-      const { error } = await supabase
-        .from("banners")
-        .update({ ...form, updated_at: new Date().toISOString() })
-        .eq("id", editing.id);
+      const { error } = await supabase.from("banners").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Banner updated");
     } else {
-      const { error } = await supabase.from("banners").insert(form);
+      const { error } = await supabase.from("banners").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success("Banner added");
     }
@@ -135,17 +224,20 @@ const AdminBanners = () => {
     fetchBanners();
   };
 
-  const moveOrder = async (index: number, direction: "up" | "down") => {
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= banners.length) return;
-    const updates = [
-      { id: banners[index].id, sort_order: banners[swapIndex].sort_order },
-      { id: banners[swapIndex].id, sort_order: banners[index].sort_order },
-    ];
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = banners.findIndex(b => b.id === active.id);
+    const newIndex = banners.findIndex(b => b.id === over.id);
+    const reordered = arrayMove(banners, oldIndex, newIndex);
+    setBanners(reordered);
+
+    const updates = reordered.map((b, i) => ({ id: b.id, sort_order: i }));
     for (const u of updates) {
       await supabase.from("banners").update({ sort_order: u.sort_order }).eq("id", u.id);
     }
-    fetchBanners();
+    toast.success("Banner order updated");
   };
 
   return (
@@ -159,6 +251,8 @@ const AdminBanners = () => {
           <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Banner</Button>
         </div>
 
+        <BannerSliderSettings />
+
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading...</div>
         ) : banners.length === 0 ? (
@@ -169,65 +263,15 @@ const AdminBanners = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {banners.map((b, i) => (
-              <Card key={b.id} className={!b.is_active ? "opacity-60" : ""}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col gap-1">
-                      <button
-                        onClick={() => moveOrder(i, "up")}
-                        disabled={i === 0}
-                        className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs"
-                      >▲</button>
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                      <button
-                        onClick={() => moveOrder(i, "down")}
-                        disabled={i === banners.length - 1}
-                        className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs"
-                      >▼</button>
-                    </div>
-
-                    <div className="flex gap-3 flex-1 min-w-0">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground uppercase">Desktop</span>
-                        {b.desktop_image_url ? (
-                          <img src={b.desktop_image_url} alt="Desktop" className="h-16 w-28 object-cover rounded border" />
-                        ) : (
-                          <div className="h-16 w-28 bg-muted rounded border flex items-center justify-center text-xs text-muted-foreground">No image</div>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground uppercase">Mobile</span>
-                        {b.mobile_image_url ? (
-                          <img src={b.mobile_image_url} alt="Mobile" className="h-16 w-20 object-cover rounded border" />
-                        ) : (
-                          <div className="h-16 w-20 bg-muted rounded border flex items-center justify-center text-xs text-muted-foreground">No image</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-sm font-medium truncate">{b.alt_text || "No alt text"}</p>
-                        {b.destination_link ? (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-                            <ExternalLink className="h-3 w-3" /> {b.destination_link}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">No link</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">Order: {b.sort_order}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Switch checked={b.is_active} onCheckedChange={() => toggleActive(b.id, b.is_active)} />
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(b)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleDelete(b.id)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
+            <SortableContext items={banners.map(b => b.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-3">
+                {banners.map(b => (
+                  <SortableBannerRow key={b.id} banner={b} onEdit={openEdit} onDelete={handleDelete} onToggle={toggleActive} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -241,52 +285,50 @@ const AdminBanners = () => {
             <div className="space-y-2">
               <Label>Desktop Banner Image</Label>
               <p className="text-xs text-muted-foreground">Recommended: 1920 × 600px</p>
-              {form.desktop_image_url && (
-                <img src={form.desktop_image_url} alt="Desktop preview" className="w-full h-32 object-cover rounded border" />
-              )}
-              <Input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadImage(f, "desktop");
-                }}
-              />
+              {form.desktop_image_url && <img src={form.desktop_image_url} alt="Desktop preview" className="w-full h-32 object-cover rounded border" />}
+              <Input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "desktop"); }} />
+            </div>
+
+            {/* Desktop Display Mode */}
+            <div className="space-y-2">
+              <Label>Desktop Display Mode</Label>
+              <Select value={form.desktop_display_mode} onValueChange={v => setForm(p => ({ ...p, desktop_display_mode: v }))}>
+                <SelectTrigger><SelectValue placeholder="Use Global Default" /></SelectTrigger>
+                <SelectContent>
+                  {displayModes.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Mobile Image */}
             <div className="space-y-2">
               <Label>Mobile Banner Image</Label>
               <p className="text-xs text-muted-foreground">Recommended: 768 × 400px</p>
-              {form.mobile_image_url && (
-                <img src={form.mobile_image_url} alt="Mobile preview" className="w-full h-32 object-cover rounded border" />
-              )}
-              <Input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadImage(f, "mobile");
-                }}
-              />
+              {form.mobile_image_url && <img src={form.mobile_image_url} alt="Mobile preview" className="w-full h-32 object-cover rounded border" />}
+              <Input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "mobile"); }} />
+            </div>
+
+            {/* Mobile Display Mode */}
+            <div className="space-y-2">
+              <Label>Mobile Display Mode</Label>
+              <Select value={form.mobile_display_mode} onValueChange={v => setForm(p => ({ ...p, mobile_display_mode: v }))}>
+                <SelectTrigger><SelectValue placeholder="Use Global Default" /></SelectTrigger>
+                <SelectContent>
+                  {displayModes.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Destination Link */}
             <div className="space-y-2">
               <Label>Destination Link (optional)</Label>
-              <Input
-                placeholder="/products or https://example.com"
-                value={form.destination_link}
-                onChange={(e) => setForm(p => ({ ...p, destination_link: e.target.value }))}
-              />
+              <Input placeholder="/products or https://example.com" value={form.destination_link} onChange={e => setForm(p => ({ ...p, destination_link: e.target.value }))} />
             </div>
 
             {/* Link Target */}
             <div className="space-y-2">
               <Label>Open Link In</Label>
-              <Select value={form.link_target} onValueChange={(v) => setForm(p => ({ ...p, link_target: v }))}>
+              <Select value={form.link_target} onValueChange={v => setForm(p => ({ ...p, link_target: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_self">Same Tab</SelectItem>
@@ -298,34 +340,33 @@ const AdminBanners = () => {
             {/* Alt Text */}
             <div className="space-y-2">
               <Label>Alt Text (for SEO & accessibility)</Label>
-              <Input
-                placeholder="Describe the banner image"
-                value={form.alt_text}
-                onChange={(e) => setForm(p => ({ ...p, alt_text: e.target.value }))}
-              />
+              <Input placeholder="Describe the banner image" value={form.alt_text} onChange={e => setForm(p => ({ ...p, alt_text: e.target.value }))} />
             </div>
 
-            {/* Sort Order */}
+            {/* Custom Duration */}
             <div className="space-y-2">
-              <Label>Sort Order</Label>
-              <Input
-                type="number"
-                value={form.sort_order}
-                onChange={(e) => setForm(p => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))}
-              />
+              <div className="flex items-center justify-between">
+                <Label>Custom Slide Duration</Label>
+                <Switch checked={useCustomDuration} onCheckedChange={v => { setUseCustomDuration(v); if (!v) setForm(p => ({ ...p, custom_duration: null })); }} />
+              </div>
+              {useCustomDuration && (
+                <div className="space-y-1">
+                  <Input type="number" min={1000} max={30000} step={500} placeholder="e.g. 5000"
+                    value={form.custom_duration || ""} onChange={e => setForm(p => ({ ...p, custom_duration: parseInt(e.target.value) || null }))} />
+                  <p className="text-xs text-muted-foreground">Overrides global auto-play speed for this banner only</p>
+                </div>
+              )}
             </div>
 
             {/* Status */}
             <div className="flex items-center justify-between">
               <Label>Active</Label>
-              <Switch checked={form.is_active} onCheckedChange={(v) => setForm(p => ({ ...p, is_active: v }))} />
+              <Switch checked={form.is_active} onCheckedChange={v => setForm(p => ({ ...p, is_active: v }))} />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={uploading}>
-                {editing ? "Update" : "Add"} Banner
-              </Button>
+              <Button onClick={handleSave} disabled={uploading}>{editing ? "Update" : "Add"} Banner</Button>
             </div>
           </div>
         </DialogContent>
