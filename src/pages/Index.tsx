@@ -62,7 +62,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+      <div className="pt-16">
+        <BannerSlider />
+      </div>
 
       {/* ===== HERO ===== */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
