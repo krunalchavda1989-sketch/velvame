@@ -45,7 +45,7 @@ interface Banner {
 }
 
 const displayModes = [
-  { value: "", label: "Use Global Default" },
+  { value: "global", label: "Use Global Default" },
   { value: "cover", label: "Cover" },
   { value: "contain", label: "Contain" },
   { value: "fill", label: "Fill" },
