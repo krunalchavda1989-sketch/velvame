@@ -78,6 +78,7 @@ const AdminSettings = () => {
       case "captcha": return <CaptchaTab />;
       case "membership": return <MembershipTab />;
       case "ordernumber": return <OrderNumberTab />;
+      case "referralcode": return <ReferralCodeTab />;
       default: return <PaymentTab />;
     }
   };
