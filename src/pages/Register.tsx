@@ -33,7 +33,10 @@ const Register = () => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => {
       setCooldown((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0; }
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
@@ -143,12 +146,13 @@ const Register = () => {
             ) : (
               <Crown className="h-8 w-8 text-primary" />
             )}
-            <span className="font-display text-2xl font-bold text-gradient-gold">{brand.brand_name}</span>
           </Link>
           {step === "form" ? (
             <>
               <h1 className="text-2xl font-display font-bold text-foreground">Create Your Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}
+              </p>
             </>
           ) : (
             <>
@@ -162,7 +166,9 @@ const Register = () => {
         {step === "form" ? (
           <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border">
             <div>
-              <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
+              <Label htmlFor="fullName" className="text-foreground">
+                Full Name
+              </Label>
               <Input
                 id="fullName"
                 value={form.fullName}
@@ -174,7 +180,9 @@ const Register = () => {
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -187,7 +195,9 @@ const Register = () => {
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-foreground">Password</Label>
+              <Label htmlFor="password" className="text-foreground">
+                Password
+              </Label>
               <div className="relative mt-1">
                 <Input
                   id="password"
@@ -210,7 +220,9 @@ const Register = () => {
             </div>
 
             <div>
-              <Label htmlFor="referral" className="text-foreground">Referral Code (optional)</Label>
+              <Label htmlFor="referral" className="text-foreground">
+                Referral Code (optional)
+              </Label>
               <Input
                 id="referral"
                 value={form.referralCode}
@@ -237,7 +249,9 @@ const Register = () => {
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
             </p>
           </form>
         ) : (
@@ -292,7 +306,11 @@ const Register = () => {
                 )}
               </p>
               <button
-                onClick={() => { setStep("form"); setCooldown(0); setResendCount(0); }}
+                onClick={() => {
+                  setStep("form");
+                  setCooldown(0);
+                  setResendCount(0);
+                }}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
