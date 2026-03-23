@@ -70,6 +70,7 @@ import AdminFooterSettings from "./pages/admin/AdminFooterSettings";
 import AdminBreadcrumbSettings from "./pages/admin/AdminBreadcrumbSettings";
 import AdminContactForm from "./pages/admin/AdminContactForm";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
+import AdminBanners from "./pages/admin/AdminBanners";
 import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
