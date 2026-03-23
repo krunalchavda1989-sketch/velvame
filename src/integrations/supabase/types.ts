@@ -143,15 +143,69 @@ export type Database = {
         }
         Relationships: []
       }
+      banner_settings: {
+        Row: {
+          autoplay_speed: number
+          created_at: string
+          default_desktop_mode: string
+          default_mobile_mode: string
+          direction: string
+          easing: string
+          id: string
+          loop_enabled: boolean
+          pause_on_hover: boolean
+          show_arrows: boolean
+          show_dots: boolean
+          transition_effect: string
+          transition_speed: number
+          updated_at: string
+        }
+        Insert: {
+          autoplay_speed?: number
+          created_at?: string
+          default_desktop_mode?: string
+          default_mobile_mode?: string
+          direction?: string
+          easing?: string
+          id?: string
+          loop_enabled?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          show_dots?: boolean
+          transition_effect?: string
+          transition_speed?: number
+          updated_at?: string
+        }
+        Update: {
+          autoplay_speed?: number
+          created_at?: string
+          default_desktop_mode?: string
+          default_mobile_mode?: string
+          direction?: string
+          easing?: string
+          id?: string
+          loop_enabled?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          show_dots?: boolean
+          transition_effect?: string
+          transition_speed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           alt_text: string
           created_at: string
+          custom_duration: number | null
+          desktop_display_mode: string
           desktop_image_url: string
           destination_link: string
           id: string
           is_active: boolean
           link_target: string
+          mobile_display_mode: string
           mobile_image_url: string
           sort_order: number
           updated_at: string
@@ -159,11 +213,14 @@ export type Database = {
         Insert: {
           alt_text?: string
           created_at?: string
+          custom_duration?: number | null
+          desktop_display_mode?: string
           desktop_image_url?: string
           destination_link?: string
           id?: string
           is_active?: boolean
           link_target?: string
+          mobile_display_mode?: string
           mobile_image_url?: string
           sort_order?: number
           updated_at?: string
@@ -171,11 +228,14 @@ export type Database = {
         Update: {
           alt_text?: string
           created_at?: string
+          custom_duration?: number | null
+          desktop_display_mode?: string
           desktop_image_url?: string
           destination_link?: string
           id?: string
           is_active?: boolean
           link_target?: string
+          mobile_display_mode?: string
           mobile_image_url?: string
           sort_order?: number
           updated_at?: string
