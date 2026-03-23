@@ -162,7 +162,7 @@ const AdminBanners = () => {
     setForm({
       desktop_image_url: "", mobile_image_url: "", destination_link: "",
       link_target: "_self", alt_text: "", is_active: true, sort_order: banners.length,
-      desktop_display_mode: "", mobile_display_mode: "", custom_duration: null,
+      desktop_display_mode: "global", mobile_display_mode: "global", custom_duration: null,
     });
     setUseCustomDuration(false);
     setEditing(null);
