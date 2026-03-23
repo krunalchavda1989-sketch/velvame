@@ -130,8 +130,8 @@ const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90">
-                    Join Now — ₹{membershipAmount.toLocaleString("en-IN")}
+                  <Button size="icon" variant="outline" className="rounded-full">
+                    <UserCircle className="h-5 w-5" />
                   </Button>
                 </Link>
               </>
