@@ -69,10 +69,11 @@ const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
+  const [heroSectionEnabled, setHeroSectionEnabled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }] = await Promise.all([
         supabase
           .from("product_categories")
           .select("id, name, image_url")
