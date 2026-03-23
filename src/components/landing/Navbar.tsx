@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useMembershipAmount } from "@/hooks/useMembershipAmount";
+
 import CartDrawer from "@/components/shop/CartDrawer";
 import AnnouncementBar from "@/components/dashboard/AnnouncementBar";
 
