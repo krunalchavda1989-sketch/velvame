@@ -8,7 +8,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus
 } from "lucide-react";
 
 interface MenuItem {
