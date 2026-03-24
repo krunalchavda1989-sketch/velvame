@@ -109,7 +109,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-16 pt-20">
+      <div className="pt-16 header-padding">
         <BannerSlider />
       </div>
 
