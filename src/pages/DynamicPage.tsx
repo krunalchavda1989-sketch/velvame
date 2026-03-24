@@ -100,7 +100,7 @@ const DynamicPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 pt-24 pb-16">
+        <main className="flex-1 pt-8 pb-16">
           <div className="container mx-auto max-w-4xl px-4">
             <Skeleton className="h-10 w-2/3 mb-4" />
             <Skeleton className="h-6 w-1/3 mb-8" />
