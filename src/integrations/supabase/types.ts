@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_bar_settings: {
+        Row: {
+          auto_play: boolean
+          bar_height: number
+          bar_position: string
+          bg_color: string
+          display_duration: number
+          font_size: number
+          font_weight: string
+          id: string
+          is_enabled: boolean
+          loop_enabled: boolean
+          pause_on_hover: boolean
+          show_arrows: boolean
+          show_close_button: boolean
+          show_dots: boolean
+          show_on_desktop: boolean
+          show_on_mobile: boolean
+          swipe_mobile: boolean
+          text_align: string
+          text_color: string
+          transition_effect: string
+          transition_speed: number
+          updated_at: string
+        }
+        Insert: {
+          auto_play?: boolean
+          bar_height?: number
+          bar_position?: string
+          bg_color?: string
+          display_duration?: number
+          font_size?: number
+          font_weight?: string
+          id?: string
+          is_enabled?: boolean
+          loop_enabled?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          show_close_button?: boolean
+          show_dots?: boolean
+          show_on_desktop?: boolean
+          show_on_mobile?: boolean
+          swipe_mobile?: boolean
+          text_align?: string
+          text_color?: string
+          transition_effect?: string
+          transition_speed?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_play?: boolean
+          bar_height?: number
+          bar_position?: string
+          bg_color?: string
+          display_duration?: number
+          font_size?: number
+          font_weight?: string
+          id?: string
+          is_enabled?: boolean
+          loop_enabled?: boolean
+          pause_on_hover?: boolean
+          show_arrows?: boolean
+          show_close_button?: boolean
+          show_dots?: boolean
+          show_on_desktop?: boolean
+          show_on_mobile?: boolean
+          swipe_mobile?: boolean
+          text_align?: string
+          text_color?: string
+          transition_effect?: string
+          transition_speed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           bg_color: string
@@ -21,6 +96,7 @@ export type Database = {
           ends_at: string | null
           id: string
           is_active: boolean
+          link_target: string
           link_text: string | null
           link_url: string | null
           message: string
@@ -37,6 +113,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_active?: boolean
+          link_target?: string
           link_text?: string | null
           link_url?: string | null
           message?: string
@@ -53,6 +130,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           is_active?: boolean
+          link_target?: string
           link_text?: string | null
           link_url?: string | null
           message?: string
