@@ -67,6 +67,7 @@ const menuItems: MenuItem[] = [
     children: [
       { icon: Share2, label: "Social Media", href: "/admin/social-media" },
       { icon: Settings, label: "Custom Code", href: "/admin/custom-code" },
+      { icon: UserPlus, label: "Default Placement", href: "/admin/default-placement" },
     ],
   },
 ];
