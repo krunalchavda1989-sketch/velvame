@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Link } from "react-router-dom";
 import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart, BadgeCheck, ShieldAlert, UserCircle } from "lucide-react";
