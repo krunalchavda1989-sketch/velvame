@@ -100,7 +100,7 @@ const DynamicPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 pt-24 pb-16">
+        <main className="flex-1 pt-8 pb-16">
           <div className="container mx-auto max-w-4xl px-4">
             <Skeleton className="h-10 w-2/3 mb-4" />
             <Skeleton className="h-6 w-1/3 mb-8" />
@@ -122,7 +122,7 @@ const DynamicPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center pt-24 pb-16">
+        <main className="flex-1 flex items-center justify-center pt-8 pb-16">
           <div className="text-center">
             <h1 className="mb-4 text-4xl font-bold text-foreground">404</h1>
             <p className="mb-4 text-xl text-muted-foreground">Page not found</p>
@@ -145,7 +145,7 @@ const DynamicPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pt-20 pb-16">
+      <main className="flex-1 pb-16">
         <PageBreadcrumb
           title={page.title}
           subtitle={page.subtitle || undefined}

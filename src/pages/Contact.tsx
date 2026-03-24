@@ -168,7 +168,7 @@ const Contact = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center pt-32"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        <div className="flex items-center justify-center pt-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       </div>
     );
   }
@@ -184,7 +184,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20 pb-16">
+      <div className="pb-16">
         <PageBreadcrumb
           title={page?.title || "Contact Us"}
           subtitle={page?.subtitle || "Get in Touch"}

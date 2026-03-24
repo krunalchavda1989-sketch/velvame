@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Link } from "react-router-dom";
 import { Menu, X, Crown, LayoutDashboard, LogOut, ShoppingCart, BadgeCheck, ShieldAlert, UserCircle } from "lucide-react";
@@ -55,9 +55,21 @@ const Navbar = () => {
     </>
   );
 
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setHeaderHeight(entry.contentRect.height);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-50">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-50">
         <AnnouncementBar />
         <nav className="glass">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
@@ -222,6 +234,9 @@ const Navbar = () => {
         </AnimatePresence>
         </nav>
       </div>
+
+      {/* Spacer to push content below the fixed header */}
+      <div style={{ height: headerHeight }} />
 
       <CartDrawer />
     </>

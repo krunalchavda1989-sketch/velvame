@@ -185,7 +185,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20 pb-16">
+      <div className="pb-16">
         <PageBreadcrumb
           title={product?.name || "Product Details"}
           breadcrumbs={[
