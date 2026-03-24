@@ -72,6 +72,7 @@ import AdminContactForm from "./pages/admin/AdminContactForm";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminCustomCode from "./pages/admin/AdminCustomCode";
+import AdminDefaultPlacement from "./pages/admin/AdminDefaultPlacement";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
