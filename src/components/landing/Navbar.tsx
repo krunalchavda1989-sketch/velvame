@@ -235,6 +235,9 @@ const Navbar = () => {
         </nav>
       </div>
 
+      {/* Spacer to push content below the fixed header */}
+      <div style={{ height: headerHeight }} />
+
       <CartDrawer />
     </>
   );
