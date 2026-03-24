@@ -72,6 +72,7 @@ import AdminContactForm from "./pages/admin/AdminContactForm";
 import AdminContactSubmissions from "./pages/admin/AdminContactSubmissions";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminCustomCode from "./pages/admin/AdminCustomCode";
+import AdminDefaultPlacement from "./pages/admin/AdminDefaultPlacement";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
@@ -247,6 +248,7 @@ const App = () => (
             <Route path="/admin/contact-submissions" element={<AdminRoute><AdminContactSubmissions /></AdminRoute>} />
             <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
             <Route path="/admin/custom-code" element={<AdminRoute><AdminCustomCode /></AdminRoute>} />
+            <Route path="/admin/default-placement" element={<AdminRoute><AdminDefaultPlacement /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
