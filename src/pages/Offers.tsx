@@ -50,7 +50,7 @@ const Offers = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20 pb-16">
+      <div className="pb-16">
         <PageBreadcrumb
           title="Monthly Offers"
           subtitle="Explore this month's exclusive deals and discounts. Limited time only — grab them before they're gone!"
