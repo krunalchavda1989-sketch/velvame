@@ -733,6 +733,27 @@ export type Database = {
         }
         Relationships: []
       }
+      default_placement_settings: {
+        Row: {
+          created_at: string
+          default_referral_code: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_referral_code?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_referral_code?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       faqs: {
         Row: {
           answer: string
