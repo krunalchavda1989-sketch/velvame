@@ -22,6 +22,7 @@ import {
   Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User
 } from "lucide-react";
 import { format } from "date-fns";
+import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
 
 const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -464,6 +465,15 @@ const AdminUserDetail = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Manual Subscription Module */}
+            <ManualSubscriptionForm
+              profile={profile}
+              onSubscriptionActivated={(updatedProfile) => {
+                setProfile(updatedProfile);
+                setEditForm((f) => ({ ...f, subscription_paid: true }));
+              }}
+            />
           </TabsContent>
 
           {/* Orders Tab */}
