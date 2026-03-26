@@ -1032,6 +1032,39 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_subscriptions: {
+        Row: {
+          activated_by: string
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          screenshot_url: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_by: string
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          screenshot_url?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_by?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          screenshot_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_offers: {
         Row: {
           created_at: string
