@@ -173,9 +173,9 @@ const Dashboard = () => {
 
         {/* Subscription status */}
         {!profile?.subscription_paid && (
-          <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-sm">
-            <span className="font-semibold text-destructive">⚠ Subscription pending.</span>{" "}
-            <span className="text-muted-foreground">Pay ₹{membershipAmount.toLocaleString("en-IN")} to activate your MLM income and start earning commissions.</span>
+          <div className="p-4 rounded-xl bg-destructive/15 border-2 border-destructive text-sm">
+            <span className="font-bold text-destructive">⚠️ Action Required:</span>{" "}
+            <span className="text-destructive/90">Your membership is not yet active. Please complete your subscription payment of ₹{membershipAmount.toLocaleString("en-IN")} to activate your account and unlock commission earnings.</span>
           </div>
         )}
 
