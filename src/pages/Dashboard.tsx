@@ -176,7 +176,7 @@ const Dashboard = () => {
         {/* Subscription status */}
         {!profile?.subscription_paid && (
           <div
-            onClick={() => navigate("/dashboard/settings")}
+            onClick={() => navigate("/dashboard/payment")}
             className="p-4 rounded-xl bg-destructive/15 border-2 border-destructive text-sm cursor-pointer hover:bg-destructive/20 transition-colors flex items-center justify-between gap-4"
           >
             <div>

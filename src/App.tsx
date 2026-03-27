@@ -174,14 +174,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/dashboard/settings/razorpay"
-              element={
-                <ProtectedRoute>
-                  <RazorpaySettings />
-                </ProtectedRoute>
-              }
-            />
+            {/* Redirect old route to /dashboard/payment */}
             <Route
               path="/dashboard/orders"
               element={

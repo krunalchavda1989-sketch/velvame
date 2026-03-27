@@ -386,7 +386,7 @@ const Settings = () => {
 
             {/* Razorpay / Payments */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-              <Link to="/dashboard/settings/razorpay">
+              <Link to="/dashboard/payment">
                 <Card className="hover:border-primary/30 transition-colors cursor-pointer">
                   <CardContent className="flex items-center justify-between py-5">
                     <div className="flex items-center gap-3">

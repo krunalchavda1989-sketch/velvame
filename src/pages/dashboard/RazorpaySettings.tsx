@@ -140,8 +140,8 @@ const RazorpaySettings = () => {
     <DashboardLayout>
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to="/dashboard/settings" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-            <ArrowLeft className="h-4 w-4" /> Back to Settings
+          <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
+            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
           </Link>
           <h1 className="text-2xl font-bold text-foreground">Payment & Subscription</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage your subscription and view payment history</p>
