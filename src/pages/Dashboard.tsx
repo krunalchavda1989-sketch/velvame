@@ -1,7 +1,8 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import { motion } from "framer-motion";
-import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check } from "lucide-react";
+import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ const COLORS = [
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
+  const navigate = useNavigate();
   const { amount: membershipAmount } = useMembershipAmount();
   const [copied, setCopied] = useState(false);
   const [wallet, setWallet] = useState<any>(null);
@@ -173,9 +175,17 @@ const Dashboard = () => {
 
         {/* Subscription status */}
         {!profile?.subscription_paid && (
-          <div className="p-4 rounded-xl bg-destructive/15 border-2 border-destructive text-sm">
-            <span className="font-bold text-destructive">⚠️ Action Required:</span>{" "}
-            <span className="text-destructive/90">Your membership is not yet active. Please complete your subscription payment of ₹{membershipAmount.toLocaleString("en-IN")} to activate your account and unlock commission earnings.</span>
+          <div
+            onClick={() => navigate("/dashboard/settings")}
+            className="p-4 rounded-xl bg-destructive/15 border-2 border-destructive text-sm cursor-pointer hover:bg-destructive/20 transition-colors flex items-center justify-between gap-4"
+          >
+            <div>
+              <span className="font-bold text-destructive">⚠️ Action Required:</span>{" "}
+              <span className="text-destructive/90">Your membership is not yet active. Please complete your subscription payment of ₹{membershipAmount.toLocaleString("en-IN")} to activate your account and unlock commission earnings.</span>
+            </div>
+            <Button size="sm" variant="destructive" className="shrink-0">
+              Subscribe Now <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         )}
 
