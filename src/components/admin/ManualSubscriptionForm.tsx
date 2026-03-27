@@ -101,7 +101,8 @@ const ManualSubscriptionForm = ({ profile, onSubscriptionActivated }: ManualSubs
     });
 
     if (insertError) {
-      toast({ title: "Error", description: "Failed to save subscription record.", variant: "destructive" });
+      console.error("Manual subscription insert error:", insertError);
+      toast({ title: "Error", description: `Failed to save subscription record: ${insertError.message}`, variant: "destructive" });
       setSaving(false);
       return;
     }
@@ -122,7 +123,8 @@ const ManualSubscriptionForm = ({ profile, onSubscriptionActivated }: ManualSubs
     setSaving(false);
 
     if (updateError) {
-      toast({ title: "Error", description: "Failed to activate subscription.", variant: "destructive" });
+      console.error("Profile update error:", updateError, "Profile ID:", profile.id, "User ID:", profile.user_id);
+      toast({ title: "Error", description: `Failed to activate subscription: ${updateError.message}`, variant: "destructive" });
       return;
     }
 
