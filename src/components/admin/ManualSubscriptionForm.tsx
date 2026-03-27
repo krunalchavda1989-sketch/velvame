@@ -120,13 +120,29 @@ const ManualSubscriptionForm = ({ profile, onSubscriptionActivated }: ManualSubs
       .update(updateData)
       .eq("id", profile.id);
 
-    setSaving(false);
-
     if (updateError) {
       console.error("Profile update error:", updateError, "Profile ID:", profile.id, "User ID:", profile.user_id);
       toast({ title: "Error", description: `Failed to activate subscription: ${updateError.message}`, variant: "destructive" });
+      setSaving(false);
       return;
     }
+
+    // Credit the subscription amount to wallet subscription_balance
+    const { data: walletResult, error: walletError } = await supabase.rpc("admin_wallet_adjust", {
+      _user_id: profile.user_id,
+      _amount: parsedAmount,
+      _type: "credit",
+      _description: `Subscription activated (${PAYMENT_METHODS.find(m => m.value === paymentMethod)?.label || paymentMethod})`,
+      _balance_type: "subscription",
+    });
+
+    if (walletError) {
+      console.error("Wallet credit error:", walletError);
+      // Don't block — subscription is already activated, just warn
+      toast({ title: "Warning", description: "Subscription activated but wallet credit failed. Please adjust wallet manually.", variant: "destructive" });
+    }
+
+    setSaving(false);
 
     const updatedProfile = { ...profile, ...updateData };
     onSubscriptionActivated(updatedProfile);
