@@ -247,29 +247,29 @@ const RazorpaySettings = () => {
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
-              ) : !payments?.length ? (
+              ) : !allHistory.length ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No payment history yet</p>
               ) : (
                 <div className="space-y-3">
-                  {payments.map((p: any) => (
+                  {allHistory.map((p) => (
                     <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
                       <div className="flex items-center gap-3">
                         {statusIcon(p.status)}
                         <div>
                           <p className="text-sm font-medium text-foreground capitalize">{p.purpose}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(p.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            {new Date(p.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">₹{Number(p.amount).toLocaleString("en-IN")}</p>
+                        <p className="text-sm font-semibold text-foreground">₹{p.amount.toLocaleString("en-IN")}</p>
                         <Badge variant="outline" className={`text-xs ${
                           p.status === "paid" ? "border-green-500/30 text-green-500" :
                           p.status === "failed" ? "border-destructive/30 text-destructive" :
                           "border-border text-muted-foreground"
                         }`}>
-                          {p.status}
+                          {p.method}
                         </Badge>
                       </div>
                     </div>
