@@ -225,7 +225,7 @@ Deno.serve(async (req: Request) => {
       .select("brand_name")
       .limit(1)
       .single();
-    const brandName = brandData?.brand_name || "NexaMarket";
+    const brandName = brandData?.brand_name || "Velvame";
 
     // Fetch order
     const { data: order, error: orderErr } = await supabase
