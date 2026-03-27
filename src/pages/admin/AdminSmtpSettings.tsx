@@ -198,7 +198,7 @@ const AdminSmtpSettings = () => {
               <Input
                 value={form.from_name}
                 onChange={(e) => setForm({ ...form, from_name: e.target.value })}
-                placeholder="NexaMLM"
+                placeholder="Velvame"
                 className="mt-1 bg-secondary border-border"
               />
             </div>

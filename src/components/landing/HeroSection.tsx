@@ -33,7 +33,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-            Join NexaMLM — purchase products, refer others, and earn commissions across 9 levels. 
+            Join Velvame — purchase products, refer others, and earn commissions across 9 levels. 
             Your network, your wealth.
           </p>
 

@@ -1244,7 +1244,7 @@ const SmtpTab = () => {
             </div>
             <div className="space-y-2">
               <Label>From Name</Label>
-              <Input value={form.from_name} onChange={(e) => setForm({ ...form, from_name: e.target.value })} placeholder="NexaMLM" />
+              <Input value={form.from_name} onChange={(e) => setForm({ ...form, from_name: e.target.value })} placeholder="Velvame" />
             </div>
           </div>
 
