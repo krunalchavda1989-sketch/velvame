@@ -56,7 +56,7 @@ const RazorpaySettings = () => {
     enabled: !!user,
   });
 
-  const { data: manualSubs, isLoading: manualSubsLoading } = useQuery({
+  const { data: manualSubs } = useQuery({
     queryKey: ["manual-subscriptions", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
