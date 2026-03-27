@@ -56,6 +56,51 @@ const RazorpaySettings = () => {
     enabled: !!user,
   });
 
+  const { data: manualSubs, isLoading: manualSubsLoading } = useQuery({
+    queryKey: ["manual-subscriptions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("manual_subscriptions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    cash: "Cash",
+    online: "Online Payment",
+    bank_transfer: "Bank Transfer",
+    upi: "UPI",
+    other: "Other",
+  };
+
+  // Merge payments and manual subscriptions into a unified history
+  const allHistory = [
+    ...(payments || []).map((p: any) => ({
+      id: p.id,
+      type: "online" as const,
+      amount: Number(p.amount),
+      status: p.status,
+      purpose: p.purpose,
+      date: p.created_at,
+      method: "Razorpay",
+    })),
+    ...(manualSubs || []).map((s: any) => ({
+      id: s.id,
+      type: "manual" as const,
+      amount: Number(s.amount),
+      status: "paid",
+      purpose: "subscription",
+      date: s.created_at,
+      method: PAYMENT_METHOD_LABELS[s.payment_method] || s.payment_method,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
