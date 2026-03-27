@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
@@ -21,12 +21,41 @@ const Register = () => {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
+  const [referralWarning, setReferralWarning] = useState("");
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     password: "",
     referralCode: searchParams.get("ref") || "",
   });
+
+  // Validate referral code on load if present
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (!refCode) return;
+
+    const validateRef = async () => {
+      const { data, error } = await supabase.rpc("validate_referral_with_subscription", {
+        _code: refCode,
+      });
+      if (error) return;
+
+      const result = data as { valid: boolean; reason: string | null; message: string | null };
+      if (!result.valid) {
+        if (result.reason === "SUBSCRIPTION_REQUIRED") {
+          setReferralWarning(
+            "This referral link is inactive. The referring user does not have an active subscription. You can register without a referral code or contact the person who referred you."
+          );
+        } else {
+          setReferralWarning(
+            "This referral code is invalid. You can register without a referral code."
+          );
+        }
+        setForm((prev) => ({ ...prev, referralCode: "" }));
+      }
+    };
+    validateRef();
+  }, [searchParams]);
 
   // Cooldown timer
   useEffect(() => {
@@ -52,13 +81,19 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Validate referral code if provided
+      // Validate referral code with subscription check if provided
       if (form.referralCode) {
-        const { data: isValid } = await supabase.rpc("validate_referral_code", {
+        const { data } = await supabase.rpc("validate_referral_with_subscription", {
           _code: form.referralCode,
         });
-        if (!isValid) {
-          toast.error("Invalid referral code. Please check and try again.");
+        const result = data as { valid: boolean; reason: string | null; message: string | null } | null;
+        if (result && !result.valid) {
+          if (result.reason === "SUBSCRIPTION_REQUIRED") {
+            toast.error("This referral code belongs to an unsubscribed user. Registering without referral.");
+            setForm((prev) => ({ ...prev, referralCode: "" }));
+          } else {
+            toast.error("Invalid referral code. Please check and try again.");
+          }
           setLoading(false);
           return;
         }
@@ -164,96 +199,109 @@ const Register = () => {
         </div>
 
         {step === "form" ? (
-          <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border">
-            <div>
-              <Label htmlFor="fullName" className="text-foreground">
-                Full Name
-              </Label>
-              <Input
-                id="fullName"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                required
-                className="mt-1 bg-secondary border-border"
-                placeholder="Your full name"
-              />
-            </div>
+          <>
+            {/* Referral Warning Banner */}
+            {referralWarning && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-sm">{referralWarning}</AlertDescription>
+              </Alert>
+            )}
 
-            <div>
-              <Label htmlFor="email" className="text-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-                className="mt-1 bg-secondary border-border"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-foreground">
-                Password
-              </Label>
-              <div className="relative mt-1">
+            <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border">
+              <div>
+                <Label htmlFor="fullName" className="text-foreground">
+                  Full Name
+                </Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  id="fullName"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                   required
-                  minLength={6}
-                  className="bg-secondary border-border pr-10"
-                  placeholder="Min 6 characters"
+                  className="mt-1 bg-secondary border-border"
+                  placeholder="Your full name"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="referral" className="text-foreground">
-                Referral Code (optional)
-              </Label>
-              <Input
-                id="referral"
-                value={form.referralCode}
-                onChange={(e) => setForm({ ...form, referralCode: e.target.value })}
-                className="mt-1 bg-secondary border-border"
-                placeholder="e.g. NXM1A2B3C"
-              />
-            </div>
+              <div>
+                <Label htmlFor="email" className="text-foreground">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                  className="mt-1 bg-secondary border-border"
+                  placeholder="you@example.com"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creating account...
-                </>
-              ) : (
-                `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
-              )}
-            </Button>
+              <div>
+                <Label htmlFor="password" className="text-foreground">
+                  Password
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                    minLength={6}
+                    className="bg-secondary border-border pr-10"
+                    placeholder="Min 6 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </form>
+              <div>
+                <Label htmlFor="referral" className="text-foreground">
+                  Referral Code (optional)
+                </Label>
+                <Input
+                  id="referral"
+                  value={form.referralCode}
+                  onChange={(e) => {
+                    setForm({ ...form, referralCode: e.target.value });
+                    if (referralWarning) setReferralWarning("");
+                  }}
+                  className="mt-1 bg-secondary border-border"
+                  placeholder="e.g. NXM1A2B3C"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Creating account...
+                  </>
+                ) : (
+                  `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
+                )}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </form>
+          </>
         ) : (
           <div className="space-y-6 p-6 rounded-xl bg-card border border-border">
             <div className="flex justify-center">
