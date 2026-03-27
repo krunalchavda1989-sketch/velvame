@@ -56,6 +56,51 @@ const RazorpaySettings = () => {
     enabled: !!user,
   });
 
+  const { data: manualSubs } = useQuery({
+    queryKey: ["manual-subscriptions", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("manual_subscriptions")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    cash: "Cash",
+    online: "Online Payment",
+    bank_transfer: "Bank Transfer",
+    upi: "UPI",
+    other: "Other",
+  };
+
+  // Merge payments and manual subscriptions into a unified history
+  const allHistory = [
+    ...(payments || []).map((p: any) => ({
+      id: p.id,
+      type: "online" as const,
+      amount: Number(p.amount),
+      status: p.status,
+      purpose: p.purpose,
+      date: p.created_at,
+      method: "Razorpay",
+    })),
+    ...(manualSubs || []).map((s: any) => ({
+      id: s.id,
+      type: "manual" as const,
+      amount: Number(s.amount),
+      status: "paid",
+      purpose: "subscription",
+      date: s.created_at,
+      method: PAYMENT_METHOD_LABELS[s.payment_method] || s.payment_method,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
@@ -202,29 +247,29 @@ const RazorpaySettings = () => {
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
-              ) : !payments?.length ? (
+              ) : !allHistory.length ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No payment history yet</p>
               ) : (
                 <div className="space-y-3">
-                  {payments.map((p: any) => (
+                  {allHistory.map((p) => (
                     <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
                       <div className="flex items-center gap-3">
                         {statusIcon(p.status)}
                         <div>
                           <p className="text-sm font-medium text-foreground capitalize">{p.purpose}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(p.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            {new Date(p.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">₹{Number(p.amount).toLocaleString("en-IN")}</p>
+                        <p className="text-sm font-semibold text-foreground">₹{p.amount.toLocaleString("en-IN")}</p>
                         <Badge variant="outline" className={`text-xs ${
                           p.status === "paid" ? "border-green-500/30 text-green-500" :
                           p.status === "failed" ? "border-destructive/30 text-destructive" :
                           "border-border text-muted-foreground"
                         }`}>
-                          {p.status}
+                          {p.method}
                         </Badge>
                       </div>
                     </div>
