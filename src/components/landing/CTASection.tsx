@@ -21,7 +21,7 @@ const CTASection = () => {
           </p>
           <Link to="/register">
             <Button size="lg" className="bg-gradient-gold text-primary-foreground font-semibold text-base px-10 glow-gold hover:opacity-90">
-              Join NexaMLM Today <ArrowRight className="ml-2 h-4 w-4" />
+              Join Velvame Today <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </motion.div>

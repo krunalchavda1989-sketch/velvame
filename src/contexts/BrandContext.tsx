@@ -20,7 +20,7 @@ interface BrandSettings {
 }
 
 const defaultBrand: BrandSettings = {
-  brand_name: "NexaMLM",
+  brand_name: "Velvame",
   tagline: "Build your network, grow your income.",
   logo_url: "",
   favicon_url: "",
