@@ -2308,6 +2308,10 @@ export type Database = {
         Returns: boolean
       }
       validate_referral_code: { Args: { _code: string }; Returns: boolean }
+      validate_referral_with_subscription: {
+        Args: { _code: string }
+        Returns: Json
+      }
       validate_withdrawal: {
         Args: { _amount: number; _user_id: string }
         Returns: Json
