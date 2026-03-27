@@ -21,6 +21,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
+  { icon: Crown, label: "Genealogy Tree", href: "/admin/genealogy" },
   {
     icon: Package, label: "Products", href: "/admin/products",
     children: [
