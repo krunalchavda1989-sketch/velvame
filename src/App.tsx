@@ -45,6 +45,7 @@ import AdminMenus from "./pages/admin/AdminMenus";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminHeroStats from "./pages/admin/AdminHeroStats";
 import AdminUserDetail from "./pages/admin/AdminUserDetail";
+import AdminGenealogyTree from "./pages/admin/AdminGenealogyTree";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import FAQPage from "./pages/FAQ";
