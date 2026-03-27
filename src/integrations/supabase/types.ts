@@ -2255,6 +2255,21 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: Json
       }
+      get_admin_genealogy_tree: {
+        Args: { _max_depth?: number; _root_profile_id?: string }
+        Returns: {
+          avatar_url: string
+          depth: number
+          direct_referral_count: number
+          full_name: string
+          profile_id: string
+          referral_code: string
+          referred_by: string
+          subscription_paid: boolean
+          title: string
+          user_id: string
+        }[]
+      }
       get_genealogy_tree: {
         Args: {
           _max_depth?: number
