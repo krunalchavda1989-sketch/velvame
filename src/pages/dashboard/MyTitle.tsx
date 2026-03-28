@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Award, Users, Star, Lock, CheckCircle2, Loader2 } from "lucide-react";
+import { Award, Users, Star, Lock, CheckCircle2, Loader2, Trophy, Gift } from "lucide-react";
 
 const TITLE_ICONS = ["🌱", "🥉", "🥈", "🥇", "💎", "👑", "🏆", "⭐", "🔥", "🚀"];
 
