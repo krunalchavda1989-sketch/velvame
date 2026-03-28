@@ -147,11 +147,13 @@ export type Database = {
         Row: {
           cash_amount: number | null
           created_at: string
+          description: string | null
           gift_description: string | null
           gift_image_url: string | null
           gift_name: string | null
           id: string
           is_active: boolean
+          required_active_members: number
           reward_type: string
           sort_order: number
           title_name: string
@@ -159,11 +161,13 @@ export type Database = {
         Insert: {
           cash_amount?: number | null
           created_at?: string
+          description?: string | null
           gift_description?: string | null
           gift_image_url?: string | null
           gift_name?: string | null
           id?: string
           is_active?: boolean
+          required_active_members?: number
           reward_type?: string
           sort_order?: number
           title_name: string
@@ -171,11 +175,13 @@ export type Database = {
         Update: {
           cash_amount?: number | null
           created_at?: string
+          description?: string | null
           gift_description?: string | null
           gift_image_url?: string | null
           gift_name?: string | null
           id?: string
           is_active?: boolean
+          required_active_members?: number
           reward_type?: string
           sort_order?: number
           title_name?: string
