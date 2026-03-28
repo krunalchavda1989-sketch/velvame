@@ -51,6 +51,19 @@ const MyTitle = () => {
     },
   });
 
+  const { data: awards = [], isLoading: awardsLoading } = useQuery({
+    queryKey: ["awards-rewards"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("awards_rewards")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: commissionLevels = [], isLoading: levelsLoading } = useQuery({
     queryKey: ["commission-levels-user"],
     queryFn: async () => {
@@ -65,7 +78,7 @@ const MyTitle = () => {
     },
   });
 
-  const isLoading = profileLoading || titlesLoading || levelsLoading || downlineLoading;
+  const isLoading = profileLoading || titlesLoading || levelsLoading || downlineLoading || awardsLoading;
 
   if (isLoading) {
     return (
