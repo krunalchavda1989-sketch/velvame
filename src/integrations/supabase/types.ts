@@ -1962,6 +1962,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           required_referrals: number
           sort_order: number
@@ -1972,6 +1973,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           required_referrals?: number
           sort_order?: number
@@ -1982,6 +1984,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           required_referrals?: number
           sort_order?: number
@@ -2255,6 +2258,7 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: Json
       }
+      get_active_downline_count: { Args: { _user_id: string }; Returns: number }
       get_admin_genealogy_tree: {
         Args: { _max_depth?: number; _root_profile_id?: string }
         Returns: {
