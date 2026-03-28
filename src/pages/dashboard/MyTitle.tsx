@@ -334,6 +334,5 @@ const MyTitle = () => {
     </DashboardLayout>
   );
 };
-};
 
 export default MyTitle;
