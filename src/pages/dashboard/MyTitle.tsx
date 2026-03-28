@@ -27,6 +27,17 @@ const MyTitle = () => {
     enabled: !!user,
   });
 
+  // Get active downline count (all levels, only active members)
+  const { data: activeDownlineCount = 0, isLoading: downlineLoading } = useQuery({
+    queryKey: ["active-downline-count", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_active_downline_count", { _user_id: user!.id });
+      if (error) throw error;
+      return (data as number) ?? 0;
+    },
+    enabled: !!user,
+  });
+
   const { data: titles = [], isLoading: titlesLoading } = useQuery({
     queryKey: ["title-roadmap"],
     queryFn: async () => {
@@ -54,7 +65,7 @@ const MyTitle = () => {
     },
   });
 
-  const isLoading = profileLoading || titlesLoading || levelsLoading;
+  const isLoading = profileLoading || titlesLoading || levelsLoading || downlineLoading;
 
   if (isLoading) {
     return (
@@ -66,44 +77,52 @@ const MyTitle = () => {
     );
   }
 
-  const referrals = profile?.direct_referral_count ?? 0;
+  const activeMembers = activeDownlineCount;
 
   // Build titles list from DB
-  const titleList = titles.map((t, i) => ({
+  const titleList = titles.map((t: any, i: number) => ({
     name: t.title_name,
-    requiredReferrals: t.required_referrals,
+    requiredMembers: t.required_referrals,
     icon: TITLE_ICONS[i] || "⭐",
     color: t.badge_color,
+    image_url: t.image_url || "",
   }));
 
-  // Fallback if no titles configured
   if (titleList.length === 0) {
-    titleList.push({ name: "Member", requiredReferrals: 0, icon: "🌱", color: null });
+    titleList.push({ name: "Member", requiredMembers: 0, icon: "🌱", color: null, image_url: "" });
   }
 
-  const currentTitleIndex = [...titleList].reverse().findIndex((t) => referrals >= t.requiredReferrals);
+  const currentTitleIndex = [...titleList].reverse().findIndex((t) => activeMembers >= t.requiredMembers);
   const resolvedIndex = currentTitleIndex >= 0 ? titleList.length - 1 - currentTitleIndex : 0;
   const currentTitle = titleList[resolvedIndex];
   const nextTitle = titleList[resolvedIndex + 1] || null;
   const progress = nextTitle
-    ? Math.min(100, ((referrals - currentTitle.requiredReferrals) / (nextTitle.requiredReferrals - currentTitle.requiredReferrals)) * 100)
+    ? Math.min(100, ((activeMembers - currentTitle.requiredMembers) / (nextTitle.requiredMembers - currentTitle.requiredMembers)) * 100)
     : 100;
 
-  // Build commission levels from DB
-  const levelsList = commissionLevels.map((cl) => ({
+  const levelsList = commissionLevels.map((cl: any) => ({
     level: cl.level,
     rate: Number(cl.rate),
     minReferrals: cl.min_referrals,
   }));
 
-  const unlockedLevels = levelsList.filter((l) => referrals >= l.minReferrals).length;
+  const unlockedLevels = levelsList.filter((l) => activeMembers >= l.minReferrals).length;
+
+  const TitleBadge = ({ title, size = "md" }: { title: typeof currentTitle; size?: "sm" | "md" | "lg" }) => {
+    const sizeClasses = size === "lg" ? "h-14 w-14" : size === "md" ? "h-10 w-10" : "h-8 w-8";
+    const textSize = size === "lg" ? "text-4xl" : size === "md" ? "text-2xl" : "text-lg";
+    if (title.image_url) {
+      return <img src={title.image_url} alt={title.name} className={`${sizeClasses} rounded-full object-cover`} />;
+    }
+    return <span className={textSize}>{title.icon}</span>;
+  };
 
   return (
     <DashboardLayout>
       <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold text-foreground">My Title</h1>
-          <p className="text-muted-foreground text-sm mt-1">Track your rank and unlock higher commission levels</p>
+          <p className="text-muted-foreground text-sm mt-1">Track your rank based on active downline members</p>
         </motion.div>
 
         {/* Current Rank Card */}
@@ -111,13 +130,13 @@ const MyTitle = () => {
           <Card className="border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="text-5xl">{currentTitle.icon}</div>
+                <TitleBadge title={currentTitle} size="lg" />
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Current Title</p>
                   <h2 className="text-2xl font-bold text-foreground">{currentTitle.name}</h2>
                   <div className="flex items-center gap-2 mt-1">
                     <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-muted-foreground">{referrals} direct referral{referrals !== 1 ? "s" : ""}</span>
+                    <span className="text-sm text-muted-foreground">{activeMembers} active downline member{activeMembers !== 1 ? "s" : ""}</span>
                   </div>
                 </div>
                 {!profile?.subscription_paid && (
@@ -132,11 +151,11 @@ const MyTitle = () => {
                 <div className="mt-6 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Progress to <span className="font-medium text-foreground">{nextTitle.name}</span></span>
-                    <span className="text-muted-foreground">{referrals}/{nextTitle.requiredReferrals} referrals</span>
+                    <span className="text-muted-foreground">{activeMembers}/{nextTitle.requiredMembers} active members</span>
                   </div>
                   <Progress value={progress} className="h-2" />
                   <p className="text-xs text-muted-foreground">
-                    {nextTitle.requiredReferrals - referrals} more referral{nextTitle.requiredReferrals - referrals !== 1 ? "s" : ""} needed
+                    {nextTitle.requiredMembers - activeMembers} more active member{nextTitle.requiredMembers - activeMembers !== 1 ? "s" : ""} needed
                   </p>
                 </div>
               )}
@@ -157,12 +176,12 @@ const MyTitle = () => {
                 <Star className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Title Roadmap</CardTitle>
               </div>
-              <CardDescription>Milestones based on direct referrals</CardDescription>
+              <CardDescription>Milestones based on active downline members</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {titleList.map((title) => {
-                  const achieved = referrals >= title.requiredReferrals;
+                  const achieved = activeMembers >= title.requiredMembers;
                   return (
                     <div
                       key={title.name}
@@ -170,13 +189,13 @@ const MyTitle = () => {
                         achieved ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"
                       }`}
                     >
-                      <span className="text-2xl">{title.icon}</span>
+                      <TitleBadge title={title} size="sm" />
                       <div className="flex-1">
                         <p className={`text-sm font-medium ${achieved ? "text-foreground" : "text-muted-foreground"}`}>
                           {title.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {title.requiredReferrals === 0 ? "Default rank" : `${title.requiredReferrals} direct referrals`}
+                          {title.requiredMembers === 0 ? "Default rank" : `${title.requiredMembers} active members`}
                         </p>
                       </div>
                       {achieved ? (
@@ -200,7 +219,7 @@ const MyTitle = () => {
                 <Award className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Commission Levels</CardTitle>
               </div>
-              <CardDescription>Levels unlocked based on your direct referrals</CardDescription>
+              <CardDescription>Levels unlocked based on your active downline members</CardDescription>
             </CardHeader>
             <CardContent>
               {levelsList.length === 0 ? (
@@ -208,7 +227,7 @@ const MyTitle = () => {
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {levelsList.map((cl) => {
-                    const unlocked = referrals >= cl.minReferrals;
+                    const unlocked = activeMembers >= cl.minReferrals;
                     return (
                       <div
                         key={cl.level}
@@ -221,7 +240,7 @@ const MyTitle = () => {
                         </p>
                         <p className="text-xs text-muted-foreground">{cl.rate}%</p>
                         <p className="text-[10px] text-muted-foreground mt-1">
-                          {cl.minReferrals} ref{cl.minReferrals !== 1 ? "s" : ""}
+                          {cl.minReferrals} member{cl.minReferrals !== 1 ? "s" : ""}
                         </p>
                       </div>
                     );
