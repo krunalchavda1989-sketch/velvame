@@ -263,9 +263,77 @@ const MyTitle = () => {
             </CardContent>
           </Card>
         </motion.div>
+        {/* My Achievements */}
+        {awards.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">My Achievements</CardTitle>
+                </div>
+                <CardDescription>Awards & rewards based on your active downline members</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {awards.map((award: any) => {
+                    const achieved = activeMembers >= (award.required_active_members || 0);
+                    const progress = award.required_active_members > 0
+                      ? Math.min(100, (activeMembers / award.required_active_members) * 100)
+                      : 100;
+                    return (
+                      <div
+                        key={award.id}
+                        className={`p-4 rounded-lg border transition-colors ${
+                          achieved ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {award.gift_image_url ? (
+                            <img src={award.gift_image_url} alt={award.title_name} className="h-12 w-12 rounded-lg object-cover" />
+                          ) : (
+                            <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${achieved ? "bg-primary/10" : "bg-muted"}`}>
+                              {award.reward_type === "gift" ? <Gift className="h-6 w-6 text-primary" /> : <Trophy className="h-6 w-6 text-primary" />}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`font-semibold text-sm ${achieved ? "text-foreground" : "text-muted-foreground"}`}>
+                                {award.title_name}
+                              </p>
+                              {achieved && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
+                              {!achieved && <Lock className="h-4 w-4 text-muted-foreground/50 shrink-0" />}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {award.reward_type === "cash" ? `₹${(award.cash_amount || 0).toLocaleString()} Cash Bonus` :
+                               award.reward_type === "gift" ? `Gift: ${award.gift_name}` :
+                               `₹${(award.cash_amount || 0).toLocaleString()} + ${award.gift_name}`}
+                            </p>
+                            {award.description && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{award.description}</p>
+                            )}
+                            {!achieved && (
+                              <div className="mt-2 space-y-1">
+                                <Progress value={progress} className="h-1.5" />
+                                <p className="text-[10px] text-muted-foreground">
+                                  {activeMembers}/{award.required_active_members} active members ({Math.round(progress)}%)
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
+};
 };
 
 export default MyTitle;
