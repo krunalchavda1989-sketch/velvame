@@ -91,6 +91,11 @@ const Settings = () => {
       setBranchName(bankDetails.branch_name || "");
       setUpiId(bankDetails.upi_id || "");
       setBankDetailsLoaded(true);
+      // Load bank proof preview
+      if ((bankDetails as any).bank_proof_url) {
+        supabase.storage.from("kyc-documents").createSignedUrl((bankDetails as any).bank_proof_url, 3600)
+          .then(({ data }) => { if (data?.signedUrl) setBankProofPreview(data.signedUrl); });
+      }
     }
     if (!bankDetails && !bankLoading && !bankDetailsLoaded) {
       setBankDetailsLoaded(true);
@@ -166,6 +171,85 @@ const Settings = () => {
       toast({ title: "Error", description: "Failed to save bank details.", variant: "destructive" });
     },
   });
+
+  const compressImage = async (file: File, maxSizeKB = 300): Promise<File> => {
+    if (!file.type.startsWith("image/")) return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      const canvas = document.createElement("canvas");
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.onload = () => {
+          let { width, height } = img;
+          const maxDim = 1200;
+          if (width > maxDim || height > maxDim) {
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          let quality = 0.8;
+          const tryCompress = () => {
+            canvas.toBlob((blob) => {
+              if (blob && (blob.size <= maxSizeKB * 1024 || quality <= 0.2)) {
+                resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+              } else { quality -= 0.1; tryCompress(); }
+            }, "image/jpeg", quality);
+          };
+          tryCompress();
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleBankProofUpload = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/jpg,image/webp";
+    fileInput.onchange = async (e: any) => {
+      let file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Error", description: "Only image files allowed.", variant: "destructive" });
+        return;
+      }
+      if (file.size > 300 * 1024) {
+        file = await compressImage(file, 300);
+        if (file.size > 300 * 1024) {
+          toast({ title: "Error", description: "Image too large even after compression.", variant: "destructive" });
+          return;
+        }
+      }
+      setUploadingBankProof(true);
+      try {
+        const path = `${user!.id}/bank_proof_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from("kyc-documents")
+          .upload(path, file, { upsert: true, contentType: "image/jpeg" });
+        if (uploadErr) throw uploadErr;
+        
+        // Save to bank_details
+        if (bankDetails) {
+          await supabase.from("bank_details").update({ bank_proof_url: path } as any).eq("user_id", user!.id);
+        } else {
+          await supabase.from("bank_details").insert({ user_id: user!.id, bank_proof_url: path } as any);
+        }
+        
+        const { data: urlData } = await supabase.storage.from("kyc-documents").createSignedUrl(path, 3600);
+        if (urlData?.signedUrl) setBankProofPreview(urlData.signedUrl);
+        queryClient.invalidateQueries({ queryKey: ["bank-details"] });
+        toast({ title: "Uploaded", description: "Bank proof uploaded successfully." });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message || "Upload failed", variant: "destructive" });
+      }
+      setUploadingBankProof(false);
+    };
+    fileInput.click();
+  };
 
   if (isLoading) {
     return (
