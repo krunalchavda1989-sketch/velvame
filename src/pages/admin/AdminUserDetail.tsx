@@ -460,6 +460,9 @@ const AdminUserDetail = () => {
                           <span className="text-sm font-medium text-foreground font-mono">{d.value}</span>
                         </div>
                       ))}
+                      {(bankDetails as any).bank_proof_url && (
+                        <BankProofPreview path={(bankDetails as any).bank_proof_url} />
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -734,7 +737,23 @@ const AdminUserDetail = () => {
   );
 };
 
-/* ─── KYC Admin Tab ─── */
+/* ─── Bank Proof Preview ─── */
+const BankProofPreview = ({ path }: { path: string }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.storage.from("kyc-documents").createSignedUrl(path, 3600)
+      .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl); });
+  }, [path]);
+  if (!url) return null;
+  return (
+    <div className="pt-2 border-t border-border">
+      <p className="text-xs text-muted-foreground mb-2">Bank Passbook / Cheque</p>
+      <img src={url} alt="Bank Proof" className="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80" onClick={() => window.open(url, "_blank")} />
+    </div>
+  );
+};
+
+/* ─── KYC Admin Tab (Card View with Image Previews) ─── */
 const DOC_LABELS: Record<string, string> = { aadhar: "Aadhar Card", aadhar_front: "Aadhar Card (Front)", aadhar_back: "Aadhar Card (Back)", pan: "PAN Card" };
 const STATUS_MAP: Record<string, { icon: any; label: string; cls: string }> = {
   pending: { icon: Clock, label: "Pending", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
@@ -746,6 +765,21 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
   const { toast } = useToast();
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadPreviews = async () => {
+      for (const doc of docs) {
+        if (doc.document_url) {
+          const { data } = await supabase.storage.from("kyc-documents").createSignedUrl(doc.document_url, 3600);
+          if (data?.signedUrl) {
+            setImageUrls((prev) => ({ ...prev, [doc.id]: data.signedUrl }));
+          }
+        }
+      }
+    };
+    if (docs.length > 0) loadPreviews();
+  }, [docs]);
 
   const handleAction = async (docId: string, status: "approved" | "rejected") => {
     setActionLoading(docId);
@@ -768,12 +802,6 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
     toast({ title: "Updated", description: `Document ${status} successfully.` });
   };
 
-  const getSignedUrl = async (path: string) => {
-    const { data } = await supabase.storage.from("kyc-documents").createSignedUrl(path, 300);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
-    else toast({ title: "Error", description: "Failed to get document URL.", variant: "destructive" });
-  };
-
   if (docs.length === 0) {
     return (
       <Card>
@@ -786,75 +814,89 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {docs.map((doc) => {
         const s = STATUS_MAP[doc.status] || STATUS_MAP.pending;
         const SIcon = s.icon;
+        const previewUrl = imageUrls[doc.id];
         return (
-          <Card key={doc.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">{DOC_LABELS[doc.document_type] || doc.document_type}</CardTitle>
-                <Badge variant="outline" className={`gap-1 text-[10px] ${s.cls}`}>
-                  <SIcon className="h-3 w-3" /> {s.label}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Document Number</p>
-                  <p className="font-mono font-medium text-foreground">{doc.document_number}</p>
+          <Card key={doc.id} className={doc.status === "approved" ? "border-success/30" : ""}>
+            <CardContent className="p-0">
+              {/* Image Preview */}
+              {previewUrl ? (
+                <div className="relative">
+                  <img src={previewUrl} alt={DOC_LABELS[doc.document_type]} className="w-full h-48 object-cover rounded-t-lg" />
+                  <Badge variant="outline" className={`absolute top-2 right-2 gap-1 text-[10px] ${s.cls}`}>
+                    <SIcon className="h-3 w-3" /> {s.label}
+                  </Badge>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Submitted</p>
-                  <p className="text-foreground">{format(new Date(doc.created_at), "dd MMM yyyy, hh:mm a")}</p>
+              ) : (
+                <div className="w-full h-48 bg-muted/50 rounded-t-lg flex items-center justify-center">
+                  <Shield className="h-10 w-10 text-muted-foreground/30" />
+                  <Badge variant="outline" className={`absolute top-2 right-2 gap-1 text-[10px] ${s.cls}`}>
+                    <SIcon className="h-3 w-3" /> {s.label}
+                  </Badge>
                 </div>
-              </div>
+              )}
 
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => getSignedUrl(doc.document_url)}>
-                <Eye className="h-3.5 w-3.5" /> View Document
-              </Button>
+              <div className="p-4 space-y-3">
+                <h3 className="font-semibold text-sm text-foreground">{DOC_LABELS[doc.document_type] || doc.document_type}</h3>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Document Number</p>
+                    <p className="font-mono font-medium text-foreground">{doc.document_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Submitted</p>
+                    <p className="text-foreground">{format(new Date(doc.created_at), "dd MMM yyyy")}</p>
+                  </div>
+                </div>
 
-              {doc.status === "pending" && (
-                <div className="space-y-3 pt-2 border-t border-border">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Rejection Note (required if rejecting)</Label>
+                {previewUrl && (
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full" onClick={() => window.open(previewUrl, "_blank")}>
+                    <Eye className="h-3.5 w-3.5" /> View Full Image
+                  </Button>
+                )}
+
+                {doc.status === "pending" && (
+                  <div className="space-y-2 pt-2 border-t border-border">
                     <Input
-                      placeholder="Reason for rejection..."
+                      placeholder="Rejection reason..."
                       value={rejectNote[doc.id] || ""}
                       onChange={(e) => setRejectNote({ ...rejectNote, [doc.id]: e.target.value })}
                       maxLength={500}
+                      className="text-xs"
                     />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
+                        disabled={actionLoading === doc.id}
+                        onClick={() => handleAction(doc.id, "approved")}
+                      >
+                        {actionLoading === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-1.5 text-destructive border-destructive/30"
+                        disabled={actionLoading === doc.id}
+                        onClick={() => handleAction(doc.id, "rejected")}
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Reject
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
-                      disabled={actionLoading === doc.id}
-                      onClick={() => handleAction(doc.id, "approved")}
-                    >
-                      {actionLoading === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 text-destructive border-destructive/30"
-                      disabled={actionLoading === doc.id}
-                      onClick={() => handleAction(doc.id, "rejected")}
-                    >
-                      <XCircle className="h-3.5 w-3.5" /> Reject
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {doc.status === "rejected" && doc.admin_note && (
-                <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20 text-sm text-destructive">
-                  <strong>Rejection Note:</strong> {doc.admin_note}
-                </div>
-              )}
+                {doc.status === "rejected" && doc.admin_note && (
+                  <div className="p-2 rounded-lg bg-destructive/5 border border-destructive/20 text-xs text-destructive">
+                    <strong>Reason:</strong> {doc.admin_note}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         );

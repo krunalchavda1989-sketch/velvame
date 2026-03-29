@@ -1,0 +1,1 @@
+ALTER TABLE public.bank_details ADD COLUMN IF NOT EXISTS bank_proof_url text DEFAULT '';
