@@ -385,22 +385,74 @@ const Settings = () => {
                     </div>
                   </div>
                   <Separator />
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
+                      <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" maxLength={50} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="middleName">Middle Name</Label>
+                      <Input id="middleName" value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="Middle name" maxLength={50} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
+                      <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" maxLength={50} />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Mobile No</Label>
+                      <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" maxLength={15} />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 234 567 8900" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Birth Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !birthDate && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {birthDate ? format(birthDate, "PPP") : <span>Select date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={birthDate}
+                            onSelect={setBirthDate}
+                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Anniversary Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !anniversaryDate && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {anniversaryDate ? format(anniversaryDate, "PPP") : <span>Select date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={anniversaryDate}
+                            onSelect={setAnniversaryDate}
+                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
-                  <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending} className="gap-2">
-                    {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    Save Changes
-                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
