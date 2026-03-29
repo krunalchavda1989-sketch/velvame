@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload, Camera } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
 
@@ -43,6 +44,8 @@ const Settings = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [uploadingBankProof, setUploadingBankProof] = useState(false);
   const [bankProofPreview, setBankProofPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["settings-profile", user?.id],
