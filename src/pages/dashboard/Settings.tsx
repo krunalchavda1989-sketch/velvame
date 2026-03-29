@@ -334,6 +334,34 @@ const Settings = () => {
                   <CardDescription>Update your personal details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Avatar Upload */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative group">
+                      <Avatar className="h-20 w-20 border-2 border-border">
+                        <AvatarImage src={avatarPreview || ""} alt="Profile" />
+                        <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                          {fullName ? fullName.charAt(0).toUpperCase() : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        ) : (
+                          <Camera className="h-5 w-5 text-white" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                      <p className="text-xs text-muted-foreground">Click on avatar to upload (max 300KB)</p>
+                    </div>
+                  </div>
+                  <Separator />
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" value={user?.email || ""} disabled className="bg-muted" />

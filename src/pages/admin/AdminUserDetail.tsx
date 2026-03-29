@@ -19,8 +19,9 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera, Upload
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
 
