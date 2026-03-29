@@ -59,7 +59,7 @@ const AdminUserDetail = () => {
     birth_date: undefined as Date | undefined,
     anniversary_date: undefined as Date | undefined,
   });
-  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  
   const [newPassword, setNewPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
 
