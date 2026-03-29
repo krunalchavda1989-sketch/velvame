@@ -19,8 +19,9 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera, KeyRound, RefreshCw
 } from "lucide-react";
+import DateDropdowns from "@/components/ui/date-dropdowns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
@@ -48,11 +49,19 @@ const AdminUserDetail = () => {
   const [uploadingAdminAvatar, setUploadingAdminAvatar] = useState(false);
   const [adminAvatarPreview, setAdminAvatarPreview] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
     full_name: "",
     phone: "",
     title: "",
     subscription_paid: false,
+    birth_date: undefined as Date | undefined,
+    anniversary_date: undefined as Date | undefined,
   });
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
