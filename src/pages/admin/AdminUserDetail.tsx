@@ -321,6 +321,33 @@ const AdminUserDetail = () => {
                     <DialogTitle>Edit User Profile</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-2">
+                    {/* Avatar Upload */}
+                    <div className="flex items-center gap-4">
+                      <div className="relative group">
+                        <Avatar className="h-20 w-20 border-2 border-border">
+                          <AvatarImage src={adminAvatarPreview || ""} alt="Profile" />
+                          <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                            {editForm.full_name ? editForm.full_name.charAt(0).toUpperCase() : "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <button
+                          type="button"
+                          onClick={handleAdminAvatarUpload}
+                          disabled={uploadingAdminAvatar}
+                          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          {uploadingAdminAvatar ? (
+                            <Loader2 className="h-5 w-5 text-white animate-spin" />
+                          ) : (
+                            <Camera className="h-5 w-5 text-white" />
+                          )}
+                        </button>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                        <p className="text-xs text-muted-foreground">Click to change photo</p>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-name">Full Name</Label>
                       <Input
@@ -338,23 +365,6 @@ const AdminUserDetail = () => {
                         onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                         maxLength={20}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title">Title</Label>
-                      <Select value={editForm.title} onValueChange={(v) => setEditForm({ ...editForm, title: v })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {titleRoadmap.length > 0 ? (
-                            titleRoadmap.map((t) => (
-                              <SelectItem key={t.id} value={t.title_name}>{t.title_name}</SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="Member">Member</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>
