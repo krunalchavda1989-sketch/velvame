@@ -88,8 +88,8 @@ const AdminUserDetail = () => {
           phone: prof.phone || "",
           title: prof.title || "Member",
           subscription_paid: prof.subscription_paid || false,
-          birth_date: prof.birth_date ? new Date(prof.birth_date) : undefined,
-          anniversary_date: prof.anniversary_date ? new Date(prof.anniversary_date) : undefined,
+          birth_date: prof.birth_date ? new Date(prof.birth_date + "T00:00:00") : undefined,
+          anniversary_date: prof.anniversary_date ? new Date(prof.anniversary_date + "T00:00:00") : undefined,
         });
         // Load avatar preview
         if (prof.avatar_url) {
@@ -587,8 +587,8 @@ const AdminUserDetail = () => {
                     { label: "Last Name", value: profile.last_name },
                     { label: "Email", value: userEmail },
                     { label: "Mobile No", value: profile.phone },
-                    { label: "Birth Date", value: profile.birth_date ? format(new Date(profile.birth_date), "dd MMM yyyy") : null },
-                    { label: "Anniversary Date", value: profile.anniversary_date ? format(new Date(profile.anniversary_date), "dd MMM yyyy") : null },
+                    { label: "Birth Date", value: profile.birth_date ? format(new Date(profile.birth_date + "T00:00:00"), "dd MMM yyyy") : null },
+                    { label: "Anniversary Date", value: profile.anniversary_date ? format(new Date(profile.anniversary_date + "T00:00:00"), "dd MMM yyyy") : null },
                   ].map((d) => (
                     <div key={d.label} className="space-y-1">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{d.label}</p>
