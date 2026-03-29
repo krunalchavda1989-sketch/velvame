@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
   const userId = claimsData.claims.sub as string;
 
-  // Check admin role
+  // Check admin role (master admin)
   const serviceClient = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -49,7 +49,19 @@ Deno.serve(async (req) => {
     .eq("role", "admin")
     .single();
 
-  if (!roleData) {
+  // Also check sub-admin
+  let isAuthorized = !!roleData;
+  if (!isAuthorized) {
+    const { data: subAdmin } = await serviceClient
+      .from("admin_sub_users")
+      .select("is_active")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .single();
+    isAuthorized = !!subAdmin;
+  }
+
+  if (!isAuthorized) {
     return new Response(JSON.stringify({ error: "Forbidden: admin access required" }), {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
