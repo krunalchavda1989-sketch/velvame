@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Select removed - title dropdown removed from edit dialog
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -19,8 +19,9 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
 
@@ -44,6 +45,8 @@ const AdminUserDetail = () => {
   // Edit state
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingAdminAvatar, setUploadingAdminAvatar] = useState(false);
+  const [adminAvatarPreview, setAdminAvatarPreview] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     full_name: "",
     phone: "",
@@ -74,6 +77,11 @@ const AdminUserDetail = () => {
           title: prof.title || "Member",
           subscription_paid: prof.subscription_paid || false,
         });
+        // Load avatar preview
+        if (prof.avatar_url) {
+          const { data: avData } = supabase.storage.from("avatars").getPublicUrl(prof.avatar_url);
+          if (avData?.publicUrl) setAdminAvatarPreview(avData.publicUrl);
+        }
 
         const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
@@ -103,6 +111,80 @@ const AdminUserDetail = () => {
     };
     fetchAll();
   }, [userId]);
+
+  const compressImage = async (file: File, maxSizeKB = 300): Promise<File> => {
+    if (!file.type.startsWith("image/")) return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      const canvas = document.createElement("canvas");
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.onload = () => {
+          let { width, height } = img;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          let quality = 0.8;
+          const tryCompress = () => {
+            canvas.toBlob((blob) => {
+              if (blob && (blob.size <= maxSizeKB * 1024 || quality <= 0.2)) {
+                resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+              } else { quality -= 0.1; tryCompress(); }
+            }, "image/jpeg", quality);
+          };
+          tryCompress();
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAdminAvatarUpload = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/jpg,image/webp";
+    fileInput.onchange = async (ev: any) => {
+      let file = ev.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Error", description: "Only image files allowed.", variant: "destructive" });
+        return;
+      }
+      if (file.size > 300 * 1024) {
+        file = await compressImage(file, 300);
+      }
+      setUploadingAdminAvatar(true);
+      try {
+        const path = `${profile.user_id}/avatar_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, file, { upsert: true, contentType: "image/jpeg" });
+        if (uploadErr) throw uploadErr;
+
+        const { error: updateErr } = await supabase
+          .from("profiles")
+          .update({ avatar_url: path })
+          .eq("id", profile.id);
+        if (updateErr) throw updateErr;
+
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        if (urlData?.publicUrl) setAdminAvatarPreview(urlData.publicUrl + "?t=" + Date.now());
+        setProfile({ ...profile, avatar_url: path });
+        toast({ title: "Uploaded", description: "Profile photo updated." });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message || "Upload failed", variant: "destructive" });
+      }
+      setUploadingAdminAvatar(false);
+    };
+    fileInput.click();
+  };
 
   const handleSave = async () => {
     if (!profile) return;
@@ -239,6 +321,33 @@ const AdminUserDetail = () => {
                     <DialogTitle>Edit User Profile</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-2">
+                    {/* Avatar Upload */}
+                    <div className="flex items-center gap-4">
+                      <div className="relative group">
+                        <Avatar className="h-20 w-20 border-2 border-border">
+                          <AvatarImage src={adminAvatarPreview || ""} alt="Profile" />
+                          <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                            {editForm.full_name ? editForm.full_name.charAt(0).toUpperCase() : "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <button
+                          type="button"
+                          onClick={handleAdminAvatarUpload}
+                          disabled={uploadingAdminAvatar}
+                          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          {uploadingAdminAvatar ? (
+                            <Loader2 className="h-5 w-5 text-white animate-spin" />
+                          ) : (
+                            <Camera className="h-5 w-5 text-white" />
+                          )}
+                        </button>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                        <p className="text-xs text-muted-foreground">Click to change photo</p>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="edit-name">Full Name</Label>
                       <Input
@@ -256,23 +365,6 @@ const AdminUserDetail = () => {
                         onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                         maxLength={20}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title">Title</Label>
-                      <Select value={editForm.title} onValueChange={(v) => setEditForm({ ...editForm, title: v })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {titleRoadmap.length > 0 ? (
-                            titleRoadmap.map((t) => (
-                              <SelectItem key={t.id} value={t.title_name}>{t.title_name}</SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="Member">Member</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>

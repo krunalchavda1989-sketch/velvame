@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload, Camera } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
 
@@ -43,6 +44,8 @@ const Settings = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [uploadingBankProof, setUploadingBankProof] = useState(false);
   const [bankProofPreview, setBankProofPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["settings-profile", user?.id],
@@ -78,6 +81,10 @@ const Settings = () => {
       setFullName(profile.full_name || "");
       setPhone(profile.phone || "");
       setProfileLoaded(true);
+      if (profile.avatar_url) {
+        const { data } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
+        if (data?.publicUrl) setAvatarPreview(data.publicUrl);
+      }
     }
   }, [profile, profileLoaded]);
 
@@ -206,6 +213,46 @@ const Settings = () => {
     });
   };
 
+  const handleAvatarUpload = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/jpg,image/webp";
+    fileInput.onchange = async (e: any) => {
+      let file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Error", description: "Only image files allowed.", variant: "destructive" });
+        return;
+      }
+      if (file.size > 300 * 1024) {
+        file = await compressImage(file, 300);
+      }
+      setUploadingAvatar(true);
+      try {
+        const path = `${user!.id}/avatar_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, file, { upsert: true, contentType: "image/jpeg" });
+        if (uploadErr) throw uploadErr;
+
+        const { error: updateErr } = await supabase
+          .from("profiles")
+          .update({ avatar_url: path })
+          .eq("user_id", user!.id);
+        if (updateErr) throw updateErr;
+
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        if (urlData?.publicUrl) setAvatarPreview(urlData.publicUrl + "?t=" + Date.now());
+        queryClient.invalidateQueries({ queryKey: ["settings-profile"] });
+        toast({ title: "Uploaded", description: "Profile photo updated successfully." });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message || "Upload failed", variant: "destructive" });
+      }
+      setUploadingAvatar(false);
+    };
+    fileInput.click();
+  };
+
   const handleBankProofUpload = () => {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -287,6 +334,34 @@ const Settings = () => {
                   <CardDescription>Update your personal details</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Avatar Upload */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative group">
+                      <Avatar className="h-20 w-20 border-2 border-border">
+                        <AvatarImage src={avatarPreview || ""} alt="Profile" />
+                        <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                          {fullName ? fullName.charAt(0).toUpperCase() : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        ) : (
+                          <Camera className="h-5 w-5 text-white" />
+                        )}
+                      </button>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                      <p className="text-xs text-muted-foreground">Click on avatar to upload (max 300KB)</p>
+                    </div>
+                  </div>
+                  <Separator />
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
