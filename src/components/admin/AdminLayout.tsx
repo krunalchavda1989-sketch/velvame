@@ -8,7 +8,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck
 } from "lucide-react";
 
 interface MenuItem {
@@ -69,8 +69,10 @@ const menuItems: MenuItem[] = [
       { icon: Share2, label: "Social Media", href: "/admin/social-media" },
       { icon: Settings, label: "Custom Code", href: "/admin/custom-code" },
       { icon: UserPlus, label: "Default Placement", href: "/admin/default-placement" },
+      { icon: ShieldCheck, label: "Sub-Admins", href: "/admin/sub-users" },
     ],
   },
+  { icon: User, label: "My Profile", href: "/admin/profile" },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
