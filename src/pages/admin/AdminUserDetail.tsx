@@ -19,7 +19,7 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw
 } from "lucide-react";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
@@ -888,6 +888,48 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
                         <XCircle className="h-3.5 w-3.5" /> Reject
                       </Button>
                     </div>
+                  </div>
+                )}
+
+                {doc.status === "approved" && (
+                  <div className="pt-2 border-t border-border">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" /> Revoke Approval
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Revoke KYC Approval?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reject the document and force the user to re-upload their {DOC_LABELS[doc.document_type] || doc.document_type}. They will be redirected to the KYC page until they re-submit.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Input
+                          placeholder="Reason for revoking (required)..."
+                          value={rejectNote[doc.id] || ""}
+                          onChange={(e) => setRejectNote({ ...rejectNote, [doc.id]: e.target.value })}
+                          maxLength={500}
+                          className="text-sm"
+                        />
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={actionLoading === doc.id}
+                            onClick={() => handleAction(doc.id, "rejected")}
+                          >
+                            {actionLoading === doc.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                            Revoke & Force Re-KYC
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 )}
 
