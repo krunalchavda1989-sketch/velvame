@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sub_users: {
+        Row: {
+          added_by: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcement_bar_settings: {
         Row: {
           auto_play: boolean
