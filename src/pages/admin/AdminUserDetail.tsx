@@ -45,6 +45,8 @@ const AdminUserDetail = () => {
   // Edit state
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingAdminAvatar, setUploadingAdminAvatar] = useState(false);
+  const [adminAvatarPreview, setAdminAvatarPreview] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     full_name: "",
     phone: "",
