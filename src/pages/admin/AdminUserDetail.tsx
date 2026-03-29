@@ -81,10 +81,15 @@ const AdminUserDetail = () => {
 
       if (prof) {
         setEditForm({
+          first_name: prof.first_name || "",
+          middle_name: prof.middle_name || "",
+          last_name: prof.last_name || "",
           full_name: prof.full_name || "",
           phone: prof.phone || "",
           title: prof.title || "Member",
           subscription_paid: prof.subscription_paid || false,
+          birth_date: prof.birth_date ? new Date(prof.birth_date) : undefined,
+          anniversary_date: prof.anniversary_date ? new Date(prof.anniversary_date) : undefined,
         });
         // Load avatar preview
         if (prof.avatar_url) {
@@ -197,22 +202,23 @@ const AdminUserDetail = () => {
 
   const handleSave = async () => {
     if (!profile) return;
-    const trimmedName = editForm.full_name.trim();
-    if (!trimmedName) {
-      toast({ title: "Error", description: "Name cannot be empty.", variant: "destructive" });
-      return;
-    }
-    if (trimmedName.length > 100) {
-      toast({ title: "Error", description: "Name must be less than 100 characters.", variant: "destructive" });
+    const computedFullName = [editForm.first_name.trim(), editForm.middle_name.trim(), editForm.last_name.trim()].filter(Boolean).join(" ");
+    if (!computedFullName) {
+      toast({ title: "Error", description: "First name is required.", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     const updateData: any = {
-      full_name: trimmedName,
+      full_name: computedFullName,
+      first_name: editForm.first_name.trim(),
+      middle_name: editForm.middle_name.trim(),
+      last_name: editForm.last_name.trim(),
       phone: editForm.phone.trim(),
       title: editForm.title,
       subscription_paid: editForm.subscription_paid,
+      birth_date: editForm.birth_date ? format(editForm.birth_date, "yyyy-MM-dd") : null,
+      anniversary_date: editForm.anniversary_date ? format(editForm.anniversary_date, "yyyy-MM-dd") : null,
     };
 
     if (editForm.subscription_paid && !profile.subscription_paid) {
@@ -234,6 +240,33 @@ const AdminUserDetail = () => {
     setProfile({ ...profile, ...updateData });
     setEditOpen(false);
     toast({ title: "Saved", description: "User profile updated successfully." });
+  };
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!";
+    let pwd = "";
+    for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    setNewPassword(pwd);
+  };
+
+  const handleResetPassword = async () => {
+    if (!profile || !newPassword) return;
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    setResettingPassword(true);
+    const { data, error } = await supabase.functions.invoke("admin-settings", {
+      body: { action: "reset_user_password", user_id: profile.user_id, new_password: newPassword },
+    });
+    setResettingPassword(false);
+    if (error || data?.error) {
+      toast({ title: "Error", description: data?.error || "Failed to reset password.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Password Reset", description: "New password has been sent to the user's email." });
+    setNewPassword("");
+    setResetPasswordOpen(false);
   };
 
   const handleQuickToggleSubscription = async () => {
