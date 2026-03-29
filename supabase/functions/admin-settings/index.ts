@@ -108,6 +108,34 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (action === "lookup_user_by_email") {
+      const { email } = body;
+      if (!email) {
+        return new Response(JSON.stringify({ error: "email is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: users, error: listErr } = await serviceClient.auth.admin.listUsers();
+      if (listErr) {
+        return new Response(JSON.stringify({ error: "Failed to lookup user" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const found = users.users.find((u: any) => u.email === email);
+      if (!found) {
+        return new Response(JSON.stringify({ error: "User not found with this email. They must register first." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({ user_id: found.id }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "get_user_email") {
       const { user_id: targetUserId } = body;
       if (!targetUserId) {
