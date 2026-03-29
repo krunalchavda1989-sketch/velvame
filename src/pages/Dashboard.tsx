@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [earningsTrend, setEarningsTrend] = useState<any[]>([]);
   const [commissionBreakdown, setCommissionBreakdown] = useState<any[]>([]);
   const [teamGrowth, setTeamGrowth] = useState<any[]>([]);
+  const [totalCommissionEarnings, setTotalCommissionEarnings] = useState(0);
 
   const referralLink = profile ? `${window.location.origin}/register?ref=${profile.referral_code}` : "";
 
@@ -99,7 +100,8 @@ const Dashboard = () => {
         .eq("beneficiary_id", user.id);
 
       // Calculate total commission earnings (excludes subscription balance)
-      const totalCommissionEarnings = (comms || []).reduce((s, c) => s + Number(c.amount), 0);
+      const commEarnings = (comms || []).reduce((s, c) => s + Number(c.amount), 0);
+      setTotalCommissionEarnings(Math.round(commEarnings));
 
       // Earnings trend (last 6 months)
       const et: any[] = [];
