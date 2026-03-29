@@ -266,7 +266,7 @@ const AdminUserDetail = () => {
     }
     toast({ title: "Password Reset", description: "New password has been sent to the user's email." });
     setNewPassword("");
-    setResetPasswordOpen(false);
+    
   };
 
   const handleQuickToggleSubscription = async () => {
