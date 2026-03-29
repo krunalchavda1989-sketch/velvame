@@ -16,6 +16,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload, Camera, CalendarIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const Settings = () => {
   const [searchParams] = useSearchParams();
