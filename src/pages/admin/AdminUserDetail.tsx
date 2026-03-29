@@ -343,8 +343,8 @@ const AdminUserDetail = () => {
         {/* Profile Header */}
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover" />
+            {adminAvatarPreview ? (
+              <img src={adminAvatarPreview} alt="" className="w-16 h-16 rounded-full object-cover" />
             ) : (
               <span className="text-2xl font-bold text-primary">{(profile.full_name || "U")[0]}</span>
             )}
@@ -574,6 +574,31 @@ const AdminUserDetail = () => {
 
           {/* Profile Tab */}
           <TabsContent value="profile">
+            {/* Personal Details */}
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" />Personal Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "First Name", value: profile.first_name },
+                    { label: "Middle Name", value: profile.middle_name },
+                    { label: "Last Name", value: profile.last_name },
+                    { label: "Email", value: userEmail },
+                    { label: "Mobile No", value: profile.phone },
+                    { label: "Birth Date", value: profile.birth_date ? format(new Date(profile.birth_date), "dd MMM yyyy") : null },
+                    { label: "Anniversary Date", value: profile.anniversary_date ? format(new Date(profile.anniversary_date), "dd MMM yyyy") : null },
+                  ].map((d) => (
+                    <div key={d.label} className="space-y-1">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{d.label}</p>
+                      <p className="text-sm font-medium text-foreground">{d.value || "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Addresses */}
               <Card>
