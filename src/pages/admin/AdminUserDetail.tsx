@@ -77,6 +77,11 @@ const AdminUserDetail = () => {
           title: prof.title || "Member",
           subscription_paid: prof.subscription_paid || false,
         });
+        // Load avatar preview
+        if (prof.avatar_url) {
+          const { data: avData } = supabase.storage.from("avatars").getPublicUrl(prof.avatar_url);
+          if (avData?.publicUrl) setAdminAvatarPreview(avData.publicUrl);
+        }
 
         const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
