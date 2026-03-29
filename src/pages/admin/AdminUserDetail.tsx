@@ -543,7 +543,7 @@ const AdminUserDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
             { icon: Wallet, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: "text-primary" },
-            { icon: TrendingUp, label: "Total Earned", value: `₹${wallet?.total_earned || 0}`, color: "text-success" },
+            { icon: TrendingUp, label: "Total Earned (Commissions)", value: `₹${commissions.reduce((s: number, c: any) => s + Number(c.amount), 0)}`, color: "text-success" },
             { icon: CreditCard, label: "Total Withdrawn", value: `₹${wallet?.total_withdrawn || 0}`, color: "text-muted-foreground" },
           ].map((s) => (
             <Card key={s.label}>

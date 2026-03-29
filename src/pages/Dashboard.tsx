@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [earningsTrend, setEarningsTrend] = useState<any[]>([]);
   const [commissionBreakdown, setCommissionBreakdown] = useState<any[]>([]);
   const [teamGrowth, setTeamGrowth] = useState<any[]>([]);
+  const [totalCommissionEarnings, setTotalCommissionEarnings] = useState(0);
 
   const referralLink = profile ? `${window.location.origin}/register?ref=${profile.referral_code}` : "";
 
@@ -92,11 +93,15 @@ const Dashboard = () => {
         .eq("user_id", user.id);
       setOrderCount(oc || 0);
 
-      // Commissions
+      // Commissions (actual earnings, not subscription)
       const { data: comms } = await supabase
         .from("commissions")
         .select("amount, commission_type, created_at")
         .eq("beneficiary_id", user.id);
+
+      // Calculate total commission earnings (excludes subscription balance)
+      const commEarnings = (comms || []).reduce((s, c) => s + Number(c.amount), 0);
+      setTotalCommissionEarnings(Math.round(commEarnings));
 
       // Earnings trend (last 6 months)
       const et: any[] = [];
@@ -133,7 +138,7 @@ const Dashboard = () => {
   };
 
   const stats = [
-    { icon: Wallet, label: "Total Earnings", value: `₹${wallet?.total_earned || 0}`, color: "text-primary" },
+    { icon: Wallet, label: "Total Earnings", value: `₹${totalCommissionEarnings}`, color: "text-primary" },
     { icon: Users, label: "Direct Referrals", value: String(teamCount), color: "text-chart-2" },
     { icon: TrendingUp, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: "text-chart-3" },
     { icon: ShoppingBag, label: "Orders", value: String(orderCount), color: "text-chart-4" },
