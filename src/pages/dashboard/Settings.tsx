@@ -125,9 +125,18 @@ const Settings = () => {
 
   const updateProfile = useMutation({
     mutationFn: async () => {
+      const computedFullName = [firstName.trim(), middleName.trim(), lastName.trim()].filter(Boolean).join(" ");
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name: fullName.trim(), phone: phone.trim() })
+        .update({
+          full_name: computedFullName,
+          phone: phone.trim(),
+          first_name: firstName.trim(),
+          middle_name: middleName.trim(),
+          last_name: lastName.trim(),
+          birth_date: birthDate ? format(birthDate, "yyyy-MM-dd") : null,
+          anniversary_date: anniversaryDate ? format(anniversaryDate, "yyyy-MM-dd") : null,
+        } as any)
         .eq("user_id", user!.id);
       if (error) throw error;
     },
