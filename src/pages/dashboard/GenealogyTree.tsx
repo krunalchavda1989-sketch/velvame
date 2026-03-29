@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronDown, ChevronRight, User, Users, Crown, Loader2,
+  ChevronDown, ChevronRight, Users, Crown, Loader2,
   Shield, Search, X, Eye, ArrowLeft, List, GitFork
 } from "lucide-react";
+import { getAvatarUrl, getInitial } from "@/lib/avatarUtils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

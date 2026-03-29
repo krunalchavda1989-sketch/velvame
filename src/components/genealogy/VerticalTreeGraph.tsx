@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { User, Shield, Users, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Shield, Users, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { getAvatarUrl, getInitial } from "@/lib/avatarUtils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
