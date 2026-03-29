@@ -87,8 +87,13 @@ const Settings = () => {
   // Sync profile form
   useEffect(() => {
     if (profile && !profileLoaded) {
+      setFirstName((profile as any).first_name || "");
+      setMiddleName((profile as any).middle_name || "");
+      setLastName((profile as any).last_name || "");
       setFullName(profile.full_name || "");
       setPhone(profile.phone || "");
+      if ((profile as any).birth_date) setBirthDate(new Date((profile as any).birth_date));
+      if ((profile as any).anniversary_date) setAnniversaryDate(new Date((profile as any).anniversary_date));
       setProfileLoaded(true);
       if (profile.avatar_url) {
         const { data } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
