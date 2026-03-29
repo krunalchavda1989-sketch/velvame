@@ -958,6 +958,9 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
           </Card>
         );
       })}
+      {lightboxImg && (
+        <ImageLightbox src={lightboxImg.src} alt={lightboxImg.alt} open={!!lightboxImg} onClose={() => setLightboxImg(null)} />
+      )}
     </div>
   );
 };
