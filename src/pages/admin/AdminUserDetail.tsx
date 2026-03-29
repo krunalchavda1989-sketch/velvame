@@ -460,6 +460,9 @@ const AdminUserDetail = () => {
                           <span className="text-sm font-medium text-foreground font-mono">{d.value}</span>
                         </div>
                       ))}
+                      {(bankDetails as any).bank_proof_url && (
+                        <BankProofPreview path={(bankDetails as any).bank_proof_url} />
+                      )}
                     </div>
                   )}
                 </CardContent>
