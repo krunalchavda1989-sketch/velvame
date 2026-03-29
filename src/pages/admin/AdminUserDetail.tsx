@@ -737,6 +737,22 @@ const AdminUserDetail = () => {
   );
 };
 
+/* ─── Bank Proof Preview ─── */
+const BankProofPreview = ({ path }: { path: string }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.storage.from("kyc-documents").createSignedUrl(path, 3600)
+      .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl); });
+  }, [path]);
+  if (!url) return null;
+  return (
+    <div className="pt-2 border-t border-border">
+      <p className="text-xs text-muted-foreground mb-2">Bank Passbook / Cheque</p>
+      <img src={url} alt="Bank Proof" className="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80" onClick={() => window.open(url, "_blank")} />
+    </div>
+  );
+};
+
 /* ─── KYC Admin Tab (Card View with Image Previews) ─── */
 const DOC_LABELS: Record<string, string> = { aadhar: "Aadhar Card", aadhar_front: "Aadhar Card (Front)", aadhar_back: "Aadhar Card (Back)", pan: "PAN Card" };
 const STATUS_MAP: Record<string, { icon: any; label: string; cls: string }> = {
