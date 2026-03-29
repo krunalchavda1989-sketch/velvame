@@ -298,7 +298,7 @@ const WalletPage = () => {
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { label: "Total Earned", value: wallet?.total_earned ?? 0, icon: TrendingUp },
+                { label: "Total Commission Earned", value: commissions.reduce((s, c) => s + Number(c.amount), 0), icon: TrendingUp },
                 { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine },
               ].map((s, i) => (
                 <motion.div
