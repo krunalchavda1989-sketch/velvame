@@ -28,8 +28,13 @@ const Settings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+  const [anniversaryDate, setAnniversaryDate] = useState<Date | undefined>(undefined);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
