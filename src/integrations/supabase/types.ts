@@ -1671,13 +1671,18 @@ export type Database = {
       }
       profiles: {
         Row: {
+          anniversary_date: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           direct_referral_count: number
+          first_name: string
           full_name: string
           id: string
+          last_name: string
           membership_activated_at: string | null
           membership_source: string | null
+          middle_name: string
           phone: string | null
           referral_code: string
           referred_by: string | null
@@ -1688,13 +1693,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anniversary_date?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           direct_referral_count?: number
+          first_name?: string
           full_name?: string
           id?: string
+          last_name?: string
           membership_activated_at?: string | null
           membership_source?: string | null
+          middle_name?: string
           phone?: string | null
           referral_code: string
           referred_by?: string | null
@@ -1705,13 +1715,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          anniversary_date?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           direct_referral_count?: number
+          first_name?: string
           full_name?: string
           id?: string
+          last_name?: string
           membership_activated_at?: string | null
           membership_source?: string | null
+          middle_name?: string
           phone?: string | null
           referral_code?: string
           referred_by?: string | null
