@@ -168,12 +168,12 @@ const TreeNodeCard = ({
             )}
           </button>
 
-          <div className="relative flex-shrink-0">
-            {node.avatar_url ? (
-              <img src={node.avatar_url} alt={node.full_name} className="w-10 h-10 rounded-full object-cover border border-border" />
+           <div className="relative flex-shrink-0">
+            {getAvatarUrl(node.avatar_url) ? (
+              <img src={getAvatarUrl(node.avatar_url)!} alt={node.full_name} className="w-10 h-10 rounded-full object-cover border border-border" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-5 w-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">{getInitial(node.full_name)}</span>
               </div>
             )}
             {node.subscription_paid && (
