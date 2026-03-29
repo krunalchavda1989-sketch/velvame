@@ -737,9 +737,22 @@ const AdminUserDetail = () => {
   );
 };
 
+/* ─── Image Lightbox ─── */
+const ImageLightbox = ({ src, alt, open, onClose }: { src: string; alt: string; open: boolean; onClose: () => void }) => (
+  <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <DialogContent className="max-w-3xl p-2 sm:p-4">
+      <DialogHeader><DialogTitle className="text-sm">{alt}</DialogTitle></DialogHeader>
+      <div className="flex items-center justify-center max-h-[75vh] overflow-auto">
+        <img src={src} alt={alt} className="max-w-full max-h-[70vh] object-contain rounded-lg" />
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
 /* ─── Bank Proof Preview ─── */
 const BankProofPreview = ({ path }: { path: string }) => {
   const [url, setUrl] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState(false);
   useEffect(() => {
     supabase.storage.from("kyc-documents").createSignedUrl(path, 3600)
       .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl); });
@@ -748,7 +761,8 @@ const BankProofPreview = ({ path }: { path: string }) => {
   return (
     <div className="pt-2 border-t border-border">
       <p className="text-xs text-muted-foreground mb-2">Bank Passbook / Cheque</p>
-      <img src={url} alt="Bank Proof" className="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80" onClick={() => window.open(url, "_blank")} />
+      <img src={url} alt="Bank Proof" className="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80" onClick={() => setLightbox(true)} />
+      <ImageLightbox src={url} alt="Bank Passbook / Cheque" open={lightbox} onClose={() => setLightbox(false)} />
     </div>
   );
 };
@@ -766,6 +780,7 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({});
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [lightboxImg, setLightboxImg] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
     const loadPreviews = async () => {
@@ -825,7 +840,7 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
               {/* Image Preview */}
               {previewUrl ? (
                 <div className="relative">
-                  <img src={previewUrl} alt={DOC_LABELS[doc.document_type]} className="w-full h-48 object-cover rounded-t-lg" />
+                  <img src={previewUrl} alt={DOC_LABELS[doc.document_type]} className="w-full h-48 object-cover rounded-t-lg cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setLightboxImg({ src: previewUrl, alt: DOC_LABELS[doc.document_type] || doc.document_type })} />
                   <Badge variant="outline" className={`absolute top-2 right-2 gap-1 text-[10px] ${s.cls}`}>
                     <SIcon className="h-3 w-3" /> {s.label}
                   </Badge>
@@ -854,7 +869,7 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
                 </div>
 
                 {previewUrl && (
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full" onClick={() => window.open(previewUrl, "_blank")}>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full" onClick={() => setLightboxImg({ src: previewUrl, alt: DOC_LABELS[doc.document_type] || doc.document_type })}>
                     <Eye className="h-3.5 w-3.5" /> View Full Image
                   </Button>
                 )}
@@ -943,6 +958,9 @@ const KycAdminTab = ({ docs, onUpdate }: { docs: any[]; onUpdate: (d: any[]) => 
           </Card>
         );
       })}
+      {lightboxImg && (
+        <ImageLightbox src={lightboxImg.src} alt={lightboxImg.alt} open={!!lightboxImg} onClose={() => setLightboxImg(null)} />
+      )}
     </div>
   );
 };
