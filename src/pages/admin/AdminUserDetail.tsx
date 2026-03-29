@@ -112,6 +112,80 @@ const AdminUserDetail = () => {
     fetchAll();
   }, [userId]);
 
+  const compressImage = async (file: File, maxSizeKB = 300): Promise<File> => {
+    if (!file.type.startsWith("image/")) return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      const canvas = document.createElement("canvas");
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.onload = () => {
+          let { width, height } = img;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          let quality = 0.8;
+          const tryCompress = () => {
+            canvas.toBlob((blob) => {
+              if (blob && (blob.size <= maxSizeKB * 1024 || quality <= 0.2)) {
+                resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+              } else { quality -= 0.1; tryCompress(); }
+            }, "image/jpeg", quality);
+          };
+          tryCompress();
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAdminAvatarUpload = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/jpg,image/webp";
+    fileInput.onchange = async (ev: any) => {
+      let file = ev.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Error", description: "Only image files allowed.", variant: "destructive" });
+        return;
+      }
+      if (file.size > 300 * 1024) {
+        file = await compressImage(file, 300);
+      }
+      setUploadingAdminAvatar(true);
+      try {
+        const path = `${profile.user_id}/avatar_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, file, { upsert: true, contentType: "image/jpeg" });
+        if (uploadErr) throw uploadErr;
+
+        const { error: updateErr } = await supabase
+          .from("profiles")
+          .update({ avatar_url: path })
+          .eq("id", profile.id);
+        if (updateErr) throw updateErr;
+
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        if (urlData?.publicUrl) setAdminAvatarPreview(urlData.publicUrl + "?t=" + Date.now());
+        setProfile({ ...profile, avatar_url: path });
+        toast({ title: "Uploaded", description: "Profile photo updated." });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message || "Upload failed", variant: "destructive" });
+      }
+      setUploadingAdminAvatar(false);
+    };
+    fileInput.click();
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     const trimmedName = editForm.full_name.trim();
