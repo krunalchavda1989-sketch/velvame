@@ -81,6 +81,10 @@ const Settings = () => {
       setFullName(profile.full_name || "");
       setPhone(profile.phone || "");
       setProfileLoaded(true);
+      if (profile.avatar_url) {
+        const { data } = supabase.storage.from("avatars").getPublicUrl(profile.avatar_url);
+        if (data?.publicUrl) setAvatarPreview(data.publicUrl);
+      }
     }
   }, [profile, profileLoaded]);
 
