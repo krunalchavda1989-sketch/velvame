@@ -19,8 +19,9 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera, KeyRound, RefreshCw
 } from "lucide-react";
+import DateDropdowns from "@/components/ui/date-dropdowns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
@@ -48,11 +49,19 @@ const AdminUserDetail = () => {
   const [uploadingAdminAvatar, setUploadingAdminAvatar] = useState(false);
   const [adminAvatarPreview, setAdminAvatarPreview] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
     full_name: "",
     phone: "",
     title: "",
     subscription_paid: false,
+    birth_date: undefined as Date | undefined,
+    anniversary_date: undefined as Date | undefined,
   });
+  
+  const [newPassword, setNewPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -72,10 +81,15 @@ const AdminUserDetail = () => {
 
       if (prof) {
         setEditForm({
+          first_name: prof.first_name || "",
+          middle_name: prof.middle_name || "",
+          last_name: prof.last_name || "",
           full_name: prof.full_name || "",
           phone: prof.phone || "",
           title: prof.title || "Member",
           subscription_paid: prof.subscription_paid || false,
+          birth_date: prof.birth_date ? new Date(prof.birth_date) : undefined,
+          anniversary_date: prof.anniversary_date ? new Date(prof.anniversary_date) : undefined,
         });
         // Load avatar preview
         if (prof.avatar_url) {
@@ -188,22 +202,23 @@ const AdminUserDetail = () => {
 
   const handleSave = async () => {
     if (!profile) return;
-    const trimmedName = editForm.full_name.trim();
-    if (!trimmedName) {
-      toast({ title: "Error", description: "Name cannot be empty.", variant: "destructive" });
-      return;
-    }
-    if (trimmedName.length > 100) {
-      toast({ title: "Error", description: "Name must be less than 100 characters.", variant: "destructive" });
+    const computedFullName = [editForm.first_name.trim(), editForm.middle_name.trim(), editForm.last_name.trim()].filter(Boolean).join(" ");
+    if (!computedFullName) {
+      toast({ title: "Error", description: "First name is required.", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     const updateData: any = {
-      full_name: trimmedName,
+      full_name: computedFullName,
+      first_name: editForm.first_name.trim(),
+      middle_name: editForm.middle_name.trim(),
+      last_name: editForm.last_name.trim(),
       phone: editForm.phone.trim(),
       title: editForm.title,
       subscription_paid: editForm.subscription_paid,
+      birth_date: editForm.birth_date ? format(editForm.birth_date, "yyyy-MM-dd") : null,
+      anniversary_date: editForm.anniversary_date ? format(editForm.anniversary_date, "yyyy-MM-dd") : null,
     };
 
     if (editForm.subscription_paid && !profile.subscription_paid) {
@@ -225,6 +240,33 @@ const AdminUserDetail = () => {
     setProfile({ ...profile, ...updateData });
     setEditOpen(false);
     toast({ title: "Saved", description: "User profile updated successfully." });
+  };
+
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!";
+    let pwd = "";
+    for (let i = 0; i < 12; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    setNewPassword(pwd);
+  };
+
+  const handleResetPassword = async () => {
+    if (!profile || !newPassword) return;
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    setResettingPassword(true);
+    const { data, error } = await supabase.functions.invoke("admin-settings", {
+      body: { action: "reset_user_password", user_id: profile.user_id, new_password: newPassword },
+    });
+    setResettingPassword(false);
+    if (error || data?.error) {
+      toast({ title: "Error", description: data?.error || "Failed to reset password.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Password Reset", description: "New password has been sent to the user's email." });
+    setNewPassword("");
+    
   };
 
   const handleQuickToggleSubscription = async () => {
@@ -316,7 +358,7 @@ const AdminUserDetail = () => {
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Edit User Profile</DialogTitle>
                   </DialogHeader>
@@ -327,7 +369,7 @@ const AdminUserDetail = () => {
                         <Avatar className="h-20 w-20 border-2 border-border">
                           <AvatarImage src={adminAvatarPreview || ""} alt="Profile" />
                           <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                            {editForm.full_name ? editForm.full_name.charAt(0).toUpperCase() : "U"}
+                            {editForm.first_name ? editForm.first_name.charAt(0).toUpperCase() : "U"}
                           </AvatarFallback>
                         </Avatar>
                         <button
@@ -348,28 +390,38 @@ const AdminUserDetail = () => {
                         <p className="text-xs text-muted-foreground">Click to change photo</p>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-name">Full Name</Label>
-                      <Input
-                        id="edit-name"
-                        value={editForm.full_name}
-                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                        maxLength={100}
-                      />
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label>First Name <span className="text-destructive">*</span></Label>
+                        <Input value={editForm.first_name} onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })} maxLength={50} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Middle Name</Label>
+                        <Input value={editForm.middle_name} onChange={(e) => setEditForm({ ...editForm, middle_name: e.target.value })} maxLength={50} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name <span className="text-destructive">*</span></Label>
+                        <Input value={editForm.last_name} onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })} maxLength={50} />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-phone">Phone</Label>
-                      <Input
-                        id="edit-phone"
-                        value={editForm.phone}
-                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                        maxLength={20}
-                      />
+                      <Label>Phone</Label>
+                      <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} maxLength={20} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Birth Date</Label>
+                        <DateDropdowns value={editForm.birth_date} onChange={(d) => setEditForm({ ...editForm, birth_date: d })} maxDate={new Date()} minYear={1940} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Anniversary Date</Label>
+                        <DateDropdowns value={editForm.anniversary_date} onChange={(d) => setEditForm({ ...editForm, anniversary_date: d })} maxDate={new Date()} minYear={1970} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>
                         <Label className="text-sm font-medium">Subscription Active</Label>
-                        <p className="text-xs text-muted-foreground">Toggle subscription status for this user</p>
+                        <p className="text-xs text-muted-foreground">Toggle subscription status</p>
                       </div>
                       <Switch
                         checked={editForm.subscription_paid}
@@ -380,6 +432,27 @@ const AdminUserDetail = () => {
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
+
+                    {/* Reset Password Section */}
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2"><KeyRound className="h-4 w-4" /> Reset Password</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          type="text"
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={generatePassword} className="gap-1 whitespace-nowrap">
+                          <RefreshCw className="h-3.5 w-3.5" /> Auto
+                        </Button>
+                      </div>
+                      <Button onClick={handleResetPassword} disabled={resettingPassword || !newPassword} variant="destructive" className="w-full gap-2">
+                        {resettingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                        {resettingPassword ? "Resetting..." : "Reset & Send to Email"}
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>

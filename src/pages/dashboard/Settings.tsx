@@ -13,13 +13,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload, Camera, CalendarIcon } from "lucide-react";
+import { User, Lock, Bell, Save, Loader2, CreditCard, ChevronRight, Shield, Landmark, Upload, Camera } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import KYCSection from "@/components/dashboard/KYCSection";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import DateDropdowns from "@/components/ui/date-dropdowns";
 
 const Settings = () => {
   const [searchParams] = useSearchParams();
@@ -412,45 +410,11 @@ const Settings = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Birth Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !birthDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {birthDate ? format(birthDate, "PPP") : <span>Select date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={birthDate}
-                            onSelect={setBirthDate}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DateDropdowns value={birthDate} onChange={setBirthDate} maxDate={new Date()} minYear={1940} />
                     </div>
                     <div className="space-y-2">
                       <Label>Anniversary Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !anniversaryDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {anniversaryDate ? format(anniversaryDate, "PPP") : <span>Select date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={anniversaryDate}
-                            onSelect={setAnniversaryDate}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                            className={cn("p-3 pointer-events-auto")}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DateDropdowns value={anniversaryDate} onChange={setAnniversaryDate} maxDate={new Date()} minYear={1970} />
                     </div>
                   </div>
                   <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending || !firstName.trim() || !lastName.trim()} className="gap-2">
