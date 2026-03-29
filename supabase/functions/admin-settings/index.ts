@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
   const userId = claimsData.claims.sub as string;
 
-  // Check admin role
+  // Check admin role (master admin)
   const serviceClient = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -49,7 +49,19 @@ Deno.serve(async (req) => {
     .eq("role", "admin")
     .single();
 
-  if (!roleData) {
+  // Also check sub-admin
+  let isAuthorized = !!roleData;
+  if (!isAuthorized) {
+    const { data: subAdmin } = await serviceClient
+      .from("admin_sub_users")
+      .select("is_active")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .single();
+    isAuthorized = !!subAdmin;
+  }
+
+  if (!isAuthorized) {
     return new Response(JSON.stringify({ error: "Forbidden: admin access required" }), {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -106,6 +118,34 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+    }
+
+    if (action === "lookup_user_by_email") {
+      const { email } = body;
+      if (!email) {
+        return new Response(JSON.stringify({ error: "email is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: users, error: listErr } = await serviceClient.auth.admin.listUsers();
+      if (listErr) {
+        return new Response(JSON.stringify({ error: "Failed to lookup user" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const found = users.users.find((u: any) => u.email === email);
+      if (!found) {
+        return new Response(JSON.stringify({ error: "User not found with this email. They must register first." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({ user_id: found.id }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (action === "get_user_email") {

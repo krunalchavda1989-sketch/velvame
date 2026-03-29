@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 
+const MASTER_ADMIN_EMAIL = "shweta1112025@gmail.com";
+
 const AdminLogin = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -23,23 +25,41 @@ const AdminLogin = () => {
       });
       if (error) throw error;
 
-      // Verify admin role
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
+      const userEmail = authData.user.email;
+
+      // Check if master admin
+      if (userEmail === MASTER_ADMIN_EMAIL) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (roleData) {
+          toast.success("Welcome, Master Administrator!");
+          navigate("/admin");
+          return;
+        }
+      }
+
+      // Check if sub-admin
+      const { data: subAdmin } = await supabase
+        .from("admin_sub_users")
+        .select("is_active")
         .eq("user_id", authData.user.id)
-        .eq("role", "admin")
+        .eq("is_active", true)
         .maybeSingle();
 
-      if (!roleData) {
-        await supabase.auth.signOut();
-        toast.error("Access denied. Admin credentials required.");
-        setLoading(false);
+      if (subAdmin) {
+        toast.success("Welcome, Administrator!");
+        navigate("/admin");
         return;
       }
 
-      toast.success("Welcome, Administrator!");
-      navigate("/admin");
+      // Not authorized
+      await supabase.auth.signOut();
+      toast.error("Access denied. Admin credentials required.");
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
     } finally {
