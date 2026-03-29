@@ -213,6 +213,46 @@ const Settings = () => {
     });
   };
 
+  const handleAvatarUpload = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/jpg,image/webp";
+    fileInput.onchange = async (e: any) => {
+      let file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Error", description: "Only image files allowed.", variant: "destructive" });
+        return;
+      }
+      if (file.size > 300 * 1024) {
+        file = await compressImage(file, 300);
+      }
+      setUploadingAvatar(true);
+      try {
+        const path = `${user!.id}/avatar_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, file, { upsert: true, contentType: "image/jpeg" });
+        if (uploadErr) throw uploadErr;
+
+        const { error: updateErr } = await supabase
+          .from("profiles")
+          .update({ avatar_url: path })
+          .eq("user_id", user!.id);
+        if (updateErr) throw updateErr;
+
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+        if (urlData?.publicUrl) setAvatarPreview(urlData.publicUrl + "?t=" + Date.now());
+        queryClient.invalidateQueries({ queryKey: ["settings-profile"] });
+        toast({ title: "Uploaded", description: "Profile photo updated successfully." });
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message || "Upload failed", variant: "destructive" });
+      }
+      setUploadingAvatar(false);
+    };
+    fileInput.click();
+  };
+
   const handleBankProofUpload = () => {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
