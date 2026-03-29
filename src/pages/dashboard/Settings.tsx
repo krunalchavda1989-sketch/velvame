@@ -305,6 +305,27 @@ const Settings = () => {
                           />
                         </div>
                       </div>
+                      {/* Bank Passbook/Cheque Upload */}
+                      <div className="space-y-2">
+                        <Label>Bank Passbook / Cancelled Cheque (Optional)</Label>
+                        {bankProofPreview && (
+                          <div className="rounded-lg border border-border overflow-hidden max-w-xs">
+                            <img src={bankProofPreview} alt="Bank Proof" className="w-full h-32 object-cover" />
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="gap-2"
+                          disabled={uploadingBankProof}
+                          onClick={handleBankProofUpload}
+                        >
+                          {uploadingBankProof ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                          {bankDetails?.bank_proof_url ? "Re-upload Proof" : "Upload Proof"}
+                        </Button>
+                        <p className="text-xs text-muted-foreground">Max 300KB. Auto-compressed if larger.</p>
+                      </div>
+
                       <Button
                         onClick={() => saveBankDetails.mutate()}
                         disabled={saveBankDetails.isPending || (!accountHolderName.trim() && !bankName.trim() && !accountNumber.trim())}
