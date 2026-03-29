@@ -453,6 +453,10 @@ const Settings = () => {
                       </Popover>
                     </div>
                   </div>
+                  <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending || !firstName.trim() || !lastName.trim()} className="gap-2">
+                    {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Save Changes
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
