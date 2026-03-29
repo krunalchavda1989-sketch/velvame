@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet } from "lucide-react";
 
 interface OrderItem {
   product_id: string;
@@ -15,6 +15,12 @@ interface OrderItem {
   price: number;
   variation_id: string;
   variation_label: string;
+}
+
+interface WalletData {
+  balance: number;
+  subscription_balance: number;
+  commission_balance: number;
 }
 
 const AdminManualOrder = () => {
@@ -28,6 +34,8 @@ const AdminManualOrder = () => {
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [sendPaymentLink, setSendPaymentLink] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [userWallet, setUserWallet] = useState<WalletData | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +47,6 @@ const AdminManualOrder = () => {
       setUsers(usersRes.data || []);
       setProducts(productsRes.data || []);
 
-      // Group variations by product_id
       const vMap: Record<string, any[]> = {};
       (variationsRes.data || []).forEach((v: any) => {
         if (!vMap[v.product_id]) vMap[v.product_id] = [];
@@ -50,6 +57,25 @@ const AdminManualOrder = () => {
     };
     fetchData();
   }, []);
+
+  // Fetch wallet when user changes
+  useEffect(() => {
+    if (!selectedUserId) {
+      setUserWallet(null);
+      return;
+    }
+    const fetchWallet = async () => {
+      setWalletLoading(true);
+      const { data } = await supabase
+        .from("wallets")
+        .select("balance, subscription_balance, commission_balance")
+        .eq("user_id", selectedUserId)
+        .maybeSingle();
+      setUserWallet(data || null);
+      setWalletLoading(false);
+    };
+    fetchWallet();
+  }, [selectedUserId]);
 
   const addItem = () => {
     setOrderItems([...orderItems, { product_id: "", quantity: 1, price: 0, variation_id: "", variation_label: "" }]);
@@ -95,10 +121,20 @@ const AdminManualOrder = () => {
       return;
     }
 
+    // Wallet balance validation
+    if (paymentMethod === "wallet") {
+      if (!userWallet || userWallet.balance < totalAmount) {
+        toast.error(`Insufficient wallet balance. Available: ₹${userWallet?.balance?.toFixed(2) || "0.00"}`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
+
+      const walletAmountUsed = paymentMethod === "wallet" ? totalAmount : 0;
 
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -106,8 +142,9 @@ const AdminManualOrder = () => {
           user_id: selectedUserId,
           total_amount: totalAmount,
           payment_method: paymentMethod,
-          status: paymentMethod === "cod" ? "confirmed" : "pending",
+          status: paymentMethod === "wallet" || paymentMethod === "cod" || paymentMethod === "manual" ? "confirmed" : "pending",
           shipping_address: {},
+          wallet_amount_used: walletAmountUsed,
         })
         .select()
         .single();
@@ -125,6 +162,38 @@ const AdminManualOrder = () => {
 
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw itemsError;
+
+      // Deduct wallet balance if wallet payment
+      if (paymentMethod === "wallet") {
+        const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet_balance", {
+          _user_id: selectedUserId,
+          _amount: totalAmount,
+        });
+
+        if (deductError) throw deductError;
+        const result = deductResult as any;
+        if (!result?.success) {
+          throw new Error(result?.error || "Failed to deduct wallet balance");
+        }
+
+        // Update the wallet transaction records with the order_id
+        await supabase
+          .from("wallet_transactions")
+          .update({ order_id: order.id })
+          .eq("user_id", selectedUserId)
+          .eq("type", "debit")
+          .is("order_id", null)
+          .order("created_at", { ascending: false })
+          .limit(2);
+
+        // Refresh wallet display
+        const { data: updatedWallet } = await supabase
+          .from("wallets")
+          .select("balance, subscription_balance, commission_balance")
+          .eq("user_id", selectedUserId)
+          .maybeSingle();
+        setUserWallet(updatedWallet || null);
+      }
 
       if (sendPaymentLink && paymentMethod === "razorpay") {
         try {
@@ -179,7 +248,7 @@ const AdminManualOrder = () => {
           {/* User Selection */}
           <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
             <h2 className="font-semibold text-foreground">Select User</h2>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <Select value={selectedUserId} onValueChange={(v) => { setSelectedUserId(v); setPaymentMethod("razorpay"); }}>
               <SelectTrigger className="bg-secondary border-border">
                 <SelectValue placeholder="Choose a user..." />
               </SelectTrigger>
@@ -191,6 +260,36 @@ const AdminManualOrder = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Wallet Balance Display */}
+            {selectedUserId && (
+              <div className="p-3 rounded-lg bg-secondary/50 border border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">User Wallet Balance</span>
+                </div>
+                {walletLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                ) : userWallet ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Total Balance</p>
+                      <p className="text-sm font-bold text-foreground">₹{userWallet.balance.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Subscription</p>
+                      <p className="text-sm font-semibold text-foreground">₹{userWallet.subscription_balance.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Commission</p>
+                      <p className="text-sm font-semibold text-foreground">₹{userWallet.commission_balance.toFixed(2)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No wallet found</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Products */}
@@ -212,7 +311,6 @@ const AdminManualOrder = () => {
                 <div key={index} className="p-3 sm:p-4 rounded-lg bg-secondary/50 border border-border space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="flex-1 space-y-3">
-                      {/* Product select */}
                       <div>
                         <Label className="text-xs text-muted-foreground">Product</Label>
                         <Select value={item.product_id} onValueChange={(v) => updateItem(index, "product_id", v)}>
@@ -229,7 +327,6 @@ const AdminManualOrder = () => {
                         </Select>
                       </div>
 
-                      {/* Variation select - only show if product has variations */}
                       {productVariations.length > 0 && (
                         <div>
                           <Label className="text-xs text-muted-foreground">Variation / Attribute</Label>
@@ -253,7 +350,6 @@ const AdminManualOrder = () => {
                         </div>
                       )}
 
-                      {/* Qty & Price row */}
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs text-muted-foreground">Qty</Label>
@@ -304,8 +400,48 @@ const AdminManualOrder = () => {
                 <SelectItem value="cod">Cash on Delivery</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                 <SelectItem value="manual">Manual / Cash</SelectItem>
+                {selectedUserId && userWallet && userWallet.balance > 0 && (
+                  <SelectItem value="wallet">
+                    Wallet Balance (₹{userWallet.balance.toFixed(2)})
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
+
+            {paymentMethod === "wallet" && userWallet && (
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Wallet Payment</span>
+                  </div>
+                  {totalAmount > userWallet.balance ? (
+                    <Badge variant="destructive" className="text-xs">Insufficient Balance</Badge>
+                  ) : (
+                    <Badge className="text-xs bg-green-600 hover:bg-green-700">Sufficient Balance</Badge>
+                  )}
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <div className="flex justify-between">
+                    <span>Available Balance:</span>
+                    <span className="font-medium text-foreground">₹{userWallet.balance.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Order Total:</span>
+                    <span className="font-medium text-foreground">₹{totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border pt-1 mt-1">
+                    <span>Remaining After Order:</span>
+                    <span className={`font-bold ${userWallet.balance - totalAmount >= 0 ? "text-green-600" : "text-destructive"}`}>
+                      ₹{(userWallet.balance - totalAmount).toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Subscription balance will be used first, then commission balance.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {paymentMethod === "razorpay" && (
               <div className="flex items-center gap-3 pt-2">
@@ -326,11 +462,13 @@ const AdminManualOrder = () => {
           {/* Submit */}
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !selectedUserId || orderItems.length === 0}
+            disabled={submitting || !selectedUserId || orderItems.length === 0 || (paymentMethod === "wallet" && (!userWallet || userWallet.balance < totalAmount))}
             className="w-full bg-primary text-primary-foreground font-semibold h-12"
           >
             {submitting ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : paymentMethod === "wallet" ? (
+              <Wallet className="h-4 w-4 mr-2" />
             ) : sendPaymentLink ? (
               <Send className="h-4 w-4 mr-2" />
             ) : (
@@ -338,9 +476,11 @@ const AdminManualOrder = () => {
             )}
             {submitting
               ? "Creating order..."
-              : sendPaymentLink
-                ? `Create Order & Send Payment Link — ₹${totalAmount.toFixed(2)}`
-                : `Create Order — ₹${totalAmount.toFixed(2)}`}
+              : paymentMethod === "wallet"
+                ? `Create Order (Pay from Wallet) — ₹${totalAmount.toFixed(2)}`
+                : sendPaymentLink
+                  ? `Create Order & Send Payment Link — ₹${totalAmount.toFixed(2)}`
+                  : `Create Order — ₹${totalAmount.toFixed(2)}`}
           </Button>
         </div>
       </div>
