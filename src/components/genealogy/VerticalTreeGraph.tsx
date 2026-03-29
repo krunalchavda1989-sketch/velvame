@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { User, Shield, Users, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Shield, Users, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { getAvatarUrl, getInitial } from "@/lib/avatarUtils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -124,15 +125,15 @@ const GraphNode = ({
         >
           <div className="flex items-center gap-2 h-full">
             <div className="relative flex-shrink-0">
-              {node.avatar_url ? (
+              {getAvatarUrl(node.avatar_url) ? (
                 <img
-                  src={node.avatar_url}
+                  src={getAvatarUrl(node.avatar_url)!}
                   alt={node.full_name}
                   className="w-8 h-8 rounded-full object-cover border border-border/50"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-background/60 flex items-center justify-center">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-[10px] font-semibold text-primary">{getInitial(node.full_name)}</span>
                 </div>
               )}
               {node.subscription_paid && (

@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronDown, ChevronRight, User, Users, Crown, Loader2,
+  ChevronDown, ChevronRight, Users, Crown, Loader2,
   Shield, Search, X, Eye, ArrowLeft, List, GitFork
 } from "lucide-react";
+import { getAvatarUrl, getInitial } from "@/lib/avatarUtils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -125,16 +126,16 @@ const TreeNodeCard = ({
           </button>
 
           {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            {node.avatar_url ? (
+           <div className="relative flex-shrink-0">
+            {getAvatarUrl(node.avatar_url) ? (
               <img
-                src={node.avatar_url}
+                src={getAvatarUrl(node.avatar_url)!}
                 alt={node.full_name}
                 className="w-10 h-10 rounded-full object-cover border border-border"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-5 w-5 text-muted-foreground" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">{getInitial(node.full_name)}</span>
               </div>
             )}
             {node.subscription_paid && (
