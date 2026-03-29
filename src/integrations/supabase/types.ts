@@ -193,6 +193,7 @@ export type Database = {
           account_holder_name: string
           account_number: string
           bank_name: string
+          bank_proof_url: string | null
           branch_name: string
           created_at: string
           id: string
@@ -205,6 +206,7 @@ export type Database = {
           account_holder_name?: string
           account_number?: string
           bank_name?: string
+          bank_proof_url?: string | null
           branch_name?: string
           created_at?: string
           id?: string
@@ -217,6 +219,7 @@ export type Database = {
           account_holder_name?: string
           account_number?: string
           bank_name?: string
+          bank_proof_url?: string | null
           branch_name?: string
           created_at?: string
           id?: string
