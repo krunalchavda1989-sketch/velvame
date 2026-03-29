@@ -358,7 +358,7 @@ const AdminUserDetail = () => {
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Edit User Profile</DialogTitle>
                   </DialogHeader>
@@ -369,7 +369,7 @@ const AdminUserDetail = () => {
                         <Avatar className="h-20 w-20 border-2 border-border">
                           <AvatarImage src={adminAvatarPreview || ""} alt="Profile" />
                           <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                            {editForm.full_name ? editForm.full_name.charAt(0).toUpperCase() : "U"}
+                            {editForm.first_name ? editForm.first_name.charAt(0).toUpperCase() : "U"}
                           </AvatarFallback>
                         </Avatar>
                         <button
@@ -390,28 +390,38 @@ const AdminUserDetail = () => {
                         <p className="text-xs text-muted-foreground">Click to change photo</p>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-name">Full Name</Label>
-                      <Input
-                        id="edit-name"
-                        value={editForm.full_name}
-                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                        maxLength={100}
-                      />
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label>First Name <span className="text-destructive">*</span></Label>
+                        <Input value={editForm.first_name} onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })} maxLength={50} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Middle Name</Label>
+                        <Input value={editForm.middle_name} onChange={(e) => setEditForm({ ...editForm, middle_name: e.target.value })} maxLength={50} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name <span className="text-destructive">*</span></Label>
+                        <Input value={editForm.last_name} onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })} maxLength={50} />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="edit-phone">Phone</Label>
-                      <Input
-                        id="edit-phone"
-                        value={editForm.phone}
-                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                        maxLength={20}
-                      />
+                      <Label>Phone</Label>
+                      <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} maxLength={20} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Birth Date</Label>
+                        <DateDropdowns value={editForm.birth_date} onChange={(d) => setEditForm({ ...editForm, birth_date: d })} maxDate={new Date()} minYear={1940} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Anniversary Date</Label>
+                        <DateDropdowns value={editForm.anniversary_date} onChange={(d) => setEditForm({ ...editForm, anniversary_date: d })} maxDate={new Date()} minYear={1970} />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border p-3">
                       <div>
                         <Label className="text-sm font-medium">Subscription Active</Label>
-                        <p className="text-xs text-muted-foreground">Toggle subscription status for this user</p>
+                        <p className="text-xs text-muted-foreground">Toggle subscription status</p>
                       </div>
                       <Switch
                         checked={editForm.subscription_paid}
@@ -422,6 +432,27 @@ const AdminUserDetail = () => {
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
+
+                    {/* Reset Password Section */}
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2"><KeyRound className="h-4 w-4" /> Reset Password</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          type="text"
+                          className="flex-1"
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={generatePassword} className="gap-1 whitespace-nowrap">
+                          <RefreshCw className="h-3.5 w-3.5" /> Auto
+                        </Button>
+                      </div>
+                      <Button onClick={handleResetPassword} disabled={resettingPassword || !newPassword} variant="destructive" className="w-full gap-2">
+                        {resettingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                        {resettingPassword ? "Resetting..." : "Reset & Send to Email"}
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
