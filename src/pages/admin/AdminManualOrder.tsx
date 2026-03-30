@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
