@@ -368,7 +368,9 @@ const AdminManualOrder = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left Column - Form */}
+          <div className="lg:col-span-3 space-y-6">
           {/* User Selection */}
           <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
             <h2 className="font-semibold text-foreground">Select User</h2>
