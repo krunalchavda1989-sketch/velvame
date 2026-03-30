@@ -239,7 +239,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       {/* Mobile header */}
       <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center px-4 md:hidden">
         <button onClick={() => setMobileOpen(true)} className="p-2 -ml-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary">
