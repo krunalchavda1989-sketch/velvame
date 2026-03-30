@@ -84,6 +84,10 @@ const Dashboard = () => {
         setTeamCount(count);
         setRecentTeam(team);
 
+        // Total referrals (all levels) via genealogy tree
+        const { data: treeData } = await supabase.rpc("get_genealogy_tree", { root_user_id: user.id });
+        setTotalReferralCount(treeData ? treeData.length - 1 : 0); // exclude self
+
         const { data: allTeam } = await supabase
           .from("profiles")
           .select("created_at")
