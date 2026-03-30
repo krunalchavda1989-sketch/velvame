@@ -445,6 +445,7 @@ const Index = () => {
       {/* ===== How It Works ===== */}
       <section className="py-16 lg:py-20">
         <div className="container px-4">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
