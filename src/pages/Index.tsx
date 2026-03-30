@@ -350,82 +350,98 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ===== Featured Products ===== */}
-      {featuredProducts.length > 0 && (
-        <section className="py-16 lg:py-20 bg-secondary/30">
-          <div className="container px-4">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Featured Products</h2>
-              <p className="text-sm text-muted-foreground mt-2">Top selling products at the best prices</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-              {featuredProducts.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="rounded-2xl bg-card border border-border overflow-hidden group hover:shadow-lg transition-all"
-                >
-                  <Link to={getProductUrl(product)}>
-                    <div className="bg-secondary aspect-square flex items-center justify-center overflow-hidden">
-                      {product.image_url?.startsWith("http") ? (
-                        <img src={product.image_url} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <span className="text-4xl">{product.image_url || "📦"}</span>
-                      )}
-                    </div>
-                  </Link>
-                  <div className="p-4">
+      {/* ===== Dynamic Featured Sections ===== */}
+      {featuredSections.map((section) => {
+        const sectionProducts = getSectionProducts(section);
+        if (sectionProducts.length === 0) return null;
+        const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 2 : 5;
+        const currentPage = sectionPages[section.id] || 0;
+        const totalPages = Math.ceil(sectionProducts.length / perPage);
+        const visibleProducts = sectionProducts.slice(currentPage * perPage, currentPage * perPage + perPage);
+
+        return (
+          <section key={section.id} className="py-16 lg:py-20" style={{ backgroundColor: section.bg_color }}>
+            <div className="container px-4">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">{section.title}</h2>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSectionPages((prev) => ({ ...prev, [section.id]: Math.max(0, currentPage - 1) }))}
+                      disabled={currentPage === 0}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setSectionPages((prev) => ({ ...prev, [section.id]: Math.min(totalPages - 1, currentPage + 1) }))}
+                      disabled={currentPage === totalPages - 1}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
+                {visibleProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05 }}
+                    className="rounded-2xl bg-card border border-border overflow-hidden group hover:shadow-lg transition-all"
+                  >
                     <Link to={getProductUrl(product)}>
-                      <h3 className="font-display font-semibold text-foreground text-sm truncate hover:text-primary transition-colors">{product.name}</h3>
-                    </Link>
-                    <div className="flex items-center gap-1 my-1.5">
-                      <Star className="h-3 w-3 text-primary fill-primary" />
-                      <span className="text-xs text-muted-foreground">{product.rating}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div>
-                        {user ? (
-                          <>
-                            <span className="text-base font-display font-bold text-foreground">{formatPrice(product.distributor_price, currencySymbol)}</span>
-                            <span className="text-xs text-muted-foreground line-through ml-1.5">{formatPrice(product.retail_price, currencySymbol)}</span>
-                          </>
+                      <div className="bg-secondary aspect-square flex items-center justify-center overflow-hidden">
+                        {product.image_url?.startsWith("http") ? (
+                          <img src={product.image_url} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
                         ) : (
-                          <span className="text-base font-display font-bold text-foreground">{formatPrice(product.retail_price, currencySymbol)}</span>
+                          <span className="text-4xl">{product.image_url || "📦"}</span>
                         )}
                       </div>
+                    </Link>
+                    <div className="p-4">
+                      <Link to={getProductUrl(product)}>
+                        <h3 className="font-display font-semibold text-foreground text-sm truncate hover:text-primary transition-colors">{product.name}</h3>
+                      </Link>
+                      <div className="flex items-center gap-1 my-1.5">
+                        <Star className="h-3 w-3 text-primary fill-primary" />
+                        <span className="text-xs text-muted-foreground">{product.rating}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div>
+                          {user ? (
+                            <>
+                              <span className="text-base font-display font-bold text-foreground">{formatPrice(product.distributor_price, currencySymbol)}</span>
+                              <span className="text-xs text-muted-foreground line-through ml-1.5">{formatPrice(product.retail_price, currencySymbol)}</span>
+                            </>
+                          ) : (
+                            <span className="text-base font-display font-bold text-foreground">{formatPrice(product.retail_price, currencySymbol)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors text-xs font-medium h-9"
+                        onClick={() => {
+                          addToCart(product.id);
+                          toast.success(`Added ${product.name}`);
+                        }}
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
+                        Add to Cart
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full mt-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors text-xs font-medium h-9"
-                      onClick={() => {
-                        addToCart(product.id);
-                        toast.success(`Added ${product.name}`);
-                      }}
-                    >
-                      <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
-                      Add to Cart
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))}
+              </div>
             </div>
-            <div className="text-center mt-8">
-              <Link to="/shop">
-                <Button variant="outline" className="rounded-full px-8 border-border font-semibold">
-                  View All Products <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ===== How It Works ===== */}
-      <section className="py-16 lg:py-20">
+          </section>
+        );
+      })}
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
