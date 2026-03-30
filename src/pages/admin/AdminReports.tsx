@@ -188,22 +188,23 @@ const UserReport = ({ from, to }: ReportProps) => {
         <ChartCard title="New User Registrations">
           <ResponsiveContainer>
             <AreaChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
-              <Area type="monotone" dataKey="count" name="Users" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+              <defs><ChartGradients /></defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={axisTick} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={chartTooltipStyle} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+              <Area type="monotone" dataKey="count" name="Users" stroke="#6366f1" fill="url(#grad-indigo)" strokeWidth={2.5} dot={{ r: 3, fill: "#6366f1" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="User Status Distribution">
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} stroke="none" />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
-              <Legend />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
