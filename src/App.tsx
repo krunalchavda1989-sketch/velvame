@@ -78,6 +78,7 @@ import AdminSubUsers from "./pages/admin/AdminSubUsers";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminSystemColors from "./pages/admin/AdminSystemColors";
 import AdminFeaturedSections from "./pages/admin/AdminFeaturedSections";
+import AdminCategorySection from "./pages/admin/AdminCategorySection";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
@@ -251,6 +252,7 @@ const App = () => (
             <Route path="/admin/default-placement" element={<AdminRoute><AdminDefaultPlacement /></AdminRoute>} />
             <Route path="/admin/sub-users" element={<AdminRoute><AdminSubUsers /></AdminRoute>} />
             <Route path="/admin/featured-sections" element={<AdminRoute><AdminFeaturedSections /></AdminRoute>} />
+            <Route path="/admin/category-section" element={<AdminRoute><AdminCategorySection /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />

@@ -569,6 +569,48 @@ export type Database = {
         }
         Relationships: []
       }
+      category_section_settings: {
+        Row: {
+          bg_color: string
+          bg_image_url: string
+          created_at: string
+          display_count: number
+          hover_effect: string
+          id: string
+          image_style: string
+          is_active: boolean
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          bg_image_url?: string
+          created_at?: string
+          display_count?: number
+          hover_effect?: string
+          id?: string
+          image_style?: string
+          is_active?: boolean
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          bg_image_url?: string
+          created_at?: string
+          display_count?: number
+          hover_effect?: string
+          id?: string
+          image_style?: string
+          is_active?: boolean
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       commission_levels: {
         Row: {
           commission_type: string
