@@ -865,6 +865,10 @@ const Checkout = () => {
                         <Button variant="outline" onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()} className="border-gray-300 text-gray-700">
                           {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
                         </Button>
+                        <CouponRecommendations
+                          appliedCode={appliedCoupon?.code}
+                          onSelect={(code) => setCouponCode(code)}
+                        />
                       </div>
                     )}
 
