@@ -197,12 +197,10 @@ const AdminManualOrder = () => {
       return;
     }
 
-    // Wallet balance validation
-    if (paymentMethod === "wallet") {
-      if (!userWallet || userWallet.balance < totalAmount) {
-        toast.error(`Insufficient wallet balance. Available: ₹${userWallet?.balance?.toFixed(2) || "0.00"}`);
-        return;
-      }
+    // If wallet covers everything, no payment method needed; otherwise require one
+    if (remainingAmount > 0 && !paymentMethod) {
+      toast.error("Please select a payment method for the remaining amount");
+      return;
     }
 
     setSubmitting(true);
@@ -210,17 +208,18 @@ const AdminManualOrder = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
-      const walletAmountUsed = paymentMethod === "wallet" ? totalAmount : 0;
+      const effectivePaymentMethod = remainingAmount <= 0 ? "wallet" : paymentMethod;
+      const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: selectedUserId,
           total_amount: totalAmount,
-          payment_method: paymentMethod,
-          status: paymentMethod === "wallet" || paymentMethod === "cod" || paymentMethod === "manual" ? "confirmed" : "pending",
+          payment_method: effectivePaymentMethod,
+          status: isConfirmed ? "confirmed" : "pending",
           shipping_address: {},
-          wallet_amount_used: walletAmountUsed,
+          wallet_amount_used: walletAmountToUse,
         })
         .select()
         .single();
@@ -239,11 +238,11 @@ const AdminManualOrder = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw itemsError;
 
-      // Deduct wallet balance if wallet payment
-      if (paymentMethod === "wallet") {
+      // Deduct wallet balance if used
+      if (walletAmountToUse > 0) {
         const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet_balance", {
           _user_id: selectedUserId,
-          _amount: totalAmount,
+          _amount: walletAmountToUse,
         });
 
         if (deductError) throw deductError;
@@ -252,7 +251,6 @@ const AdminManualOrder = () => {
           throw new Error(result?.error || "Failed to deduct wallet balance");
         }
 
-        // Update the wallet transaction records with the order_id
         await supabase
           .from("wallet_transactions")
           .update({ order_id: order.id })
@@ -262,7 +260,6 @@ const AdminManualOrder = () => {
           .order("created_at", { ascending: false })
           .limit(2);
 
-        // Refresh wallet display
         const { data: updatedWallet } = await supabase
           .from("wallets")
           .select("balance, subscription_balance, commission_balance")
@@ -271,13 +268,23 @@ const AdminManualOrder = () => {
         setUserWallet(updatedWallet || null);
       }
 
-      if (sendPaymentLink && paymentMethod === "razorpay") {
+      // Add payment note as order note if provided
+      if (paymentNote.trim() && ["manual", "bank_transfer", "cod"].includes(effectivePaymentMethod)) {
+        await supabase.from("order_notes").insert({
+          order_id: order.id,
+          content: `Payment Note (${effectivePaymentMethod}): ${paymentNote.trim()}`,
+          note_type: "payment",
+          is_internal: true,
+        });
+      }
+
+      if (sendPaymentLink && effectivePaymentMethod === "razorpay" && remainingAmount > 0) {
         try {
           await supabase.functions.invoke("send-payment-link", {
             body: {
               order_id: order.id,
               user_id: selectedUserId,
-              amount: totalAmount,
+              amount: remainingAmount,
             },
           });
           toast.success("Payment link sent to user's email!");
@@ -286,7 +293,6 @@ const AdminManualOrder = () => {
         }
       }
 
-      // Increment coupon usage if applied
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
@@ -297,6 +303,8 @@ const AdminManualOrder = () => {
       setOrderItems([]);
       setPaymentMethod("razorpay");
       setSendPaymentLink(false);
+      setUseWallet(false);
+      setPaymentNote("");
       removeCoupon();
     } catch (err: any) {
       toast.error(err.message || "Failed to create order");
