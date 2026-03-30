@@ -274,12 +274,18 @@ const AdminManualOrder = () => {
         }
       }
 
+      // Increment coupon usage if applied
+      if (appliedCoupon) {
+        await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
+      }
+
       toast.success(`Order created successfully! ID: ${order.id.slice(0, 8)}…`);
 
       setSelectedUserId("");
       setOrderItems([]);
       setPaymentMethod("razorpay");
       setSendPaymentLink(false);
+      removeCoupon();
     } catch (err: any) {
       toast.error(err.message || "Failed to create order");
     } finally {
