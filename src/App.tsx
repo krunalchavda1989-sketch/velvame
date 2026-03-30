@@ -252,6 +252,7 @@ const App = () => (
             <Route path="/admin/default-placement" element={<AdminRoute><AdminDefaultPlacement /></AdminRoute>} />
             <Route path="/admin/sub-users" element={<AdminRoute><AdminSubUsers /></AdminRoute>} />
             <Route path="/admin/featured-sections" element={<AdminRoute><AdminFeaturedSections /></AdminRoute>} />
+            <Route path="/admin/category-section" element={<AdminRoute><AdminCategorySection /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
