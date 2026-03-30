@@ -367,11 +367,13 @@ export type Database = {
       }
       brand_settings: {
         Row: {
+          accent_color: string | null
           address: string | null
           brand_color: string | null
           brand_name: string
           button_color: string | null
           created_at: string
+          danger_color: string | null
           email: string | null
           favicon_url: string | null
           font_body: string | null
@@ -379,19 +381,30 @@ export type Database = {
           footer_logo_url: string | null
           gst_number: string | null
           id: string
+          info_color: string | null
           logo_url: string | null
           og_image_url: string | null
           phone: string | null
+          secondary_color: string | null
+          sidebar_color: string | null
+          stat_color_1: string | null
+          stat_color_2: string | null
+          stat_color_3: string | null
+          stat_color_4: string | null
+          success_color: string | null
           tagline: string | null
           updated_at: string
+          warning_color: string | null
           website: string | null
         }
         Insert: {
+          accent_color?: string | null
           address?: string | null
           brand_color?: string | null
           brand_name?: string
           button_color?: string | null
           created_at?: string
+          danger_color?: string | null
           email?: string | null
           favicon_url?: string | null
           font_body?: string | null
@@ -399,19 +412,30 @@ export type Database = {
           footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
+          info_color?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           phone?: string | null
+          secondary_color?: string | null
+          sidebar_color?: string | null
+          stat_color_1?: string | null
+          stat_color_2?: string | null
+          stat_color_3?: string | null
+          stat_color_4?: string | null
+          success_color?: string | null
           tagline?: string | null
           updated_at?: string
+          warning_color?: string | null
           website?: string | null
         }
         Update: {
+          accent_color?: string | null
           address?: string | null
           brand_color?: string | null
           brand_name?: string
           button_color?: string | null
           created_at?: string
+          danger_color?: string | null
           email?: string | null
           favicon_url?: string | null
           font_body?: string | null
@@ -419,11 +443,20 @@ export type Database = {
           footer_logo_url?: string | null
           gst_number?: string | null
           id?: string
+          info_color?: string | null
           logo_url?: string | null
           og_image_url?: string | null
           phone?: string | null
+          secondary_color?: string | null
+          sidebar_color?: string | null
+          stat_color_1?: string | null
+          stat_color_2?: string | null
+          stat_color_3?: string | null
+          stat_color_4?: string | null
+          success_color?: string | null
           tagline?: string | null
           updated_at?: string
+          warning_color?: string | null
           website?: string | null
         }
         Relationships: []
