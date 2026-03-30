@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [copied, setCopied] = useState(false);
   const [wallet, setWallet] = useState<any>(null);
   const [teamCount, setTeamCount] = useState(0);
+  const [totalReferralCount, setTotalReferralCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [recentTeam, setRecentTeam] = useState<any[]>([]);
   const [earningsTrend, setEarningsTrend] = useState<any[]>([]);
