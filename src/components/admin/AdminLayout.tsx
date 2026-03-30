@@ -145,11 +145,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-        {menuItems.map((item) => {
+        {menuItems.map((item, idx) => {
           const active = location.pathname === item.href;
           const hasChildren = item.children && item.children.length > 0;
           const groupOpen = openGroups[item.label] || false;
           const childActive = isChildActive(item);
+          const iconBg = ICON_COLORS[idx % ICON_COLORS.length];
 
           return (
             <div key={item.label}>
