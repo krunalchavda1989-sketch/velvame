@@ -159,6 +159,10 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
             button_color: d.button_color || defaultBrand.button_color,
             font_heading: d.font_heading || defaultBrand.font_heading,
             font_body: d.font_body || defaultBrand.font_body,
+            stat_color_1: d.stat_color_1 || defaultBrand.stat_color_1,
+            stat_color_2: d.stat_color_2 || defaultBrand.stat_color_2,
+            stat_color_3: d.stat_color_3 || defaultBrand.stat_color_3,
+            stat_color_4: d.stat_color_4 || defaultBrand.stat_color_4,
           };
           setBrand(b);
           applyBrandTheme(b);
