@@ -132,12 +132,6 @@ const AdminWithdrawals = () => {
     rejected: withdrawals.filter((w) => w.status === "rejected").reduce((s, w) => s + Number(w.amount), 0),
   };
 
-  const summaryCards = [
-    { icon: Clock, label: "Pending", value: `₹${totals.pending.toLocaleString()}`, color: "text-yellow-600" },
-    { icon: CheckCircle2, label: "Approved", value: `₹${totals.approved.toLocaleString()}`, color: "text-green-600" },
-    { icon: XCircle, label: "Rejected", value: `₹${totals.rejected.toLocaleString()}`, color: "text-red-500" },
-  ];
-
   const statusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -158,17 +152,23 @@ const AdminWithdrawals = () => {
         <h1 className="text-2xl font-display font-bold text-foreground mb-6">Withdrawal Requests</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {summaryCards.map((c, i) => (
+          {[
+            { icon: Clock, label: "Pending", value: `₹${totals.pending.toLocaleString()}`, gradient: "from-amber-500 to-amber-600" },
+            { icon: CheckCircle2, label: "Approved", value: `₹${totals.approved.toLocaleString()}`, gradient: "from-green-500 to-green-600" },
+            { icon: XCircle, label: "Rejected", value: `₹${totals.rejected.toLocaleString()}`, gradient: "from-red-500 to-red-600" },
+          ].map((c, i) => (
             <motion.div
               key={c.label}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="p-5 rounded-xl bg-card border border-border"
+              className={`p-5 rounded-xl bg-gradient-to-br ${c.gradient} text-white shadow-lg`}
             >
-              <c.icon className={`h-5 w-5 ${c.color} mb-3`} />
-              <div className="text-2xl font-display font-bold text-foreground">{c.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{c.label}</div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs opacity-80">{c.label}</span>
+                <c.icon className="h-5 w-5 opacity-80" />
+              </div>
+              <div className="text-2xl font-bold">{c.value}</div>
             </motion.div>
           ))}
         </div>

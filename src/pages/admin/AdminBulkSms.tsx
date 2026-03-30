@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { format } from "date-fns";
 
 const AUDIENCE_TYPES = [
@@ -311,25 +312,25 @@ const AdminBulkSms = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { label: "Total Campaigns", value: campaigns.length, icon: MessageSquare, color: "text-primary" },
-            { label: "Messages Sent", value: totalSent, icon: Send, color: "text-green-500" },
-            { label: "Failed", value: totalFailed, icon: AlertTriangle, color: "text-destructive" },
-            { label: "WhatsApp Campaigns", value: whatsappCampaigns, icon: Phone, color: "text-green-600" },
-            { label: "Total Users", value: userCount, icon: Users, color: "text-blue-500" },
-          ].map((s) => (
-            <Card key={s.label}>
-              <CardContent className="pt-4 pb-3 px-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <s.icon className={`h-4 w-4 ${s.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold">{s.value.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">{s.label}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            { label: "Total Campaigns", value: campaigns.length, icon: MessageSquare, gradient: "from-blue-500 to-blue-600" },
+            { label: "Messages Sent", value: totalSent, icon: Send, gradient: "from-emerald-500 to-emerald-600" },
+            { label: "Failed", value: totalFailed, icon: AlertTriangle, gradient: "from-red-500 to-red-600" },
+            { label: "WhatsApp Campaigns", value: whatsappCampaigns, icon: Phone, gradient: "from-green-500 to-green-600" },
+            { label: "Total Users", value: userCount, icon: Users, gradient: "from-purple-500 to-purple-600" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className={`rounded-xl bg-gradient-to-br ${s.gradient} p-4 text-white shadow-lg`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs opacity-80">{s.label}</span>
+                <s.icon className="h-4 w-4 opacity-80" />
+              </div>
+              <p className="text-xl font-bold">{s.value.toLocaleString()}</p>
+            </motion.div>
           ))}
         </div>
 
