@@ -38,10 +38,17 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     navigate("/login");
   };
 
+  const ICON_COLORS = [
+    "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
+    "#ec4899", "#14b8a6", "#f97316", "#3b82f6", "#06b6d4",
+    "#84cc16", "#e11d48", "#a855f7",
+  ];
+
   const navLinks = (isMobile: boolean) =>
-    menuItems.map((item) => {
+    menuItems.map((item, idx) => {
       const active = location.pathname === item.href ||
         (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
+      const iconBg = ICON_COLORS[idx % ICON_COLORS.length];
       return (
         <Link
           key={item.label}
@@ -53,7 +60,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           }`}
         >
-          <item.icon className="h-4 w-4 flex-shrink-0" />
+          <span
+            className="flex items-center justify-center rounded-full flex-shrink-0"
+            style={{
+              backgroundColor: iconBg,
+              width: !isMobile && collapsed ? 28 : 26,
+              height: !isMobile && collapsed ? 28 : 26,
+            }}
+          >
+            <item.icon className="h-3.5 w-3.5 text-white" />
+          </span>
           {(isMobile || !collapsed) && <span>{item.label}</span>}
         </Link>
       );
