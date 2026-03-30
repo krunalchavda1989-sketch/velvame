@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -12,8 +13,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Search, Trash2, Download, RefreshCw, Users } from "lucide-react";
+import { Mail, Search, Trash2, Download, RefreshCw, Users, Save, Loader2, Palette } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 
@@ -31,6 +33,9 @@ const AdminNewsletter = () => {
   const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [nlSettings, setNlSettings] = useState({ bg_color: '#e8e0f0', heading: 'Stay in the Loop', subtext: '', button_text: 'Sign up' });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [nlSettingsId, setNlSettingsId] = useState<string | null>(null);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -47,7 +52,25 @@ const AdminNewsletter = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchSubscribers(); }, []);
+  useEffect(() => { fetchSubscribers(); fetchNlSettings(); }, []);
+
+  const fetchNlSettings = async () => {
+    const { data } = await supabase.from("newsletter_settings" as any).select("*").limit(1).single();
+    if (data) {
+      const d = data as any;
+      setNlSettings({ bg_color: d.bg_color, heading: d.heading, subtext: d.subtext, button_text: d.button_text });
+      setNlSettingsId(d.id);
+    }
+  };
+
+  const saveNlSettings = async () => {
+    if (!nlSettingsId) return;
+    setSavingSettings(true);
+    const { error } = await supabase.from("newsletter_settings" as any).update({ ...nlSettings, updated_at: new Date().toISOString() } as any).eq("id", nlSettingsId);
+    if (error) toast.error("Failed to save settings");
+    else toast.success("Newsletter section settings saved!");
+    setSavingSettings(false);
+  };
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
@@ -165,6 +188,69 @@ const AdminNewsletter = () => {
             </Button>
           </div>
         </div>
+
+        {/* Newsletter Section Settings */}
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Palette className="h-4 w-4 text-primary" />
+              Newsletter Section Appearance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Background Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={nlSettings.bg_color}
+                    onChange={(e) => setNlSettings({ ...nlSettings, bg_color: e.target.value })}
+                    className="w-10 h-10 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={nlSettings.bg_color}
+                    onChange={(e) => setNlSettings({ ...nlSettings, bg_color: e.target.value })}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Heading</Label>
+                <Input
+                  value={nlSettings.heading}
+                  onChange={(e) => setNlSettings({ ...nlSettings, heading: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Subtext</Label>
+                <Input
+                  value={nlSettings.subtext}
+                  onChange={(e) => setNlSettings({ ...nlSettings, subtext: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Button Text</Label>
+                <Input
+                  value={nlSettings.button_text}
+                  onChange={(e) => setNlSettings({ ...nlSettings, button_text: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={saveNlSettings} disabled={savingSettings} size="sm">
+                {savingSettings ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save Settings
+              </Button>
+            </div>
+            {/* Preview */}
+            <div className="rounded-lg p-6 text-center" style={{ backgroundColor: nlSettings.bg_color }}>
+              <p className="text-xs text-muted-foreground mb-1">Preview</p>
+              <h3 className="font-bold text-lg">{nlSettings.heading}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{nlSettings.subtext}</p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
