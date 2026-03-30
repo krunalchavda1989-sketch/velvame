@@ -56,6 +56,7 @@ const SETTINGS_TABS = [
   { key: "ordernumber", label: "Order Number", icon: Hash },
   { key: "referralcode", label: "Referral Code", icon: Shield },
   { key: "kyc", label: "KYC Settings", icon: ShieldCheck },
+  { key: "authpage", label: "Login Page", icon: Image },
 ];
 
 const AdminSettings = () => {
