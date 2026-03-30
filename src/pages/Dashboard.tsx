@@ -155,6 +155,7 @@ const Dashboard = () => {
   const stats = [
     { icon: Wallet, label: "Total Earnings", value: `₹${totalCommissionEarnings}`, color: statColors.stat_color_1 },
     { icon: Users, label: "Direct Referrals", value: String(teamCount), color: statColors.stat_color_2 },
+    { icon: UsersRound, label: "Total Referrals", value: String(totalReferralCount), color: "#8b5cf6" },
     { icon: TrendingUp, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: statColors.stat_color_3 },
     { icon: ShoppingBag, label: "Orders", value: String(orderCount), color: statColors.stat_color_4 },
   ];
