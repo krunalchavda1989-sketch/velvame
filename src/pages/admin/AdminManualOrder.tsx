@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -48,6 +48,14 @@ const AdminManualOrder = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState("");
 
+  // Address state
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showManualAddress, setShowManualAddress] = useState(false);
+  const [manualAddress, setManualAddress] = useState({
+    name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       const [usersRes, productsRes, variationsRes] = await Promise.all([
@@ -69,23 +77,35 @@ const AdminManualOrder = () => {
     fetchData();
   }, []);
 
-  // Fetch wallet when user changes
+  // Fetch wallet and addresses when user changes
   useEffect(() => {
     if (!selectedUserId) {
       setUserWallet(null);
+      setSavedAddresses([]);
+      setSelectedAddressId(null);
+      setShowManualAddress(false);
       return;
     }
-    const fetchWallet = async () => {
+    const fetchUserData = async () => {
       setWalletLoading(true);
-      const { data } = await supabase
-        .from("wallets")
-        .select("balance, subscription_balance, commission_balance")
-        .eq("user_id", selectedUserId)
-        .maybeSingle();
-      setUserWallet(data || null);
+      const [walletRes, addressRes] = await Promise.all([
+        supabase.from("wallets").select("balance, subscription_balance, commission_balance").eq("user_id", selectedUserId).maybeSingle(),
+        supabase.from("user_addresses").select("*").eq("user_id", selectedUserId).order("is_default", { ascending: false }).order("created_at", { ascending: false }),
+      ]);
+      setUserWallet(walletRes.data || null);
+      const addrs = (addressRes.data as any[]) || [];
+      setSavedAddresses(addrs);
+      if (addrs.length > 0) {
+        const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+        setSelectedAddressId(defaultAddr.id);
+        setShowManualAddress(false);
+      } else {
+        setSelectedAddressId(null);
+        setShowManualAddress(true);
+      }
       setWalletLoading(false);
     };
-    fetchWallet();
+    fetchUserData();
   }, [selectedUserId]);
 
   const addItem = () => {
@@ -139,7 +159,13 @@ const AdminManualOrder = () => {
     ? Math.min(userWallet.balance, totalAmount)
     : 0;
   const remainingAmount = totalAmount - walletAmountToUse;
-  
+
+  const getShippingAddress = () => {
+    if (showManualAddress) return manualAddress;
+    const saved = savedAddresses.find((a: any) => a.id === selectedAddressId);
+    if (!saved) return null;
+    return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
+  };
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -197,6 +223,13 @@ const AdminManualOrder = () => {
       return;
     }
 
+    // Address validation
+    const shippingAddr = getShippingAddress();
+    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+      toast.error("Please fill all required shipping address fields");
+      return;
+    }
+
     // If wallet covers everything, no payment method needed; otherwise require one
     if (remainingAmount > 0 && !paymentMethod) {
       toast.error("Please select a payment method for the remaining amount");
@@ -218,7 +251,7 @@ const AdminManualOrder = () => {
           total_amount: totalAmount,
           payment_method: effectivePaymentMethod,
           status: isConfirmed ? "confirmed" : "pending",
-          shipping_address: {},
+          shipping_address: shippingAddr as any,
           wallet_amount_used: walletAmountToUse,
         })
         .select()
@@ -305,6 +338,7 @@ const AdminManualOrder = () => {
       setSendPaymentLink(false);
       setUseWallet(false);
       setPaymentNote("");
+      setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
       removeCoupon();
     } catch (err: any) {
       toast.error(err.message || "Failed to create order");
@@ -547,6 +581,99 @@ const AdminManualOrder = () => {
               </div>
             )}
           </div>
+
+          {/* Shipping Address */}
+          {selectedUserId && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-foreground">Shipping Address</h2>
+              </div>
+
+              {savedAddresses.length > 0 && !showManualAddress && (
+                <div className="space-y-3">
+                  {savedAddresses.map((addr: any) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => setSelectedAddressId(addr.id)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedAddressId === addr.id ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">{addr.label || "Address"}</Badge>
+                        {addr.is_default && <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">Default</Badge>}
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">{addr.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}, {addr.state} – {addr.pincode}
+                      </p>
+                      <p className="text-sm text-muted-foreground">📞 {addr.phone}</p>
+                    </div>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm gap-1.5 w-full text-primary"
+                    onClick={() => { setShowManualAddress(true); setSelectedAddressId(null); }}
+                  >
+                    <MapPin className="h-4 w-4" /> Use a different address
+                  </Button>
+                </div>
+              )}
+
+              {(showManualAddress || savedAddresses.length === 0) && (
+                <div className="space-y-3">
+                  {savedAddresses.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-sm gap-1.5 text-primary"
+                      onClick={() => {
+                        setShowManualAddress(false);
+                        const def = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0];
+                        if (def) setSelectedAddressId(def.id);
+                      }}
+                    >
+                      ← Back to saved addresses
+                    </Button>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Full Name *</Label>
+                    <Input value={manualAddress.name} onChange={(e) => setManualAddress({ ...manualAddress, name: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Address Line 1 *</Label>
+                    <Input value={manualAddress.line1} onChange={(e) => setManualAddress({ ...manualAddress, line1: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Address Line 2</Label>
+                    <Input value={manualAddress.line2} onChange={(e) => setManualAddress({ ...manualAddress, line2: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">City *</Label>
+                      <Input value={manualAddress.city} onChange={(e) => setManualAddress({ ...manualAddress, city: e.target.value })} className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">State *</Label>
+                      <Input value={manualAddress.state} onChange={(e) => setManualAddress({ ...manualAddress, state: e.target.value })} className="bg-secondary border-border" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">Pincode *</Label>
+                      <Input value={manualAddress.pincode} onChange={(e) => setManualAddress({ ...manualAddress, pincode: e.target.value.replace(/\D/g, "").slice(0, 10) })} className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">Phone *</Label>
+                      <Input value={manualAddress.phone} onChange={(e) => setManualAddress({ ...manualAddress, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} className="bg-secondary border-border" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Wallet Toggle (like user panel) */}
           {selectedUserId && userWallet && userWallet.balance > 0 && (
