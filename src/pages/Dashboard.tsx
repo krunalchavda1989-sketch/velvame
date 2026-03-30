@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import { motion } from "framer-motion";
-import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight } from "lucide-react";
+import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [copied, setCopied] = useState(false);
   const [wallet, setWallet] = useState<any>(null);
   const [teamCount, setTeamCount] = useState(0);
+  const [totalReferralCount, setTotalReferralCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [recentTeam, setRecentTeam] = useState<any[]>([]);
   const [earningsTrend, setEarningsTrend] = useState<any[]>([]);
@@ -82,6 +83,10 @@ const Dashboard = () => {
         count = res.count || 0;
         setTeamCount(count);
         setRecentTeam(team);
+
+        // Total referrals (all levels) via genealogy tree
+        const { data: treeData } = await supabase.rpc("get_genealogy_tree", { _user_id: user.id });
+        setTotalReferralCount(treeData ? treeData.length - 1 : 0); // exclude self
 
         const { data: allTeam } = await supabase
           .from("profiles")
@@ -150,6 +155,7 @@ const Dashboard = () => {
   const stats = [
     { icon: Wallet, label: "Total Earnings", value: `₹${totalCommissionEarnings}`, color: statColors.stat_color_1 },
     { icon: Users, label: "Direct Referrals", value: String(teamCount), color: statColors.stat_color_2 },
+    { icon: UsersRound, label: "Total Referrals", value: String(totalReferralCount), color: "#8b5cf6" },
     { icon: TrendingUp, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: statColors.stat_color_3 },
     { icon: ShoppingBag, label: "Orders", value: String(orderCount), color: statColors.stat_color_4 },
   ];
@@ -204,7 +210,7 @@ const Dashboard = () => {
         )}
 
         {/* Colorful Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {stats.map((s, i) => (
             <motion.div
               key={s.label}
