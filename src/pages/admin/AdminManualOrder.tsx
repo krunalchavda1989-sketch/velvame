@@ -445,9 +445,63 @@ const AdminManualOrder = () => {
             })}
 
             {orderItems.length > 0 && (
-              <div className="flex justify-end pt-2 border-t border-border">
-                <span className="text-sm text-muted-foreground mr-2">Total:</span>
-                <span className="font-bold text-primary">₹{totalAmount.toFixed(2)}</span>
+              <div className="pt-2 border-t border-border space-y-1">
+                <div className="flex justify-end">
+                  <span className="text-sm text-muted-foreground mr-2">Subtotal:</span>
+                  <span className="font-medium text-foreground">₹{subtotalAmount.toFixed(2)}</span>
+                </div>
+                {appliedCoupon && couponDiscount > 0 && (
+                  <div className="flex justify-end">
+                    <span className="text-sm text-green-600 mr-2">Coupon ({appliedCoupon.code}):</span>
+                    <span className="font-medium text-green-600">-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <span className="text-sm text-muted-foreground mr-2">Total:</span>
+                  <span className="font-bold text-primary">₹{totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Coupon Code */}
+          <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+            <div className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Coupon Code</h2>
+            </div>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="font-mono font-bold text-green-700 dark:text-green-400">{appliedCoupon.code}</span>
+                  <span className="text-sm text-green-600">
+                    ({appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}% off` : `₹${appliedCoupon.discount_value} off`})
+                  </span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={removeCoupon} className="text-destructive h-7 px-2">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                    className="font-mono bg-secondary border-border"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponCode.trim() || orderItems.length === 0}
+                    className="shrink-0"
+                  >
+                    {couponLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : "Apply"}
+                  </Button>
+                </div>
+                {couponError && <p className="text-xs text-destructive">{couponError}</p>}
               </div>
             )}
           </div>
