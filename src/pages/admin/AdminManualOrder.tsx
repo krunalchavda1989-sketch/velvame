@@ -223,6 +223,13 @@ const AdminManualOrder = () => {
       return;
     }
 
+    // Address validation
+    const shippingAddr = getShippingAddress();
+    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+      toast.error("Please fill all required shipping address fields");
+      return;
+    }
+
     // If wallet covers everything, no payment method needed; otherwise require one
     if (remainingAmount > 0 && !paymentMethod) {
       toast.error("Please select a payment method for the remaining amount");
@@ -244,7 +251,7 @@ const AdminManualOrder = () => {
           total_amount: totalAmount,
           payment_method: effectivePaymentMethod,
           status: isConfirmed ? "confirmed" : "pending",
-          shipping_address: {},
+          shipping_address: shippingAddr as any,
           wallet_amount_used: walletAmountToUse,
         })
         .select()
