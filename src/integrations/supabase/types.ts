@@ -1228,6 +1228,33 @@ export type Database = {
           },
         ]
       }
+      newsletter_settings: {
+        Row: {
+          bg_color: string
+          button_text: string
+          heading: string
+          id: string
+          subtext: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          button_text?: string
+          heading?: string
+          id?: string
+          subtext?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          button_text?: string
+          heading?: string
+          id?: string
+          subtext?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
