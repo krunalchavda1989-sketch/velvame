@@ -90,9 +90,15 @@ const AdminSettings = () => {
       <div className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">Settings</h2>
       </div>
-      {SETTINGS_TABS.map((tab) => {
+      {SETTINGS_TABS.map((tab, idx) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.key;
+        const ICON_COLORS = [
+          "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
+          "#ec4899", "#14b8a6", "#f97316", "#3b82f6", "#06b6d4",
+          "#84cc16", "#e11d48",
+        ];
+        const iconBg = ICON_COLORS[idx % ICON_COLORS.length];
         return (
           <button
             key={tab.key}
@@ -103,7 +109,12 @@ const AdminSettings = () => {
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
-            <Icon className="h-4 w-4 flex-shrink-0" />
+            <span
+              className="flex items-center justify-center rounded-full flex-shrink-0"
+              style={{ backgroundColor: iconBg, width: 26, height: 26 }}
+            >
+              <Icon className="h-3.5 w-3.5 text-white" />
+            </span>
             {tab.label}
           </button>
         );
