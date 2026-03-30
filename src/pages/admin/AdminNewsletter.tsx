@@ -52,7 +52,25 @@ const AdminNewsletter = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchSubscribers(); }, []);
+  useEffect(() => { fetchSubscribers(); fetchNlSettings(); }, []);
+
+  const fetchNlSettings = async () => {
+    const { data } = await supabase.from("newsletter_settings" as any).select("*").limit(1).single();
+    if (data) {
+      const d = data as any;
+      setNlSettings({ bg_color: d.bg_color, heading: d.heading, subtext: d.subtext, button_text: d.button_text });
+      setNlSettingsId(d.id);
+    }
+  };
+
+  const saveNlSettings = async () => {
+    if (!nlSettingsId) return;
+    setSavingSettings(true);
+    const { error } = await supabase.from("newsletter_settings" as any).update({ ...nlSettings, updated_at: new Date().toISOString() } as any).eq("id", nlSettingsId);
+    if (error) toast.error("Failed to save settings");
+    else toast.success("Newsletter section settings saved!");
+    setSavingSettings(false);
+  };
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
