@@ -55,6 +55,15 @@ interface HeroStat {
   icon: string;
   sort_order: number;
 }
+interface FeaturedSection {
+  id: string;
+  title: string;
+  selection_type: string;
+  category_filter: string;
+  bg_color: string;
+  sort_order: number;
+  product_ids: string[];
+}
 
 const iconMap: Record<string, LucideIcon> = {
   users: Users,
