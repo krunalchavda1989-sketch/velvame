@@ -437,7 +437,7 @@ const Index = () => {
         const visibleTestimonials = testimonials.slice(testimonialPage * perPage, testimonialPage * perPage + perPage);
 
         return (
-          <section className="py-16 lg:py-20">
+          <section className="py-16 lg:py-20" style={{ backgroundColor: testimonialBgColor }}>
             <div className="container px-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
