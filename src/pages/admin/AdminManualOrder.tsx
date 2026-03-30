@@ -582,6 +582,99 @@ const AdminManualOrder = () => {
             )}
           </div>
 
+          {/* Shipping Address */}
+          {selectedUserId && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-foreground">Shipping Address</h2>
+              </div>
+
+              {savedAddresses.length > 0 && !showManualAddress && (
+                <div className="space-y-3">
+                  {savedAddresses.map((addr: any) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => setSelectedAddressId(addr.id)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedAddressId === addr.id ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">{addr.label || "Address"}</Badge>
+                        {addr.is_default && <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">Default</Badge>}
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">{addr.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {addr.line1}{addr.line2 ? `, ${addr.line2}` : ""}, {addr.city}, {addr.state} – {addr.pincode}
+                      </p>
+                      <p className="text-sm text-muted-foreground">📞 {addr.phone}</p>
+                    </div>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm gap-1.5 w-full text-primary"
+                    onClick={() => { setShowManualAddress(true); setSelectedAddressId(null); }}
+                  >
+                    <MapPin className="h-4 w-4" /> Use a different address
+                  </Button>
+                </div>
+              )}
+
+              {(showManualAddress || savedAddresses.length === 0) && (
+                <div className="space-y-3">
+                  {savedAddresses.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-sm gap-1.5 text-primary"
+                      onClick={() => {
+                        setShowManualAddress(false);
+                        const def = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0];
+                        if (def) setSelectedAddressId(def.id);
+                      }}
+                    >
+                      ← Back to saved addresses
+                    </Button>
+                  )}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Full Name *</Label>
+                    <Input value={manualAddress.name} onChange={(e) => setManualAddress({ ...manualAddress, name: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Address Line 1 *</Label>
+                    <Input value={manualAddress.line1} onChange={(e) => setManualAddress({ ...manualAddress, line1: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-muted-foreground">Address Line 2</Label>
+                    <Input value={manualAddress.line2} onChange={(e) => setManualAddress({ ...manualAddress, line2: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">City *</Label>
+                      <Input value={manualAddress.city} onChange={(e) => setManualAddress({ ...manualAddress, city: e.target.value })} className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">State *</Label>
+                      <Input value={manualAddress.state} onChange={(e) => setManualAddress({ ...manualAddress, state: e.target.value })} className="bg-secondary border-border" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">Pincode *</Label>
+                      <Input value={manualAddress.pincode} onChange={(e) => setManualAddress({ ...manualAddress, pincode: e.target.value.replace(/\D/g, "").slice(0, 10) })} className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm text-muted-foreground">Phone *</Label>
+                      <Input value={manualAddress.phone} onChange={(e) => setManualAddress({ ...manualAddress, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} className="bg-secondary border-border" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Wallet Toggle (like user panel) */}
           {selectedUserId && userWallet && userWallet.balance > 0 && (
             <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-3">
