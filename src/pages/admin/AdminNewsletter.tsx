@@ -33,6 +33,9 @@ const AdminNewsletter = () => {
   const [deleteTarget, setDeleteTarget] = useState<Subscriber | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [nlSettings, setNlSettings] = useState({ bg_color: '#e8e0f0', heading: 'Stay in the Loop', subtext: '', button_text: 'Sign up' });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [nlSettingsId, setNlSettingsId] = useState<string | null>(null);
 
   const fetchSubscribers = async () => {
     setLoading(true);
