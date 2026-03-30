@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
+import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 declare global {
   interface Window {
@@ -865,6 +866,10 @@ const Checkout = () => {
                         <Button variant="outline" onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()} className="border-gray-300 text-gray-700">
                           {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
                         </Button>
+                        <CouponRecommendations
+                          appliedCode={appliedCoupon?.code}
+                          onSelect={(code) => setCouponCode(code)}
+                        />
                       </div>
                     )}
 
