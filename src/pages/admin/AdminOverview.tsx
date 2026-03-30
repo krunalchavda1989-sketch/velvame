@@ -159,12 +159,13 @@ const AdminOverview = () => {
     fetchAll();
   }, []);
 
+  const adminColors = [statColors.stat_color_1, statColors.stat_color_2, statColors.stat_color_3, statColors.stat_color_4, "#8b5cf6"];
   const cards = [
-    { icon: Users, label: "Total Users", value: stats.users, href: "/admin/users", color: "text-primary" },
-    { icon: Package, label: "Products", value: stats.products, href: "/admin/products", color: "text-chart-2" },
-    { icon: ShoppingCart, label: "Orders", value: stats.orders, href: "/admin/orders", color: "text-chart-3" },
-    { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, href: "/admin/orders", color: "text-chart-4" },
-    { icon: TrendingUp, label: "Commissions", value: `₹${stats.commissions.toLocaleString()}`, href: "/admin/commissions", color: "text-chart-5" },
+    { icon: Users, label: "Total Users", value: stats.users, href: "/admin/users" },
+    { icon: Package, label: "Products", value: stats.products, href: "/admin/products" },
+    { icon: ShoppingCart, label: "Orders", value: stats.orders, href: "/admin/orders" },
+    { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue.toLocaleString()}`, href: "/admin/orders" },
+    { icon: TrendingUp, label: "Commissions", value: `₹${stats.commissions.toLocaleString()}`, href: "/admin/commissions" },
   ];
 
   return (
@@ -180,9 +181,14 @@ const AdminOverview = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+                className="p-4 rounded-2xl text-white relative overflow-hidden hover:scale-[1.02] transition-transform"
+                style={{
+                  background: `linear-gradient(135deg, ${adminColors[i]}, ${adminColors[i]}cc)`,
+                  boxShadow: `0 8px 24px -4px ${adminColors[i]}44`,
+                }}
               >
-                <c.icon className={`h-5 w-5 ${c.color} mb-2`} />
+                <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-20" style={{ background: 'white', transform: 'translate(30%, -30%)' }} />
+                <c.icon className="h-5 w-5 mb-2 opacity-90" />
                 <div className="text-xl font-display font-bold text-foreground">{c.value}</div>
                 <div className="text-xs text-muted-foreground">{c.label}</div>
               </motion.div>
