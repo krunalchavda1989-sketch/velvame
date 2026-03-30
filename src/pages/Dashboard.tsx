@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
 import { motion } from "framer-motion";
-import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight } from "lucide-react";
+import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { Button } from "@/components/ui/button";
