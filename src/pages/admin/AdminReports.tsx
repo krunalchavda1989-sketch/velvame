@@ -279,22 +279,23 @@ const IncomeReport = ({ from, to }: ReportProps) => {
         <ChartCard title="Commission Earnings Over Time">
           <ResponsiveContainer>
             <AreaChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
-              <Area type="monotone" dataKey="amount" name="Amount" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+              <defs><ChartGradients /></defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis tick={axisTick} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={chartTooltipStyle} cursor={{ stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
+              <Area type="monotone" dataKey="amount" name="Amount" stroke="#10b981" fill="url(#grad-emerald)" strokeWidth={2.5} dot={{ r: 3, fill: "#10b981" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Commission by Type">
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                {typeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                {typeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
-              <Legend />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
