@@ -518,19 +518,21 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* ===== Newsletter ===== */}
-      <section className="py-16 lg:py-20">
+      {/* ===== Newsletter – Full Width ===== */}
+      <section className="py-16 lg:py-20" style={{ backgroundColor: newsletterSettings.bg_color }}>
         <div className="container px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-2xl mx-auto text-center"
+            className="max-w-3xl mx-auto"
           >
-            <div className="p-8 sm:p-12 rounded-2xl bg-card border border-border">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">Stay in the Loop</h2>
-              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                Get the latest product updates, exclusive offers, and wellness tips delivered to your inbox.
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-3">
+                {newsletterSettings.heading}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-8 max-w-lg mx-auto">
+                {newsletterSettings.subtext}
               </p>
               <form
                 onSubmit={async (e) => {
@@ -553,14 +555,13 @@ const Index = () => {
                   type="email"
                   name="email"
                   required
-                  placeholder="Enter your email"
-                  className="flex-1 h-11 px-4 rounded-full border border-border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                  placeholder="Your e-mail address"
+                  className="flex-1 h-12 px-5 rounded-lg border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 />
-                <Button type="submit" className="bg-foreground text-background font-semibold h-11 px-6 rounded-full hover:bg-foreground/90">
-                  Subscribe <ArrowRight className="h-4 w-4 ml-1.5" />
+                <Button type="submit" className="h-12 px-8 rounded-lg font-semibold">
+                  {newsletterSettings.button_text}
                 </Button>
               </form>
-              <p className="text-xs text-muted-foreground mt-4">No spam, unsubscribe anytime.</p>
             </div>
           </motion.div>
         </div>
