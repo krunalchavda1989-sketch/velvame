@@ -3138,4 +3138,95 @@ const KycSettingsTab = () => {
   );
 };
 
+const AuthPageTab = () => {
+  const [imageUrl, setImageUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "auth_page_image").maybeSingle();
+      setImageUrl((data?.value as string) || "");
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `auth-page/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("site-assets").upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(path);
+      setImageUrl(urlData.publicUrl);
+      toast.success("Image uploaded!");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("site_settings").upsert({ key: "auth_page_image", value: imageUrl as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) throw error;
+      toast.success("Login page image updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Image className="h-5 w-5" /> Login & Register Page Image</CardTitle>
+          <CardDescription>Upload or set the image displayed on the left side of the login and registration pages.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-foreground text-sm font-medium">Image URL</Label>
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="mt-1.5"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Label htmlFor="auth-image-upload" className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-secondary text-sm font-medium hover:bg-secondary/80 transition-colors">
+              <Upload className="h-4 w-4" />
+              {uploading ? "Uploading..." : "Upload Image"}
+            </Label>
+            <input id="auth-image-upload" type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+          </div>
+
+          {imageUrl && (
+            <div className="rounded-xl overflow-hidden border border-border max-w-md">
+              <img src={imageUrl} alt="Auth page preview" className="w-full h-56 object-cover" />
+            </div>
+          )}
+
+          <Button onClick={handleSave} disabled={saving} className="gap-2">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Changes
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default AdminSettings;
