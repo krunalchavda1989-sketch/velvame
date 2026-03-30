@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowLeft,
   ShoppingBag,
   Star,
   Users,
@@ -20,6 +21,7 @@ import {
   Eye,
   BadgeCheck,
   MapPin,
+  Quote,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
