@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { startOfMonth, format, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
-import { Users, DollarSign, Package, ShoppingCart, Truck, Loader2, Download, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, DollarSign, Package, ShoppingCart, Truck, Loader2, Download, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
