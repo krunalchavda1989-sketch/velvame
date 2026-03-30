@@ -548,86 +548,157 @@ const AdminManualOrder = () => {
             )}
           </div>
 
-          {/* Payment */}
-          <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
-            <h2 className="font-semibold text-foreground">Payment Method</h2>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="razorpay">Razorpay (Online)</SelectItem>
-                <SelectItem value="cod">Cash on Delivery</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="manual">Manual / Cash</SelectItem>
-                {selectedUserId && userWallet && userWallet.balance > 0 && (
-                  <SelectItem value="wallet">
-                    Wallet Balance (₹{userWallet.balance.toFixed(2)})
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-
-            {paymentMethod === "wallet" && userWallet && (
-              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-foreground">Wallet Payment</span>
+          {/* Wallet Toggle (like user panel) */}
+          {selectedUserId && userWallet && userWallet.balance > 0 && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
+                    <Wallet className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  {totalAmount > userWallet.balance ? (
-                    <Badge variant="destructive" className="text-xs">Insufficient Balance</Badge>
-                  ) : (
-                    <Badge className="text-xs bg-green-600 hover:bg-green-700">Sufficient Balance</Badge>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Use Wallet Balance</h3>
+                    <p className="text-sm text-muted-foreground">Total: ₹{userWallet.balance.toFixed(2)}</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={useWallet}
+                  onCheckedChange={setUseWallet}
+                />
+              </div>
+              {useWallet && (
+                <div className="text-xs space-y-1 pl-[52px]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Subscription:</span>
+                    <span className="font-medium text-foreground">₹{userWallet.subscription_balance.toFixed(2)}</span>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">orders only</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Commission:</span>
+                    <span className="font-medium text-foreground">₹{userWallet.commission_balance.toFixed(2)}</span>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">withdrawable</Badge>
+                  </div>
+                  {walletAmountToUse > 0 && (
+                    <div className="mt-2 pt-2 border-t border-border flex justify-between text-sm">
+                      <span className="text-muted-foreground">Wallet amount to use:</span>
+                      <span className="font-bold text-primary">-₹{walletAmountToUse.toFixed(2)}</span>
+                    </div>
                   )}
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground space-y-1">
-                  <div className="flex justify-between">
-                    <span>Available Balance:</span>
-                    <span className="font-medium text-foreground">₹{userWallet.balance.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Order Total:</span>
-                    <span className="font-medium text-foreground">₹{totalAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-border pt-1 mt-1">
-                    <span>Remaining After Order:</span>
-                    <span className={`font-bold ${userWallet.balance - totalAmount >= 0 ? "text-green-600" : "text-destructive"}`}>
-                      ₹{(userWallet.balance - totalAmount).toFixed(2)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Subscription balance will be used first, then commission balance.
-                  </p>
+              )}
+            </div>
+          )}
+
+          {/* Payment Method (for remaining amount) */}
+          <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-foreground">Payment Method</h2>
+              {remainingAmount < totalAmount && remainingAmount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Remaining: ₹{remainingAmount.toFixed(2)}
+                </Badge>
+              )}
+            </div>
+
+            {remainingAmount <= 0 ? (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                    Full amount covered by wallet balance
+                  </span>
                 </div>
               </div>
-            )}
+            ) : (
+              <>
+                <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPaymentNote(""); }}>
+                  <SelectTrigger className="bg-secondary border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="razorpay">Razorpay (Online)</SelectItem>
+                    <SelectItem value="cod">Cash on Delivery</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="manual">Manual / Cash</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            {paymentMethod === "razorpay" && (
-              <div className="flex items-center gap-3 pt-2">
-                <input
-                  type="checkbox"
-                  id="sendLink"
-                  checked={sendPaymentLink}
-                  onChange={(e) => setSendPaymentLink(e.target.checked)}
-                  className="rounded border-border"
-                />
-                <Label htmlFor="sendLink" className="text-sm text-foreground cursor-pointer">
-                  Send payment link to user's email
-                </Label>
-              </div>
+                {/* Payment Note for manual methods */}
+                {["manual", "bank_transfer", "cod"].includes(paymentMethod) && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">
+                      Payment Note <span className="text-xs">(optional)</span>
+                    </Label>
+                    <Textarea
+                      placeholder={
+                        paymentMethod === "bank_transfer"
+                          ? "e.g., Transaction ID, bank name, transfer date..."
+                          : paymentMethod === "cod"
+                            ? "e.g., Expected delivery date, collection notes..."
+                            : "e.g., Cash received by, receipt number..."
+                      }
+                      value={paymentNote}
+                      onChange={(e) => setPaymentNote(e.target.value)}
+                      className="bg-secondary border-border resize-none"
+                      rows={2}
+                    />
+                  </div>
+                )}
+
+                {paymentMethod === "razorpay" && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <input
+                      type="checkbox"
+                      id="sendLink"
+                      checked={sendPaymentLink}
+                      onChange={(e) => setSendPaymentLink(e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    <Label htmlFor="sendLink" className="text-sm text-foreground cursor-pointer">
+                      Send payment link to user's email
+                    </Label>
+                  </div>
+                )}
+              </>
             )}
           </div>
+
+          {/* Order Summary */}
+          {orderItems.length > 0 && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-2">
+              <h2 className="font-semibold text-foreground mb-3">Order Summary</h2>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">₹{subtotalAmount.toFixed(2)}</span>
+              </div>
+              {appliedCoupon && couponDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-green-600">Coupon ({appliedCoupon.code})</span>
+                  <span className="text-green-600">-₹{couponDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              {walletAmountToUse > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-primary">Wallet Balance</span>
+                  <span className="text-primary">-₹{walletAmountToUse.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm font-bold border-t border-border pt-2 mt-2">
+                <span className="text-foreground">{remainingAmount > 0 ? "Amount to Pay" : "Total"}</span>
+                <span className="text-primary">₹{remainingAmount > 0 ? remainingAmount.toFixed(2) : "0.00"}</span>
+              </div>
+            </div>
+          )}
 
           {/* Submit */}
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !selectedUserId || orderItems.length === 0 || (paymentMethod === "wallet" && (!userWallet || userWallet.balance < totalAmount))}
+            disabled={submitting || !selectedUserId || orderItems.length === 0}
             className="w-full bg-primary text-primary-foreground font-semibold h-12"
           >
             {submitting ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : paymentMethod === "wallet" ? (
+            ) : remainingAmount <= 0 && useWallet ? (
               <Wallet className="h-4 w-4 mr-2" />
             ) : sendPaymentLink ? (
               <Send className="h-4 w-4 mr-2" />
@@ -636,11 +707,11 @@ const AdminManualOrder = () => {
             )}
             {submitting
               ? "Creating order..."
-              : paymentMethod === "wallet"
-                ? `Create Order (Pay from Wallet) — ₹${totalAmount.toFixed(2)}`
+              : remainingAmount <= 0 && useWallet
+                ? `Create Order (Wallet) — ₹${totalAmount.toFixed(2)}`
                 : sendPaymentLink
-                  ? `Create Order & Send Payment Link — ₹${totalAmount.toFixed(2)}`
-                  : `Create Order — ₹${totalAmount.toFixed(2)}`}
+                  ? `Create Order & Send Link — ₹${remainingAmount.toFixed(2)}`
+                  : `Create Order — ₹${remainingAmount > 0 ? remainingAmount.toFixed(2) : totalAmount.toFixed(2)}`}
           </Button>
         </div>
       </div>
