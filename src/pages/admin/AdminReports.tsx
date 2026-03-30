@@ -133,7 +133,7 @@ const StatCard = ({ label, value, icon: Icon, gradient }: { label: string; value
 
 /* ─── Chart Card wrapper ─── */
 const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Card>
+  <Card className="overflow-hidden">
     <CardHeader className="pb-2">
       <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
     </CardHeader>
