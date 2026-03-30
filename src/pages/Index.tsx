@@ -268,42 +268,100 @@ const Index = () => {
       )}
 
       {/* ===== Shop by Category ===== */}
-      {categories.length > 0 && (
-        <section className="py-16 lg:py-20">
-          <div className="container px-4">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Shop by Category</h2>
-              <p className="text-sm text-muted-foreground mt-2">Browse our curated collections</p>
+      {catSettings.is_active && categories.length > 0 && (() => {
+        const displayCats = categories.slice(0, catSettings.display_count);
+        const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 2 : 4;
+        const totalPages = Math.ceil(displayCats.length / perPage);
+        const visibleCats = displayCats.slice(categoryPage * perPage, categoryPage * perPage + perPage);
+
+        const imageShapeClass =
+          catSettings.image_style === "full-round"
+            ? "rounded-full aspect-square"
+            : catSettings.image_style === "square"
+            ? "rounded-none aspect-square"
+            : catSettings.image_style === "adaptive"
+            ? "rounded-2xl aspect-[3/4]"
+            : "rounded-[2rem] aspect-square";
+
+        const hoverImageClass =
+          catSettings.hover_effect === "zoom"
+            ? "group-hover:scale-105"
+            : "";
+
+        const hoverCardClass =
+          catSettings.hover_effect === "lift"
+            ? "hover:-translate-y-2"
+            : catSettings.hover_effect === "glow"
+            ? "hover:ring-4 hover:ring-primary/30"
+            : catSettings.hover_effect === "grayscale"
+            ? "grayscale hover:grayscale-0"
+            : "";
+
+        return (
+          <section
+            className="py-16 lg:py-20"
+            style={{
+              backgroundColor: catSettings.bg_color,
+              backgroundImage: catSettings.bg_image_url ? `url(${catSettings.bg_image_url})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div className="container px-4">
+              <div className="flex items-center justify-between mb-10">
+                <div className="text-left">
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">{catSettings.title}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{catSettings.subtitle}</p>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCategoryPage(Math.max(0, categoryPage - 1))}
+                      disabled={categoryPage === 0}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setCategoryPage(Math.min(totalPages - 1, categoryPage + 1))}
+                      disabled={categoryPage === totalPages - 1}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                {visibleCats.map((cat, i) => (
+                  <motion.div
+                    key={cat.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <Link to={`/shop?category=${encodeURIComponent(cat.name)}`} className={`flex flex-col items-center group ${hoverCardClass} transition-all duration-300`}>
+                      <div className={`w-full ${imageShapeClass} overflow-hidden border border-border hover:border-primary/30 hover:shadow-lg transition-all bg-secondary`}>
+                        {cat.image_url ? (
+                          <img src={cat.image_url} alt={cat.name} className={`w-full h-full object-cover ${hoverImageClass} transition-transform duration-500`} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="mt-3 text-sm font-display font-semibold text-foreground group-hover:text-primary transition-colors text-center">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-              {categories.map((cat, i) => (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.06 }}
-                >
-                  <Link to={`/shop?category=${encodeURIComponent(cat.name)}`} className="flex flex-col items-center group">
-                    <div className="w-full aspect-square rounded-[2rem] overflow-hidden border border-border hover:border-primary/30 hover:shadow-lg transition-all bg-secondary">
-                      {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="mt-3 text-sm font-display font-semibold text-foreground group-hover:text-primary transition-colors text-center">
-                      {cat.name}
-                    </span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* ===== Scrolling Marquee Banner ===== */}
       <div className="border-y border-border bg-card overflow-hidden py-3">
