@@ -136,6 +136,41 @@ const AdminTestimonials = () => {
           </Button>
         </div>
 
+        {/* Section Background Color */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Palette className="h-4 w-4 text-primary" />
+              Section Appearance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label>Background Color</Label>
+                <input
+                  type="color"
+                  value={sectionBgColor}
+                  onChange={(e) => setSectionBgColor(e.target.value)}
+                  className="w-10 h-10 rounded border border-border cursor-pointer"
+                />
+                <Input
+                  value={sectionBgColor}
+                  onChange={(e) => setSectionBgColor(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+              <Button size="sm" onClick={saveBgColor} disabled={savingBg}>
+                {savingBg ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save
+              </Button>
+            </div>
+            <div className="mt-3 rounded-lg p-4 text-center text-xs text-muted-foreground" style={{ backgroundColor: sectionBgColor }}>
+              Preview
+            </div>
+          </CardContent>
+        </Card>
+
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
