@@ -79,12 +79,22 @@ export default function EarningsCharts({ earnings }: Props) {
           <TabsContent value="bar">
             <ChartContainer config={chartConfig} className="h-72 w-full">
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
+                <defs>
+                  <linearGradient id="earnBarGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                  <linearGradient id="earnBarGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="level" name="Level Income" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="repurchase" name="Repurchase" fill="hsl(var(--chart-2, 160 60% 45%))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="level" name="Level Income" fill="url(#earnBarGrad1)" radius={[6, 6, 0, 0]} animationDuration={800} />
+                <Bar dataKey="repurchase" name="Repurchase" fill="url(#earnBarGrad2)" radius={[6, 6, 0, 0]} animationDuration={800} />
               </BarChart>
             </ChartContainer>
           </TabsContent>
