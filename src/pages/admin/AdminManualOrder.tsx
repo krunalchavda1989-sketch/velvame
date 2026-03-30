@@ -520,6 +520,10 @@ const AdminManualOrder = () => {
                   </Button>
                 </div>
                 {couponError && <p className="text-xs text-destructive">{couponError}</p>}
+                <CouponRecommendations
+                  appliedCode={appliedCoupon?.code}
+                  onSelect={(code) => { setCouponCode(code); setCouponError(""); }}
+                />
               </div>
             )}
           </div>
