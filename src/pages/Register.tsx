@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Crown, Eye, EyeOff, Mail, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Mail, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useBrand } from "@/contexts/BrandContext";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
+import AuthPageLayout from "@/components/auth/AuthPageLayout";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
@@ -29,27 +30,18 @@ const Register = () => {
     referralCode: searchParams.get("ref") || "",
   });
 
-  // Validate referral code on load if present
   useEffect(() => {
     const refCode = searchParams.get("ref");
     if (!refCode) return;
-
     const validateRef = async () => {
-      const { data, error } = await supabase.rpc("validate_referral_with_subscription", {
-        _code: refCode,
-      });
+      const { data, error } = await supabase.rpc("validate_referral_with_subscription", { _code: refCode });
       if (error) return;
-
       const result = data as { valid: boolean; reason: string | null; message: string | null };
       if (!result.valid) {
         if (result.reason === "SUBSCRIPTION_REQUIRED") {
-          setReferralWarning(
-            "This referral link is inactive. The referring user does not have an active subscription. You can register without a referral code or contact the person who referred you."
-          );
+          setReferralWarning("This referral link is inactive. The referring user does not have an active subscription. You can register without a referral code or contact the person who referred you.");
         } else {
-          setReferralWarning(
-            "This referral code is invalid. You can register without a referral code."
-          );
+          setReferralWarning("This referral code is invalid. You can register without a referral code.");
         }
         setForm((prev) => ({ ...prev, referralCode: "" }));
       }
@@ -57,15 +49,11 @@ const Register = () => {
     validateRef();
   }, [searchParams]);
 
-  // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => {
       setCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(timer); return 0; }
         return prev - 1;
       });
     }, 1000);
@@ -74,18 +62,11 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
-
     try {
-      // Validate referral code with subscription check if provided
       if (form.referralCode) {
-        const { data } = await supabase.rpc("validate_referral_with_subscription", {
-          _code: form.referralCode,
-        });
+        const { data } = await supabase.rpc("validate_referral_with_subscription", { _code: form.referralCode });
         const result = data as { valid: boolean; reason: string | null; message: string | null } | null;
         if (result && !result.valid) {
           if (result.reason === "SUBSCRIPTION_REQUIRED") {
@@ -98,7 +79,6 @@ const Register = () => {
           return;
         }
       }
-
       const { error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -107,7 +87,6 @@ const Register = () => {
           emailRedirectTo: window.location.origin,
         },
       });
-
       if (error) throw error;
       toast.success("Verification email sent. Please check your inbox.");
       setStep("verifyEmail");
@@ -123,18 +102,12 @@ const Register = () => {
     setLoading(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-
       if (sessionData.session) {
         toast.success("Email verified! Welcome to " + brand.brand_name + "!");
         navigate("/dashboard");
         return;
       }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
       if (error) {
         if (error.message.toLowerCase().includes("email not confirmed")) {
           toast.error("Please click the verification link in your email first.");
@@ -142,7 +115,6 @@ const Register = () => {
         }
         throw error;
       }
-
       toast.success("Email verified! Welcome to " + brand.brand_name + "!");
       navigate("/dashboard");
     } catch (err: any) {
@@ -156,10 +128,7 @@ const Register = () => {
     if (cooldown > 0 || resendCount >= 5) return;
     setResending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: form.email,
-      });
+      const { error } = await supabase.auth.resend({ type: "signup", email: form.email });
       if (error) throw error;
       toast.success(`Verification email sent successfully to ${form.email}`);
       setResendCount((c) => c + 1);
@@ -172,138 +141,113 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            {brand.logo_url ? (
-              <img src={brand.logo_url} alt={brand.brand_name} className="h-8 w-auto object-contain rounded" />
-            ) : (
-              <Crown className="h-8 w-8 text-primary" />
-            )}
-          </Link>
-          {step === "form" ? (
-            <>
-              <h1 className="text-2xl font-display font-bold text-foreground">Create Your Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-2xl font-display font-bold text-foreground">Verify Your Email</h1>
-              <p className="text-sm text-muted-foreground mt-1">A verification link has been sent to</p>
-              <p className="text-sm font-medium text-primary mt-0.5">{form.email}</p>
-            </>
+    <AuthPageLayout>
+      {step === "form" ? (
+        <>
+          <div className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Create Your Account</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Lifetime membership — One-time ₹{membershipAmount.toLocaleString("en-IN")}
+            </p>
+          </div>
+
+          {referralWarning && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-sm">{referralWarning}</AlertDescription>
+            </Alert>
           )}
-        </div>
 
-        {step === "form" ? (
-          <>
-            {/* Referral Warning Banner */}
-            {referralWarning && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-sm">{referralWarning}</AlertDescription>
-              </Alert>
-            )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <Label htmlFor="fullName" className="text-foreground text-sm font-medium">Full Name</Label>
+              <Input
+                id="fullName"
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                required
+                className="mt-1.5 h-11 bg-background border-border"
+                placeholder="Your full name"
+              />
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl bg-card border border-border">
-              <div>
-                <Label htmlFor="fullName" className="text-foreground">
-                  Full Name
-                </Label>
+            <div>
+              <Label htmlFor="email" className="text-foreground text-sm font-medium">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                className="mt-1.5 h-11 bg-background border-border"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password" className="text-foreground text-sm font-medium">Password</Label>
+              <div className="relative mt-1.5">
                 <Input
-                  id="fullName"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
-                  className="mt-1 bg-secondary border-border"
-                  placeholder="Your full name"
+                  minLength={6}
+                  className="h-11 bg-background border-border pr-10"
+                  placeholder="Min 6 characters"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="email" className="text-foreground">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  className="mt-1 bg-secondary border-border"
-                  placeholder="you@example.com"
-                />
-              </div>
+            <div>
+              <Label htmlFor="referral" className="text-foreground text-sm font-medium">Referral Code (optional)</Label>
+              <Input
+                id="referral"
+                value={form.referralCode}
+                onChange={(e) => {
+                  setForm({ ...form, referralCode: e.target.value });
+                  if (referralWarning) setReferralWarning("");
+                }}
+                className="mt-1.5 h-11 bg-background border-border"
+                placeholder="e.g. NXM1A2B3C"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="password" className="text-foreground">
-                  Password
-                </Label>
-                <div className="relative mt-1">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    required
-                    minLength={6}
-                    className="bg-secondary border-border pr-10"
-                    placeholder="Min 6 characters"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90 rounded-lg"
+            >
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-2" />Creating account...</>
+              ) : (
+                `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
+              )}
+            </Button>
 
-              <div>
-                <Label htmlFor="referral" className="text-foreground">
-                  Referral Code (optional)
-                </Label>
-                <Input
-                  id="referral"
-                  value={form.referralCode}
-                  onChange={(e) => {
-                    setForm({ ...form, referralCode: e.target.value });
-                    if (referralWarning) setReferralWarning("");
-                  }}
-                  className="mt-1 bg-secondary border-border"
-                  placeholder="e.g. NXM1A2B3C"
-                />
-              </div>
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">Sign In</Link>
+            </p>
+          </form>
+        </>
+      ) : (
+        <>
+          <div className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Verify Your Email</h1>
+            <p className="text-sm text-muted-foreground mt-1">A verification link has been sent to</p>
+            <p className="text-sm font-medium text-primary mt-0.5">{form.email}</p>
+          </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Creating account...
-                  </>
-                ) : (
-                  `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
-                )}
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link to="/login" className="text-primary hover:underline">
-                  Sign in
-                </Link>
-              </p>
-            </form>
-          </>
-        ) : (
-          <div className="space-y-6 p-6 rounded-xl bg-card border border-border">
+          <div className="space-y-6">
             <div className="flex justify-center">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Mail className="h-8 w-8 text-primary" />
@@ -322,16 +266,9 @@ const Register = () => {
             <Button
               onClick={handleContinueAfterVerification}
               disabled={loading}
-              className="w-full bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90"
+              className="w-full h-11 bg-gradient-gold text-primary-foreground font-semibold hover:opacity-90 rounded-lg"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Checking...
-                </>
-              ) : (
-                "I Have Verified Email"
-              )}
+              {loading ? (<><Loader2 className="h-4 w-4 animate-spin mr-2" />Checking...</>) : "I Have Verified Email"}
             </Button>
 
             <div className="text-center space-y-2">
@@ -340,25 +277,15 @@ const Register = () => {
                 {resendCount >= 5 ? (
                   <span className="text-destructive font-medium">Maximum resend attempts reached</span>
                 ) : cooldown > 0 ? (
-                  <span className="text-muted-foreground font-medium">
-                    Resend in 0:{cooldown.toString().padStart(2, "0")}
-                  </span>
+                  <span className="text-muted-foreground font-medium">Resend in 0:{cooldown.toString().padStart(2, "0")}</span>
                 ) : (
-                  <button
-                    onClick={handleResendOtp}
-                    disabled={resending}
-                    className="text-primary hover:underline font-medium disabled:opacity-50"
-                  >
+                  <button onClick={handleResendOtp} disabled={resending} className="text-primary hover:underline font-medium disabled:opacity-50">
                     {resending ? "Sending..." : "Resend verification email"}
                   </button>
                 )}
               </p>
               <button
-                onClick={() => {
-                  setStep("form");
-                  setCooldown(0);
-                  setResendCount(0);
-                }}
+                onClick={() => { setStep("form"); setCooldown(0); setResendCount(0); }}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
@@ -366,9 +293,9 @@ const Register = () => {
               </button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </AuthPageLayout>
   );
 };
 
