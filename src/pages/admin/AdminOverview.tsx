@@ -21,6 +21,12 @@ const COLORS = [
 ];
 
 const AdminOverview = () => {
+  const [statColors, setStatColors] = useState({
+    stat_color_1: "#4f46e5",
+    stat_color_2: "#10b981",
+    stat_color_3: "#f59e0b",
+    stat_color_4: "#ec4899",
+  });
   const [stats, setStats] = useState({ users: 0, products: 0, orders: 0, revenue: 0, commissions: 0 });
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [userGrowth, setUserGrowth] = useState<any[]>([]);
@@ -31,6 +37,21 @@ const AdminOverview = () => {
 
   useEffect(() => {
     const fetchAll = async () => {
+      // Fetch stat colors
+      const { data: brandData } = await supabase
+        .from("brand_settings")
+        .select("stat_color_1, stat_color_2, stat_color_3, stat_color_4")
+        .limit(1)
+        .maybeSingle();
+      if (brandData) {
+        const bd = brandData as any;
+        setStatColors({
+          stat_color_1: bd.stat_color_1 || "#4f46e5",
+          stat_color_2: bd.stat_color_2 || "#10b981",
+          stat_color_3: bd.stat_color_3 || "#f59e0b",
+          stat_color_4: bd.stat_color_4 || "#ec4899",
+        });
+      }
       const [profilesRes, productsRes, ordersRes, commissionsRes] = await Promise.all([
         supabase.from("profiles").select("id, created_at", { count: "exact" }),
         supabase.from("products").select("*", { count: "exact", head: true }),
