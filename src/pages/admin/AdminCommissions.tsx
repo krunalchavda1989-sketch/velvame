@@ -69,12 +69,7 @@ const exportCsv = (columns: string[], rows: string[][], filename: string) => {
   a.click(); URL.revokeObjectURL(url);
 };
 
-const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Card>
-    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle></CardHeader>
-    <CardContent className="pt-0"><div className="h-[260px] w-full">{children}</div></CardContent>
-  </Card>
-);
+// ChartCard moved to top with imports
 
 const AdminCommissions = () => {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
