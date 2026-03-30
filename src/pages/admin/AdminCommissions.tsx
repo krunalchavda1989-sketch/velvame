@@ -30,13 +30,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 173 58% 39%))",
-  "hsl(var(--chart-3, 43 74% 66%))",
-  "hsl(var(--chart-4, 12 76% 61%))",
-  "hsl(var(--chart-5, 280 65% 60%))",
-];
+import { VIBRANT_COLORS, ChartGradients, chartTooltipStyle, axisTick } from "@/components/admin/ChartStyles";
+
+const CHART_COLORS = VIBRANT_COLORS;
 
 const toEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
 

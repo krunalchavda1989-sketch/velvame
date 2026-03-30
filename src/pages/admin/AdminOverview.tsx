@@ -191,8 +191,7 @@ const AdminOverview = () => {
 
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Trend */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Revenue & Commission Trend</CardTitle>
             </CardHeader>
@@ -200,45 +199,38 @@ const AdminOverview = () => {
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={revenueData}>
                   <defs>
-                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="commGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                    </linearGradient>
+                    <ChartGradients />
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
-                  />
-                  <Legend />
-                  <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="url(#revGrad)" name="Revenue (₹)" />
-                  <Area type="monotone" dataKey="commissions" stroke="hsl(var(--chart-2))" fill="url(#commGrad)" name="Commissions (₹)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                  <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+                  <YAxis tick={axisTick} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="url(#grad-indigo)" strokeWidth={2.5} name="Revenue (₹)" dot={{ r: 3, fill: "#6366f1" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="commissions" stroke="#10b981" fill="url(#grad-emerald)" strokeWidth={2.5} name="Commissions (₹)" dot={{ r: 3, fill: "#10b981" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* User Growth */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">User Growth</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={userGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                  <Tooltip
-                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                  />
-                  <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="New Users" />
+                  <defs>
+                    <linearGradient id="barGrad1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#6366f1" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                  <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+                  <YAxis tick={axisTick} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: "rgba(99,102,241,0.08)" }} />
+                  <Bar dataKey="users" fill="url(#barGrad1)" radius={[6, 6, 0, 0]} name="New Users" animationDuration={800} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -247,8 +239,7 @@ const AdminOverview = () => {
 
         {/* Charts Row 2 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Commission Breakdown */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Commission Breakdown</CardTitle>
             </CardHeader>
@@ -256,12 +247,12 @@ const AdminOverview = () => {
               {commissionBreakdown.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={commissionBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    <Pie data={commissionBreakdown} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={4} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800} animationBegin={200}>
                       {commissionBreakdown.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        <Cell key={i} fill={VIBRANT_COLORS[i % VIBRANT_COLORS.length]} stroke="none" />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -270,8 +261,7 @@ const AdminOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Order Status */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Order Status</CardTitle>
             </CardHeader>
@@ -279,12 +269,12 @@ const AdminOverview = () => {
               {orderStatusData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={orderStatusData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                    <Pie data={orderStatusData} cx="50%" cy="50%" outerRadius={80} dataKey="value" paddingAngle={3} label={({ name, value }) => `${name}: ${value}`} animationDuration={800} animationBegin={400}>
                       {orderStatusData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        <Cell key={i} fill={VIBRANT_COLORS[i % VIBRANT_COLORS.length]} stroke="none" />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={chartTooltipStyle} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -293,8 +283,7 @@ const AdminOverview = () => {
             </CardContent>
           </Card>
 
-          {/* Top Earners */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Top Earners</CardTitle>
             </CardHeader>
@@ -302,17 +291,17 @@ const AdminOverview = () => {
               {topUsers.length > 0 ? (
                 <div className="space-y-3">
                   {topUsers.map((u, i) => (
-                    <div key={i} className="flex items-center justify-between">
+                    <div key={i} className="flex items-center justify-between group">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: VIBRANT_COLORS[i % VIBRANT_COLORS.length] }}>
                           {i + 1}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-foreground">{u.name}</div>
+                          <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{u.name}</div>
                           <div className="text-xs text-muted-foreground">{u.code}</div>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-primary">₹{u.earned.toLocaleString()}</span>
+                      <span className="text-sm font-semibold" style={{ color: VIBRANT_COLORS[i % VIBRANT_COLORS.length] }}>₹{u.earned.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

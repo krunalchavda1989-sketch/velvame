@@ -11,15 +11,8 @@ import {
 import type { EarningRecord } from "@/hooks/useEarningsData";
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 160 60% 45%))",
-  "hsl(var(--chart-3, 30 80% 55%))",
-  "hsl(var(--chart-4, 280 65% 60%))",
-  "hsl(var(--chart-5, 340 75% 55%))",
-  "hsl(200 70% 50%)",
-  "hsl(120 60% 45%)",
-  "hsl(60 70% 50%)",
-  "hsl(0 70% 50%)",
+  "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#f97316", "#14b8a6",
 ];
 
 const chartConfig = {
