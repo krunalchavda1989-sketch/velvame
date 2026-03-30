@@ -139,7 +139,7 @@ const AdminManualOrder = () => {
     ? Math.min(userWallet.balance, totalAmount)
     : 0;
   const remainingAmount = totalAmount - walletAmountToUse;
-  const needsPaymentMethod = remainingAmount > 0;
+  
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
