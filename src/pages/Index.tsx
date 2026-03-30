@@ -424,7 +424,6 @@ const Index = () => {
 
       {/* ===== Testimonials Carousel ===== */}
       {testimonials.length > 0 && (() => {
-        const [testimonialPage, setTestimonialPage] = useState(0);
         const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 3;
         const totalPages = Math.ceil(testimonials.length / perPage);
         const visibleTestimonials = testimonials.slice(testimonialPage * perPage, testimonialPage * perPage + perPage);
