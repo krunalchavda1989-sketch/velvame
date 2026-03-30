@@ -159,7 +159,13 @@ const AdminManualOrder = () => {
     ? Math.min(userWallet.balance, totalAmount)
     : 0;
   const remainingAmount = totalAmount - walletAmountToUse;
-  
+
+  const getShippingAddress = () => {
+    if (showManualAddress) return manualAddress;
+    const saved = savedAddresses.find((a: any) => a.id === selectedAddressId);
+    if (!saved) return null;
+    return { name: saved.name, line1: saved.line1, line2: saved.line2 || "", city: saved.city, state: saved.state, pincode: saved.pincode, phone: saved.phone };
+  };
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
