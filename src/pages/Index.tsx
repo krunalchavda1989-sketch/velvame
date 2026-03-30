@@ -78,19 +78,24 @@ const Index = () => {
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
   const [heroSectionEnabled, setHeroSectionEnabled] = useState(false);
   const [testimonialPage, setTestimonialPage] = useState(0);
+  const [newsletterSettings, setNewsletterSettings] = useState<{ bg_color: string; heading: string; subtext: string; button_text: string }>({
+    bg_color: '#e8e0f0', heading: 'Stay in the Loop', subtext: 'No spam. Only useful tips, exclusive offers, and friendly reminders delivered to your inbox.', button_text: 'Sign up',
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }] = await Promise.all([
         supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
         supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
+        supabase.from("newsletter_settings" as any).select("bg_color, heading, subtext, button_text").limit(1).single(),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
       setHeroStats((stats as unknown as HeroStat[]) || []);
       setHeroSectionEnabled((bannerSettings as any)?.hero_section_enabled ?? true);
+      if (nlSettings) setNewsletterSettings(nlSettings as any);
     };
     fetchData();
   }, []);
