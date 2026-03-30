@@ -164,7 +164,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span
+                    className="flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: iconBg,
+                      width: collapsed && !isMobile ? 28 : 26,
+                      height: collapsed && !isMobile ? 28 : 26,
+                    }}
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-white" />
+                  </span>
                   {(isMobile || !collapsed) && <span className="truncate">{item.label}</span>}
                 </Link>
                 {hasChildren && (isMobile || !collapsed) && (
