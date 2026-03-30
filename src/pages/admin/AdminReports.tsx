@@ -571,22 +571,28 @@ const ShippingReport = ({ from, to }: ReportProps) => {
         <ChartCard title="Shipment Status Breakdown">
           <ResponsiveContainer>
             <BarChart data={statusData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
-              <Bar dataKey="value" name="Orders" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+              <defs>
+                <linearGradient id="barShipGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <XAxis dataKey="name" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={axisTick} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: "rgba(99,102,241,0.08)" }} />
+              <Bar dataKey="value" name="Orders" fill="url(#barShipGrad)" radius={[6, 6, 0, 0]} animationDuration={800} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Shipping Method Distribution">
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={methodData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                {methodData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              <Pie data={methodData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                {methodData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
-              <Legend />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
