@@ -11,15 +11,8 @@ import {
 import type { EarningRecord } from "@/hooks/useEarningsData";
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 160 60% 45%))",
-  "hsl(var(--chart-3, 30 80% 55%))",
-  "hsl(var(--chart-4, 280 65% 60%))",
-  "hsl(var(--chart-5, 340 75% 55%))",
-  "hsl(200 70% 50%)",
-  "hsl(120 60% 45%)",
-  "hsl(60 70% 50%)",
-  "hsl(0 70% 50%)",
+  "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#f97316", "#14b8a6",
 ];
 
 const chartConfig = {
@@ -86,12 +79,22 @@ export default function EarningsCharts({ earnings }: Props) {
           <TabsContent value="bar">
             <ChartContainer config={chartConfig} className="h-72 w-full">
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
+                <defs>
+                  <linearGradient id="earnBarGrad1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                  <linearGradient id="earnBarGrad2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#06b6d4" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="level" name="Level Income" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="repurchase" name="Repurchase" fill="hsl(var(--chart-2, 160 60% 45%))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="level" name="Level Income" fill="url(#earnBarGrad1)" radius={[6, 6, 0, 0]} animationDuration={800} />
+                <Bar dataKey="repurchase" name="Repurchase" fill="url(#earnBarGrad2)" radius={[6, 6, 0, 0]} animationDuration={800} />
               </BarChart>
             </ChartContainer>
           </TabsContent>
@@ -123,13 +126,13 @@ export default function EarningsCharts({ earnings }: Props) {
           <TabsContent value="line">
             <ChartContainer config={chartConfig} className="h-72 w-full">
               <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} name="Total Income" />
-                <Line type="monotone" dataKey="level" stroke="hsl(var(--chart-3, 30 80% 55%))" strokeWidth={2} dot={{ r: 3 }} name="Level" />
-                <Line type="monotone" dataKey="repurchase" stroke="hsl(var(--chart-2, 160 60% 45%))" strokeWidth={2} dot={{ r: 3 }} name="Repurchase" />
+                <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 4, fill: "#6366f1" }} activeDot={{ r: 7, stroke: "#fff", strokeWidth: 2 }} name="Total Income" />
+                <Line type="monotone" dataKey="level" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: "#f59e0b" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} name="Level" />
+                <Line type="monotone" dataKey="repurchase" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: "#10b981" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} name="Repurchase" />
               </LineChart>
             </ChartContainer>
           </TabsContent>

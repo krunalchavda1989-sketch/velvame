@@ -30,13 +30,16 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 173 58% 39%))",
-  "hsl(var(--chart-3, 43 74% 66%))",
-  "hsl(var(--chart-4, 12 76% 61%))",
-  "hsl(var(--chart-5, 280 65% 60%))",
-];
+import { VIBRANT_COLORS, ChartGradients, chartTooltipStyle, axisTick } from "@/components/admin/ChartStyles";
+
+const CHART_COLORS = VIBRANT_COLORS;
+
+const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Card className="overflow-hidden">
+    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle></CardHeader>
+    <CardContent className="pt-0"><div className="h-[260px] w-full">{children}</div></CardContent>
+  </Card>
+);
 
 const toEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
 
@@ -66,12 +69,7 @@ const exportCsv = (columns: string[], rows: string[][], filename: string) => {
   a.click(); URL.revokeObjectURL(url);
 };
 
-const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Card>
-    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle></CardHeader>
-    <CardContent className="pt-0"><div className="h-[260px] w-full">{children}</div></CardContent>
-  </Card>
-);
+// ChartCard moved to top with imports
 
 const AdminCommissions = () => {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
@@ -204,30 +202,32 @@ const AdminCommissions = () => {
           <ChartCard title="Commission Trend">
             <ResponsiveContainer>
               <AreaChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="label" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
-                <Area type="monotone" dataKey="amount" name="Amount" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+                <defs><ChartGradients /></defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={chartTooltipStyle} cursor={{ stroke: "#6366f1", strokeWidth: 1, strokeDasharray: "4 4" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Amount"]} />
+                <Area type="monotone" dataKey="amount" name="Amount" stroke="#6366f1" fill="url(#grad-indigo)" strokeWidth={2.5} dot={{ r: 3, fill: "#6366f1" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
           <ChartCard title="By Commission Type">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={typeDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {typeDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                <Pie data={typeDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                  {typeDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
           </ChartCard>
           <ChartCard title="By Status">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {statusDistribution.map((_, i) => <Cell key={i} fill={[CHART_COLORS[1], CHART_COLORS[0]][i]} />)}
+                <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                  {statusDistribution.map((_, i) => <Cell key={i} fill={[CHART_COLORS[1], CHART_COLORS[0]][i]} stroke="none" />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`]} /><Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
           </ChartCard>
