@@ -35,10 +35,39 @@ const AdminOrders = () => {
       .select("order_id");
     const processedOrderIds = new Set((commData || []).map((c) => c.order_id));
 
+    // Fetch order items with product images
+    const orderIds = (ordersData || []).map((o) => o.id);
+    const { data: orderItemsData } = orderIds.length > 0
+      ? await supabase
+          .from("order_items")
+          .select("order_id, product_id")
+          .in("order_id", orderIds)
+      : { data: [] };
+
+    const productIds = [...new Set((orderItemsData || []).map((i: any) => i.product_id))];
+    let productMap = new Map<string, any>();
+    if (productIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, name, image_url")
+        .in("id", productIds);
+      productMap = new Map((productsData || []).map((p: any) => [p.id, p]));
+    }
+
+    // Group items by order
+    const orderItemsMap = new Map<string, any[]>();
+    (orderItemsData || []).forEach((item: any) => {
+      const existing = orderItemsMap.get(item.order_id) || [];
+      const product = productMap.get(item.product_id);
+      if (product) existing.push(product);
+      orderItemsMap.set(item.order_id, existing);
+    });
+
     const enriched = (ordersData || []).map((o) => ({
       ...o,
       profile: profileMap.get(o.user_id) || null,
       commissions_processed: processedOrderIds.has(o.id),
+      products: orderItemsMap.get(o.id) || [],
     }));
 
     setOrders(enriched);
