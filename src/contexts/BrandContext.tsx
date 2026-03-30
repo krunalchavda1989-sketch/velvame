@@ -17,6 +17,10 @@ interface BrandSettings {
   button_color: string;
   font_heading: string;
   font_body: string;
+  stat_color_1: string;
+  stat_color_2: string;
+  stat_color_3: string;
+  stat_color_4: string;
 }
 
 const defaultBrand: BrandSettings = {
@@ -35,6 +39,10 @@ const defaultBrand: BrandSettings = {
   button_color: "#1a1a2e",
   font_heading: "Space Grotesk",
   font_body: "Inter",
+  stat_color_1: "#4f46e5",
+  stat_color_2: "#10b981",
+  stat_color_3: "#f59e0b",
+  stat_color_4: "#ec4899",
 };
 
 const BrandContext = createContext<BrandSettings>(defaultBrand);
