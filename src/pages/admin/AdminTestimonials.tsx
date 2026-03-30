@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { MessageSquareQuote, Plus, Pencil, Trash2, Loader2, Save, Star } from "lucide-react";
+import { MessageSquareQuote, Plus, Pencil, Trash2, Loader2, Save, Star, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,18 +39,27 @@ const AdminTestimonials = () => {
   const [editing, setEditing] = useState<Testimonial | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [sectionBgColor, setSectionBgColor] = useState('#ffffff');
+  const [savingBg, setSavingBg] = useState(false);
 
   const fetchData = async () => {
-    const { data } = await supabase
-      .from("testimonials")
-      .select("*")
-      .order("sort_order")
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: bgSetting }] = await Promise.all([
+      supabase.from("testimonials").select("*").order("sort_order").order("created_at", { ascending: false }),
+      supabase.from("site_settings").select("value").eq("key", "testimonial_section_bg_color").single(),
+    ]);
     setItems((data as unknown as Testimonial[]) || []);
+    if (bgSetting) setSectionBgColor((bgSetting as any).value as string);
     setLoading(false);
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const saveBgColor = async () => {
+    setSavingBg(true);
+    await supabase.from("site_settings").update({ value: JSON.stringify(sectionBgColor) as any, updated_at: new Date().toISOString() }).eq("key", "testimonial_section_bg_color");
+    toast.success("Section background color saved!");
+    setSavingBg(false);
+  };
 
   const openAdd = () => {
     setEditing(null);
@@ -126,6 +135,41 @@ const AdminTestimonials = () => {
             <Plus className="h-4 w-4 mr-2" /> Add Testimonial
           </Button>
         </div>
+
+        {/* Section Background Color */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Palette className="h-4 w-4 text-primary" />
+              Section Appearance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label>Background Color</Label>
+                <input
+                  type="color"
+                  value={sectionBgColor}
+                  onChange={(e) => setSectionBgColor(e.target.value)}
+                  className="w-10 h-10 rounded border border-border cursor-pointer"
+                />
+                <Input
+                  value={sectionBgColor}
+                  onChange={(e) => setSectionBgColor(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+              <Button size="sm" onClick={saveBgColor} disabled={savingBg}>
+                {savingBg ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save
+              </Button>
+            </div>
+            <div className="mt-3 rounded-lg p-4 text-center text-xs text-muted-foreground" style={{ backgroundColor: sectionBgColor }}>
+              Preview
+            </div>
+          </CardContent>
+        </Card>
 
         {loading ? (
           <div className="flex justify-center py-20">
