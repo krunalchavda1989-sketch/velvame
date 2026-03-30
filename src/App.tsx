@@ -76,6 +76,7 @@ import AdminCustomCode from "./pages/admin/AdminCustomCode";
 import AdminDefaultPlacement from "./pages/admin/AdminDefaultPlacement";
 import AdminSubUsers from "./pages/admin/AdminSubUsers";
 import AdminProfile from "./pages/admin/AdminProfile";
+import AdminSystemColors from "./pages/admin/AdminSystemColors";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
@@ -220,6 +221,7 @@ const App = () => (
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/brand-settings" element={<AdminRoute><AdminBrandSettings /></AdminRoute>} />
+            <Route path="/admin/system-colors" element={<AdminRoute><AdminSystemColors /></AdminRoute>} />
             <Route path="/admin/pages" element={<AdminRoute><AdminPages /></AdminRoute>} />
             <Route path="/admin/title-roadmap" element={<AdminRoute><AdminTitleRoadmap /></AdminRoute>} />
             <Route path="/admin/commission-levels" element={<AdminRoute><AdminCommissionLevels /></AdminRoute>} />

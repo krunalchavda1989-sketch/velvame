@@ -17,6 +17,10 @@ interface BrandSettings {
   button_color: string;
   font_heading: string;
   font_body: string;
+  stat_color_1: string;
+  stat_color_2: string;
+  stat_color_3: string;
+  stat_color_4: string;
 }
 
 const defaultBrand: BrandSettings = {
@@ -35,6 +39,10 @@ const defaultBrand: BrandSettings = {
   button_color: "#1a1a2e",
   font_heading: "Space Grotesk",
   font_body: "Inter",
+  stat_color_1: "#4f46e5",
+  stat_color_2: "#10b981",
+  stat_color_3: "#f59e0b",
+  stat_color_4: "#ec4899",
 };
 
 const BrandContext = createContext<BrandSettings>(defaultBrand);
@@ -151,6 +159,10 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
             button_color: d.button_color || defaultBrand.button_color,
             font_heading: d.font_heading || defaultBrand.font_heading,
             font_body: d.font_body || defaultBrand.font_body,
+            stat_color_1: d.stat_color_1 || defaultBrand.stat_color_1,
+            stat_color_2: d.stat_color_2 || defaultBrand.stat_color_2,
+            stat_color_3: d.stat_color_3 || defaultBrand.stat_color_3,
+            stat_color_4: d.stat_color_4 || defaultBrand.stat_color_4,
           };
           setBrand(b);
           applyBrandTheme(b);

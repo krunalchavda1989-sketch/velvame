@@ -16,14 +16,7 @@ import {
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { useMembershipAmount } from "@/hooks/useMembershipAmount";
 
-
-const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+const PIE_COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
 
 const Dashboard = () => {
   const { profile, user } = useAuth();
@@ -38,6 +31,12 @@ const Dashboard = () => {
   const [commissionBreakdown, setCommissionBreakdown] = useState<any[]>([]);
   const [teamGrowth, setTeamGrowth] = useState<any[]>([]);
   const [totalCommissionEarnings, setTotalCommissionEarnings] = useState(0);
+  const [statColors, setStatColors] = useState({
+    stat_color_1: "#4f46e5",
+    stat_color_2: "#10b981",
+    stat_color_3: "#f59e0b",
+    stat_color_4: "#ec4899",
+  });
 
   const referralLink = profile ? `${window.location.origin}/register?ref=${profile.referral_code}` : "";
 
@@ -45,6 +44,22 @@ const Dashboard = () => {
     if (!user) return;
 
     const fetchData = async () => {
+      // Fetch stat colors from brand_settings
+      const { data: brandData } = await supabase
+        .from("brand_settings")
+        .select("stat_color_1, stat_color_2, stat_color_3, stat_color_4")
+        .limit(1)
+        .maybeSingle();
+      if (brandData) {
+        const bd = brandData as any;
+        setStatColors({
+          stat_color_1: bd.stat_color_1 || "#4f46e5",
+          stat_color_2: bd.stat_color_2 || "#10b981",
+          stat_color_3: bd.stat_color_3 || "#f59e0b",
+          stat_color_4: bd.stat_color_4 || "#ec4899",
+        });
+      }
+
       // Wallet
       const { data: w } = await supabase
         .from("wallets")
@@ -68,7 +83,6 @@ const Dashboard = () => {
         setTeamCount(count);
         setRecentTeam(team);
 
-        // Team growth (last 6 months)
         const { data: allTeam } = await supabase
           .from("profiles")
           .select("created_at")
@@ -93,17 +107,15 @@ const Dashboard = () => {
         .eq("user_id", user.id);
       setOrderCount(oc || 0);
 
-      // Commissions (actual earnings, not subscription)
+      // Commissions
       const { data: comms } = await supabase
         .from("commissions")
         .select("amount, commission_type, created_at")
         .eq("beneficiary_id", user.id);
 
-      // Calculate total commission earnings (excludes subscription balance)
       const commEarnings = (comms || []).reduce((s, c) => s + Number(c.amount), 0);
       setTotalCommissionEarnings(Math.round(commEarnings));
 
-      // Earnings trend (last 6 months)
       const et: any[] = [];
       for (let i = 5; i >= 0; i--) {
         const d = subMonths(new Date(), i);
@@ -116,7 +128,6 @@ const Dashboard = () => {
       }
       setEarningsTrend(et);
 
-      // Commission breakdown by type
       const typeMap: Record<string, number> = {};
       (comms || []).forEach((c) => {
         const t = c.commission_type === "level" ? "Level Income" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type;
@@ -125,7 +136,6 @@ const Dashboard = () => {
       setCommissionBreakdown(
         Object.entries(typeMap).map(([name, value]) => ({ name, value: Math.round(value) }))
       );
-
     };
 
     fetchData();
@@ -138,10 +148,10 @@ const Dashboard = () => {
   };
 
   const stats = [
-    { icon: Wallet, label: "Total Earnings", value: `₹${totalCommissionEarnings}`, color: "text-primary" },
-    { icon: Users, label: "Direct Referrals", value: String(teamCount), color: "text-chart-2" },
-    { icon: TrendingUp, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: "text-chart-3" },
-    { icon: ShoppingBag, label: "Orders", value: String(orderCount), color: "text-chart-4" },
+    { icon: Wallet, label: "Total Earnings", value: `₹${totalCommissionEarnings}`, color: statColors.stat_color_1 },
+    { icon: Users, label: "Direct Referrals", value: String(teamCount), color: statColors.stat_color_2 },
+    { icon: TrendingUp, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: statColors.stat_color_3 },
+    { icon: ShoppingBag, label: "Orders", value: String(orderCount), color: statColors.stat_color_4 },
   ];
 
   return (
@@ -175,7 +185,6 @@ const Dashboard = () => {
           </Button>
         </motion.div>
 
-        {/* Social sharing */}
         <SocialShareButtons referralLink={referralLink} referralCode={profile?.referral_code} compact />
 
         {/* Subscription status */}
@@ -194,7 +203,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Stats */}
+        {/* Colorful Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s, i) => (
             <motion.div
@@ -202,19 +211,23 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="p-4 rounded-xl bg-card border border-border"
+              className="p-5 rounded-2xl text-white relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${s.color}, ${s.color}cc)`,
+                boxShadow: `0 8px 24px -4px ${s.color}44`,
+              }}
             >
-              <s.icon className={`h-5 w-5 ${s.color} mb-2`} />
-              <div className="text-xl font-display font-bold text-foreground">{s.value}</div>
-              <div className="text-xs text-muted-foreground">{s.label}</div>
+              <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-20" style={{ background: 'white', transform: 'translate(30%, -30%)' }} />
+              <s.icon className="h-6 w-6 mb-3 opacity-90" />
+              <div className="text-2xl font-display font-bold">{s.value}</div>
+              <div className="text-sm opacity-85 mt-0.5">{s.label}</div>
             </motion.div>
           ))}
         </div>
 
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Earnings Trend */}
-          <Card>
+          <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Earnings Trend (6 months)</CardTitle>
             </CardHeader>
@@ -223,22 +236,22 @@ const Dashboard = () => {
                 <AreaChart data={earningsTrend}>
                   <defs>
                     <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="0%" stopColor={statColors.stat_color_1} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={statColors.stat_color_1} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                   <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                  <Area type="monotone" dataKey="earnings" stroke="hsl(var(--primary))" fill="url(#earnGrad)" name="Earnings (₹)" />
+                  <Area type="monotone" dataKey="earnings" stroke={statColors.stat_color_1} fill="url(#earnGrad)" name="Earnings (₹)" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Team Growth */}
-          <Card>
+          <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Team Growth (6 months)</CardTitle>
             </CardHeader>
@@ -249,7 +262,7 @@ const Dashboard = () => {
                   <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                   <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} allowDecimals={false} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                  <Bar dataKey="members" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="New Members" />
+                  <Bar dataKey="members" fill={statColors.stat_color_2} radius={[6, 6, 0, 0]} name="New Members" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -258,7 +271,7 @@ const Dashboard = () => {
 
         {/* Commission Breakdown + Recent Team */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Commission Breakdown</CardTitle>
             </CardHeader>
@@ -268,7 +281,7 @@ const Dashboard = () => {
                   <PieChart>
                     <Pie data={commissionBreakdown} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                       {commissionBreakdown.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -280,8 +293,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Team */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 border-0 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Recent Team Members</CardTitle>
             </CardHeader>
@@ -292,18 +304,26 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {recentTeam.map((member) => (
+                  {recentTeam.map((member, i) => (
                     <div key={member.id} className="flex items-center justify-between py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-xs font-bold text-primary">{(member.full_name || "U")[0]}</span>
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                          style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
+                        >
+                          {(member.full_name || "U")[0]}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-foreground">{member.full_name || "User"}</div>
                           <div className="text-xs text-muted-foreground">{member.referral_code}</div>
                         </div>
                       </div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Direct</span>
+                      <span
+                        className="text-xs px-2.5 py-1 rounded-full text-white font-medium"
+                        style={{ background: statColors.stat_color_2 }}
+                      >
+                        Direct
+                      </span>
                     </div>
                   ))}
                 </div>
