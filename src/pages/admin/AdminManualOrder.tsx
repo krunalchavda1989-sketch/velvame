@@ -115,7 +115,65 @@ const AdminManualOrder = () => {
     setOrderItems(updated);
   };
 
-  const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Coupon discount calculation
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.discount_type === "percentage"
+      ? Math.min(
+          (subtotalAmount * appliedCoupon.discount_value) / 100,
+          appliedCoupon.max_discount_amount > 0 ? appliedCoupon.max_discount_amount : Infinity
+        )
+      : appliedCoupon.discount_value
+    : 0;
+
+  const totalAmount = Math.max(0, subtotalAmount - couponDiscount);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", couponCode.trim().toUpperCase())
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) { setCouponError("Invalid coupon code"); setCouponLoading(false); return; }
+
+      // Validate dates
+      const now = new Date();
+      if (new Date(data.start_date) > now) { setCouponError("Coupon not yet active"); setCouponLoading(false); return; }
+      if (new Date(data.end_date) < now) { setCouponError("Coupon has expired"); setCouponLoading(false); return; }
+
+      // Validate uses
+      if (data.max_uses && data.max_uses > 0 && data.used_count >= data.max_uses) {
+        setCouponError("Coupon usage limit reached"); setCouponLoading(false); return;
+      }
+
+      // Validate min order
+      if (data.min_order_amount && subtotalAmount < data.min_order_amount) {
+        setCouponError(`Minimum order ₹${data.min_order_amount} required`); setCouponLoading(false); return;
+      }
+
+      setAppliedCoupon(data);
+      setCouponError("");
+      toast.success(`Coupon "${data.code}" applied!`);
+    } catch (err: any) {
+      setCouponError(err.message);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
 
   const handleSubmit = async () => {
     if (!selectedUserId) {
