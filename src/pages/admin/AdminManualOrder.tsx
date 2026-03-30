@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check } from "lucide-react";
 
 interface OrderItem {
   product_id: string;
