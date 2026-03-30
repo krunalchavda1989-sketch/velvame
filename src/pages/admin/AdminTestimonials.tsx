@@ -39,18 +39,27 @@ const AdminTestimonials = () => {
   const [editing, setEditing] = useState<Testimonial | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [sectionBgColor, setSectionBgColor] = useState('#ffffff');
+  const [savingBg, setSavingBg] = useState(false);
 
   const fetchData = async () => {
-    const { data } = await supabase
-      .from("testimonials")
-      .select("*")
-      .order("sort_order")
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: bgSetting }] = await Promise.all([
+      supabase.from("testimonials").select("*").order("sort_order").order("created_at", { ascending: false }),
+      supabase.from("site_settings").select("value").eq("key", "testimonial_section_bg_color").single(),
+    ]);
     setItems((data as unknown as Testimonial[]) || []);
+    if (bgSetting) setSectionBgColor((bgSetting as any).value as string);
     setLoading(false);
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const saveBgColor = async () => {
+    setSavingBg(true);
+    await supabase.from("site_settings").update({ value: JSON.stringify(sectionBgColor) as any, updated_at: new Date().toISOString() }).eq("key", "testimonial_section_bg_color");
+    toast.success("Section background color saved!");
+    setSavingBg(false);
+  };
 
   const openAdd = () => {
     setEditing(null);
