@@ -68,6 +68,7 @@ const menuItems: MenuItem[] = [
       { icon: Menu, label: "Menus", href: "/admin/menus" },
       { icon: FileText, label: "Page Manager", href: "/admin/pages" },
       { icon: MessageSquareQuote, label: "Testimonials", href: "/admin/testimonials" },
+      { icon: Layers, label: "Featured Sections", href: "/admin/featured-sections" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
       { icon: PanelTop, label: "Banners", href: "/admin/banners" },

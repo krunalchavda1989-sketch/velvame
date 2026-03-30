@@ -859,6 +859,81 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_section_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          section_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          section_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          section_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_section_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_section_products_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "featured_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_sections: {
+        Row: {
+          bg_color: string
+          category_filter: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          selection_type: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          category_filter?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          selection_type?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          category_filter?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          selection_type?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       footer_menu_items: {
         Row: {
           created_at: string
