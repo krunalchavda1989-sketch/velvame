@@ -262,6 +262,29 @@ const AdminOrders = () => {
                         </Button>
                       </td>
                       <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
+                      <td className="p-3">
+                        <div className="flex items-center -space-x-2">
+                          {(o.products || []).slice(0, 3).map((p: any, idx: number) => (
+                            <div key={idx} className="w-8 h-8 rounded-md border-2 border-background bg-secondary overflow-hidden flex-shrink-0">
+                              {p.image_url ? (
+                                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {(o.products || []).length > 3 && (
+                            <div className="w-8 h-8 rounded-md border-2 border-background bg-secondary flex items-center justify-center text-xs font-medium text-muted-foreground flex-shrink-0">
+                              +{o.products.length - 3}
+                            </div>
+                          )}
+                          {(o.products || []).length === 0 && (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
                       <td className="p-3">
