@@ -77,6 +77,7 @@ const Index = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
   const [heroSectionEnabled, setHeroSectionEnabled] = useState(false);
+  const [testimonialPage, setTestimonialPage] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
