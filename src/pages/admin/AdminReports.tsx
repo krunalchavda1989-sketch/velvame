@@ -16,7 +16,6 @@ import {
 } from "recharts";
 
 import { VIBRANT_COLORS, ChartGradients, chartTooltipStyle, axisTick } from "@/components/admin/ChartStyles";
-
 const CHART_COLORS = VIBRANT_COLORS;
 
 // ─── Helpers ───
