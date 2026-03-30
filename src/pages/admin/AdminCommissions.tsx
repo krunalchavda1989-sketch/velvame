@@ -34,6 +34,13 @@ import { VIBRANT_COLORS, ChartGradients, chartTooltipStyle, axisTick } from "@/c
 
 const CHART_COLORS = VIBRANT_COLORS;
 
+const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <Card className="overflow-hidden">
+    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle></CardHeader>
+    <CardContent className="pt-0"><div className="h-[260px] w-full">{children}</div></CardContent>
+  </Card>
+);
+
 const toEnd = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
 
 const groupByDate = (items: any[], dateKey: string, from: Date, to: Date) => {
