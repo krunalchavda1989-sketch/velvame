@@ -85,18 +85,20 @@ const Index = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }] = await Promise.all([
         supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
         supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
         supabase.from("newsletter_settings" as any).select("bg_color, heading, subtext, button_text").limit(1).single(),
+        supabase.from("site_settings").select("value").eq("key", "testimonial_section_bg_color").single(),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
       setHeroStats((stats as unknown as HeroStat[]) || []);
       setHeroSectionEnabled((bannerSettings as any)?.hero_section_enabled ?? true);
       if (nlSettings) setNewsletterSettings(nlSettings as any);
+      if (tBgSetting) setTestimonialBgColor((tBgSetting as any).value as string);
     };
     fetchData();
   }, []);
