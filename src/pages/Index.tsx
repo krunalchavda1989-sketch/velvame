@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Shield,
   ChevronRight,
-  Sparkles,
+  
   Gift,
   Zap,
   Heart,
