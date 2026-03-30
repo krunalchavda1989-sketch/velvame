@@ -113,21 +113,26 @@ const exportCsv = (columns: string[], rows: string[][], filename: string) => {
 };
 
 /* ─── Stat Card ─── */
-const StatCard = ({ label, value, icon: Icon, trend }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null }) => (
-  <Card>
-    <CardContent className="p-4 flex items-center gap-4">
-      <div className="p-2.5 rounded-lg bg-primary/10"><Icon className="h-5 w-5 text-primary" /></div>
-      <div>
-        <p className="text-2xl font-display font-bold text-foreground">{value}</p>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          {label}
-          {trend === "up" && <TrendingUp className="h-3 w-3 text-success" />}
-          {trend === "down" && <TrendingDown className="h-3 w-3 text-destructive" />}
-        </p>
+const STAT_GRADIENTS = [
+  "from-blue-500 to-blue-600",
+  "from-emerald-500 to-emerald-600",
+  "from-purple-500 to-purple-600",
+  "from-amber-500 to-amber-600",
+  "from-rose-500 to-rose-600",
+];
+let _statIdx = 0;
+const StatCard = ({ label, value, icon: Icon, trend, gradient }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null; gradient?: string }) => {
+  const g = gradient || STAT_GRADIENTS[_statIdx++ % STAT_GRADIENTS.length];
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`rounded-xl bg-gradient-to-br ${g} p-4 text-white shadow-lg`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs opacity-80">{label}</span>
+        <Icon className="h-4 w-4 opacity-80" />
       </div>
-    </CardContent>
-  </Card>
-);
+      <p className="text-2xl font-bold">{value}</p>
+    </motion.div>
+  );
+};
 
 /* ─── Chart Card wrapper ─── */
 const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (

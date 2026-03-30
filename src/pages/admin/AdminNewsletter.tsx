@@ -167,24 +167,25 @@ const AdminNewsletter = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-              <Users className="h-3.5 w-3.5" /> Total
-            </div>
-            <p className="text-2xl font-display font-bold text-foreground">{subscribers.length}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-              <Mail className="h-3.5 w-3.5" /> Active
-            </div>
-            <p className="text-2xl font-display font-bold text-primary">{activeCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-              <Mail className="h-3.5 w-3.5" /> Inactive
-            </div>
-            <p className="text-2xl font-display font-bold text-muted-foreground">{subscribers.length - activeCount}</p>
-          </div>
+          {[
+            { label: "Total", value: subscribers.length, icon: Users, gradient: "from-blue-500 to-blue-600" },
+            { label: "Active", value: activeCount, icon: Mail, gradient: "from-emerald-500 to-emerald-600" },
+            { label: "Inactive", value: subscribers.length - activeCount, icon: Mail, gradient: "from-amber-500 to-amber-600" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className={`rounded-xl bg-gradient-to-br ${s.gradient} p-4 text-white shadow-lg`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs opacity-80">{s.label}</span>
+                <s.icon className="h-4 w-4 opacity-80" />
+              </div>
+              <p className="text-2xl font-bold">{s.value}</p>
+            </motion.div>
+          ))}
         </div>
 
         {/* Search */}

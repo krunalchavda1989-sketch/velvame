@@ -190,11 +190,19 @@ const AdminCommissions = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {summaryCards.map((c, i) => (
-            <motion.div key={c.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-xl bg-card border border-border">
-              <c.icon className={`h-4 w-4 ${c.color} mb-2`} />
-              <div className="text-lg font-display font-bold text-foreground">{c.value}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">{c.label}</div>
+          {[
+            { icon: DollarSign, label: "Total Commissions", value: `₹${totalAll.toLocaleString()}`, gradient: "from-blue-500 to-blue-600" },
+            { icon: Layers, label: "Level Income", value: `₹${totalLevel.toLocaleString()}`, gradient: "from-emerald-500 to-emerald-600" },
+            { icon: Repeat, label: "Repurchase Income", value: `₹${totalRepurchase.toLocaleString()}`, gradient: "from-purple-500 to-purple-600" },
+            { icon: Clock, label: "Pending", value: `₹${totalPending.toLocaleString()}`, gradient: "from-amber-500 to-amber-600" },
+            { icon: TrendingUp, label: "Paid Out", value: `₹${totalPaid.toLocaleString()}`, gradient: "from-green-500 to-green-600" },
+          ].map((c, i) => (
+            <motion.div key={c.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className={`p-4 rounded-xl bg-gradient-to-br ${c.gradient} text-white shadow-lg`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs opacity-80">{c.label}</span>
+                <c.icon className="h-4 w-4 opacity-80" />
+              </div>
+              <div className="text-lg font-bold">{c.value}</div>
             </motion.div>
           ))}
         </div>
