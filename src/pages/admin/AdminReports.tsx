@@ -375,22 +375,28 @@ const ProductReport = ({ from, to }: ReportProps) => {
         <ChartCard title="Top Selling Products">
           <ResponsiveContainer>
             <BarChart data={topProducts} layout="vertical" margin={{ left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} />
-              <Bar dataKey="sold" name="Units Sold" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+              <defs>
+                <linearGradient id="barProdGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <XAxis type="number" tick={axisTick} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} width={90} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: "rgba(99,102,241,0.08)" }} />
+              <Bar dataKey="sold" name="Units Sold" fill="url(#barProdGrad)" radius={[0, 6, 6, 0]} animationDuration={800} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard title="Revenue by Category">
           <ResponsiveContainer>
             <PieChart>
-              <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              <Pie data={categoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} animationDuration={800}>
+                {categoryData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, borderColor: "hsl(var(--border))" }} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
-              <Legend />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`]} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
