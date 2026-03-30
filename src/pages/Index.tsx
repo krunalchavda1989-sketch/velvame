@@ -352,14 +352,15 @@ const Index = () => {
                     </div>
                     <Button
                       size="sm"
-                      className="w-full mt-3 rounded-full border border-border bg-transparent text-foreground hover:bg-foreground hover:text-background text-xs font-medium h-9"
                       variant="outline"
+                      className="w-full mt-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors text-xs font-medium h-9"
                       onClick={() => {
                         addToCart(product.id);
                         toast.success(`Added ${product.name}`);
                       }}
                     >
-                      Explore Collection
+                      <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
+                      Add to Cart
                     </Button>
                   </div>
                 </motion.div>
