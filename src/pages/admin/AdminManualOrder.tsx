@@ -380,6 +380,18 @@ const AdminManualOrder = () => {
               return (
                 <div key={index} className="p-3 sm:p-4 rounded-lg bg-secondary/50 border border-border space-y-3">
                   <div className="flex items-start gap-3">
+                    {(() => {
+                      const selectedProduct = products.find((p) => p.id === item.product_id);
+                      return selectedProduct?.image_url ? (
+                        <div className="w-14 h-14 rounded-lg border border-border bg-background overflow-hidden flex-shrink-0 mt-5">
+                          <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : item.product_id ? (
+                        <div className="w-14 h-14 rounded-lg border border-border bg-secondary flex items-center justify-center flex-shrink-0 mt-5">
+                          <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      ) : null;
+                    })()}
                     <div className="flex-1 space-y-3">
                       <div>
                         <Label className="text-xs text-muted-foreground">Product</Label>
