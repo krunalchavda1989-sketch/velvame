@@ -78,6 +78,7 @@ import AdminSubUsers from "./pages/admin/AdminSubUsers";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminSystemColors from "./pages/admin/AdminSystemColors";
 import AdminFeaturedSections from "./pages/admin/AdminFeaturedSections";
+import AdminCategorySection from "./pages/admin/AdminCategorySection";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
