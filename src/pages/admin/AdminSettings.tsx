@@ -80,6 +80,7 @@ const AdminSettings = () => {
       case "membership": return <MembershipTab />;
       case "ordernumber": return <OrderNumberTab />;
       case "referralcode": return <ReferralCodeTab />;
+      case "kyc": return <KycSettingsTab />;
       default: return <PaymentTab />;
     }
   };
