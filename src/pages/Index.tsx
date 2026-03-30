@@ -131,7 +131,15 @@ const Index = () => {
     fetchData();
   }, []);
 
-  const featuredProducts = products.slice(0, 8);
+  // Helper to get products for a section
+  const getSectionProducts = (section: FeaturedSection) => {
+    if (section.selection_type === "category") {
+      return products.filter((p) => p.category === section.category_filter);
+    }
+    return section.product_ids
+      .map((pid) => products.find((p) => p.id === pid))
+      .filter(Boolean) as typeof products;
+  };
 
   return (
     <div className="min-h-screen bg-background">
