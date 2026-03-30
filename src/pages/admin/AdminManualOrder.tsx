@@ -37,6 +37,8 @@ const AdminManualOrder = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [useWallet, setUseWallet] = useState(false);
+  const [paymentNote, setPaymentNote] = useState("");
 
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
