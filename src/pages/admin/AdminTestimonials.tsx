@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageSquareQuote, Plus, Pencil, Trash2, Loader2, Save, Star } from "lucide-react";
+import { MessageSquareQuote, Plus, Pencil, Trash2, Loader2, Save, Star, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
