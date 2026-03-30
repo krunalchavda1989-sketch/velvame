@@ -338,7 +338,7 @@ const AdminManualOrder = () => {
           {/* User Selection */}
           <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
             <h2 className="font-semibold text-foreground">Select User</h2>
-            <Select value={selectedUserId} onValueChange={(v) => { setSelectedUserId(v); setPaymentMethod("razorpay"); }}>
+            <Select value={selectedUserId} onValueChange={(v) => { setSelectedUserId(v); setPaymentMethod("razorpay"); setUseWallet(false); setPaymentNote(""); }}>
               <SelectTrigger className="bg-secondary border-border">
                 <SelectValue placeholder="Choose a user..." />
               </SelectTrigger>
