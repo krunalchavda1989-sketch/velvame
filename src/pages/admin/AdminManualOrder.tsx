@@ -37,6 +37,12 @@ const AdminManualOrder = () => {
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       const [usersRes, productsRes, variationsRes] = await Promise.all([
