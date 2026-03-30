@@ -100,14 +100,15 @@ const Index = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }] = await Promise.all([
-        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(6),
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }] = await Promise.all([
+        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(20),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
         supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
         supabase.from("newsletter_settings" as any).select("bg_color, heading, subtext, button_text").limit(1).single(),
         supabase.from("site_settings").select("value").eq("key", "testimonial_section_bg_color").single(),
         supabase.from("featured_sections" as any).select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("category_section_settings" as any).select("*").limit(1).single(),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
