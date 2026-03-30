@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw, Eye } from "lucide-react";
+import { Coins, RefreshCw, Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import type { OrderEmailType } from "@/lib/orderEmail";
@@ -35,10 +35,39 @@ const AdminOrders = () => {
       .select("order_id");
     const processedOrderIds = new Set((commData || []).map((c) => c.order_id));
 
+    // Fetch order items with product images
+    const orderIds = (ordersData || []).map((o) => o.id);
+    const { data: orderItemsData } = orderIds.length > 0
+      ? await supabase
+          .from("order_items")
+          .select("order_id, product_id")
+          .in("order_id", orderIds)
+      : { data: [] };
+
+    const productIds = [...new Set((orderItemsData || []).map((i: any) => i.product_id))];
+    let productMap = new Map<string, any>();
+    if (productIds.length > 0) {
+      const { data: productsData } = await supabase
+        .from("products")
+        .select("id, name, image_url")
+        .in("id", productIds);
+      productMap = new Map((productsData || []).map((p: any) => [p.id, p]));
+    }
+
+    // Group items by order
+    const orderItemsMap = new Map<string, any[]>();
+    (orderItemsData || []).forEach((item: any) => {
+      const existing = orderItemsMap.get(item.order_id) || [];
+      const product = productMap.get(item.product_id);
+      if (product) existing.push(product);
+      orderItemsMap.set(item.order_id, existing);
+    });
+
     const enriched = (ordersData || []).map((o) => ({
       ...o,
       profile: profileMap.get(o.user_id) || null,
       commissions_processed: processedOrderIds.has(o.id),
+      products: orderItemsMap.get(o.id) || [],
     }));
 
     setOrders(enriched);
@@ -214,6 +243,7 @@ const AdminOrders = () => {
                   <tr className="border-b border-border bg-secondary/50">
                      <th className="text-left p-3 text-muted-foreground font-medium"></th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
@@ -232,6 +262,29 @@ const AdminOrders = () => {
                         </Button>
                       </td>
                       <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
+                      <td className="p-3">
+                        <div className="flex items-center -space-x-2">
+                          {(o.products || []).slice(0, 3).map((p: any, idx: number) => (
+                            <div key={idx} className="w-8 h-8 rounded-md border-2 border-background bg-secondary overflow-hidden flex-shrink-0">
+                              {p.image_url ? (
+                                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {(o.products || []).length > 3 && (
+                            <div className="w-8 h-8 rounded-md border-2 border-background bg-secondary flex items-center justify-center text-xs font-medium text-muted-foreground flex-shrink-0">
+                              +{o.products.length - 3}
+                            </div>
+                          )}
+                          {(o.products || []).length === 0 && (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
                       <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
                       <td className="p-3">
