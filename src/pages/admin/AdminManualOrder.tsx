@@ -48,6 +48,14 @@ const AdminManualOrder = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState("");
 
+  // Address state
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showManualAddress, setShowManualAddress] = useState(false);
+  const [manualAddress, setManualAddress] = useState({
+    name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       const [usersRes, productsRes, variationsRes] = await Promise.all([
