@@ -125,14 +125,6 @@ const AdminCommissions = () => {
 
   const getName = (id: string) => profileMap.get(id)?.full_name || "—";
 
-  const summaryCards = [
-    { icon: DollarSign, label: "Total Commissions", value: `₹${totalAll.toLocaleString()}`, color: "text-primary" },
-    { icon: Layers, label: "Level Income", value: `₹${totalLevel.toLocaleString()}`, color: "text-blue-500" },
-    { icon: Repeat, label: "Repurchase Income", value: `₹${totalRepurchase.toLocaleString()}`, color: "text-emerald-500" },
-    { icon: Clock, label: "Pending", value: `₹${totalPending.toLocaleString()}`, color: "text-amber-500" },
-    { icon: TrendingUp, label: "Paid Out", value: `₹${totalPaid.toLocaleString()}`, color: "text-green-500" },
-  ];
-
   const typeDistribution = useMemo(() => [
     { name: "Level", value: totalLevel }, { name: "Repurchase", value: totalRepurchase },
   ].filter((d) => d.value > 0), [totalLevel, totalRepurchase]);
