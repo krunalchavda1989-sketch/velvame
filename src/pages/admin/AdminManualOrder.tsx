@@ -338,6 +338,7 @@ const AdminManualOrder = () => {
       setSendPaymentLink(false);
       setUseWallet(false);
       setPaymentNote("");
+      setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
       removeCoupon();
     } catch (err: any) {
       toast.error(err.message || "Failed to create order");
