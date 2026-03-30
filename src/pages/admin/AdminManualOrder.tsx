@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check } from "lucide-react";
+import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
   product_id: string;

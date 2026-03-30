@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useNavigate, Link } from "react-router-dom";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import { useFirstOrderCheck } from "@/hooks/useFirstOrderCheck";
+import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 declare global {
   interface Window {
