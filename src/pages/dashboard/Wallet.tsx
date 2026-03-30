@@ -298,22 +298,22 @@ const WalletPage = () => {
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { label: "Total Commission Earned", value: commissions.reduce((s, c) => s + Number(c.amount), 0), icon: TrendingUp },
-                { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine },
+                { label: "Total Commission Earned", value: commissions.reduce((s, c) => s + Number(c.amount), 0), icon: TrendingUp, gradient: "from-emerald-500 to-emerald-600" },
+                { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine, gradient: "from-orange-500 to-orange-600" },
               ].map((s, i) => (
                 <motion.div
                   key={s.label}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="flex items-center gap-4 p-4 rounded-xl border bg-card border-border"
+                  className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-white shadow-lg`}
                 >
-                  <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-secondary">
-                    <s.icon className="h-5 w-5 text-muted-foreground" />
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-white/20">
+                    <s.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-2xl font-display font-bold text-foreground">{formatCurrency(s.value)}</div>
-                    <div className="text-xs text-muted-foreground">{s.label}</div>
+                    <div className="text-2xl font-display font-bold">{formatCurrency(s.value)}</div>
+                    <div className="text-xs opacity-80">{s.label}</div>
                   </div>
                 </motion.div>
               ))}

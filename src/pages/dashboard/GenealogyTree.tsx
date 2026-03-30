@@ -376,18 +376,23 @@ const GenealogyTree = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-xs text-muted-foreground mt-1">Total Members</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.active}</p>
-            <p className="text-xs text-muted-foreground mt-1">Active Members</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{stats.levels}</p>
-            <p className="text-xs text-muted-foreground mt-1">Deepest Level</p>
-          </div>
+          {[
+            { label: "Total Members", value: stats.total, icon: Users, gradient: "from-blue-500 to-blue-600" },
+            { label: "Active Members", value: stats.active, icon: Shield, gradient: "from-emerald-500 to-emerald-600" },
+            { label: "Deepest Level", value: stats.levels, icon: GitFork, gradient: "from-purple-500 to-purple-600" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className={`rounded-xl bg-gradient-to-br ${s.gradient} p-4 text-center text-white shadow-lg`}
+            >
+              <s.icon className="h-5 w-5 mx-auto mb-1 opacity-80" />
+              <p className="text-2xl font-bold">{s.value}</p>
+              <p className="text-xs opacity-80 mt-1">{s.label}</p>
+            </motion.div>
+          ))}
         </div>
 
         {/* Tree */}

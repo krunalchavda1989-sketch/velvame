@@ -108,32 +108,22 @@ const InviteLink = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Users className="h-5 w-5 text-primary" />
+          {[
+            { label: "Direct Referrals", value: String(profile?.direct_referral_count || 0), icon: Users, gradient: "from-blue-500 to-blue-600" },
+            { label: "Referral Code", value: profile?.referral_code || "", icon: Link2, gradient: "from-emerald-500 to-emerald-600" },
+          ].map((s, i) => (
+            <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+              <div className={`rounded-xl bg-gradient-to-br ${s.gradient} p-4 flex items-center gap-3 text-white shadow-lg`}>
+                <div className="p-2 rounded-lg bg-white/20">
+                  <s.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Direct Referrals</p>
-                  <p className="text-xl font-bold text-foreground">{profile?.direct_referral_count || 0}</p>
+                  <p className="text-xs opacity-80">{s.label}</p>
+                  <p className="text-xl font-bold">{s.value}</p>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Link2 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Referral Code</p>
-                  <p className="text-xl font-bold text-foreground">{profile?.referral_code}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Link Card */}
