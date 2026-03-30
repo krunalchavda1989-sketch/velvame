@@ -18,6 +18,28 @@ interface MenuItem {
   children?: { icon: any; label: string; href: string }[];
 }
 
+// Deterministic color palette for 1st-level menu icons
+const ICON_COLORS = [
+  "#6366f1", // indigo
+  "#f59e0b", // amber
+  "#10b981", // emerald
+  "#ef4444", // red
+  "#3b82f6", // blue
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#14b8a6", // teal
+  "#f97316", // orange
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#a855f7", // purple
+  "#e11d48", // rose
+  "#0ea5e9", // sky
+  "#22c55e", // green
+  "#d946ef", // fuchsia
+  "#eab308", // yellow
+  "#64748b", // slate
+];
+
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Overview", href: "/admin" },
   { icon: Users, label: "Users", href: "/admin/users" },
@@ -123,11 +145,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-        {menuItems.map((item) => {
+        {menuItems.map((item, idx) => {
           const active = location.pathname === item.href;
           const hasChildren = item.children && item.children.length > 0;
           const groupOpen = openGroups[item.label] || false;
           const childActive = isChildActive(item);
+          const iconBg = ICON_COLORS[idx % ICON_COLORS.length];
 
           return (
             <div key={item.label}>
@@ -141,7 +164,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span
+                    className="flex items-center justify-center rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: iconBg,
+                      width: collapsed && !isMobile ? 28 : 26,
+                      height: collapsed && !isMobile ? 28 : 26,
+                    }}
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-white" />
+                  </span>
                   {(isMobile || !collapsed) && <span className="truncate">{item.label}</span>}
                 </Link>
                 {hasChildren && (isMobile || !collapsed) && (
