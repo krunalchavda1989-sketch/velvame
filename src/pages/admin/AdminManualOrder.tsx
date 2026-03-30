@@ -77,23 +77,35 @@ const AdminManualOrder = () => {
     fetchData();
   }, []);
 
-  // Fetch wallet when user changes
+  // Fetch wallet and addresses when user changes
   useEffect(() => {
     if (!selectedUserId) {
       setUserWallet(null);
+      setSavedAddresses([]);
+      setSelectedAddressId(null);
+      setShowManualAddress(false);
       return;
     }
-    const fetchWallet = async () => {
+    const fetchUserData = async () => {
       setWalletLoading(true);
-      const { data } = await supabase
-        .from("wallets")
-        .select("balance, subscription_balance, commission_balance")
-        .eq("user_id", selectedUserId)
-        .maybeSingle();
-      setUserWallet(data || null);
+      const [walletRes, addressRes] = await Promise.all([
+        supabase.from("wallets").select("balance, subscription_balance, commission_balance").eq("user_id", selectedUserId).maybeSingle(),
+        supabase.from("user_addresses").select("*").eq("user_id", selectedUserId).order("is_default", { ascending: false }).order("created_at", { ascending: false }),
+      ]);
+      setUserWallet(walletRes.data || null);
+      const addrs = (addressRes.data as any[]) || [];
+      setSavedAddresses(addrs);
+      if (addrs.length > 0) {
+        const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+        setSelectedAddressId(defaultAddr.id);
+        setShowManualAddress(false);
+      } else {
+        setSelectedAddressId(null);
+        setShowManualAddress(true);
+      }
       setWalletLoading(false);
     };
-    fetchWallet();
+    fetchUserData();
   }, [selectedUserId]);
 
   const addItem = () => {
