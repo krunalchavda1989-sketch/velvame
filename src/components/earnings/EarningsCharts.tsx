@@ -126,13 +126,13 @@ export default function EarningsCharts({ earnings }: Props) {
           <TabsContent value="line">
             <ChartContainer config={chartConfig} className="h-72 w-full">
               <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} name="Total Income" />
-                <Line type="monotone" dataKey="level" stroke="hsl(var(--chart-3, 30 80% 55%))" strokeWidth={2} dot={{ r: 3 }} name="Level" />
-                <Line type="monotone" dataKey="repurchase" stroke="hsl(var(--chart-2, 160 60% 45%))" strokeWidth={2} dot={{ r: 3 }} name="Repurchase" />
+                <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 4, fill: "#6366f1" }} activeDot={{ r: 7, stroke: "#fff", strokeWidth: 2 }} name="Total Income" />
+                <Line type="monotone" dataKey="level" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: "#f59e0b" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} name="Level" />
+                <Line type="monotone" dataKey="repurchase" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: "#10b981" }} activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }} name="Repurchase" />
               </LineChart>
             </ChartContainer>
           </TabsContent>
