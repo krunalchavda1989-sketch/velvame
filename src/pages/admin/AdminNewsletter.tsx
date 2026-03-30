@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, Search, Trash2, Download, RefreshCw, Users } from "lucide-react";
+import { motion } from "framer-motion";
 import { format } from "date-fns";
 
 interface Subscriber {

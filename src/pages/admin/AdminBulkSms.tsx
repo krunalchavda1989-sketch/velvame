@@ -20,6 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { format } from "date-fns";
 
 const AUDIENCE_TYPES = [

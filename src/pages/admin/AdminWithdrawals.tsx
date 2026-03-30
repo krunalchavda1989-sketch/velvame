@@ -132,12 +132,6 @@ const AdminWithdrawals = () => {
     rejected: withdrawals.filter((w) => w.status === "rejected").reduce((s, w) => s + Number(w.amount), 0),
   };
 
-  const summaryCards = [
-    { icon: Clock, label: "Pending", value: `₹${totals.pending.toLocaleString()}`, color: "text-yellow-600" },
-    { icon: CheckCircle2, label: "Approved", value: `₹${totals.approved.toLocaleString()}`, color: "text-green-600" },
-    { icon: XCircle, label: "Rejected", value: `₹${totals.rejected.toLocaleString()}`, color: "text-red-500" },
-  ];
-
   const statusBadge = (status: string) => {
     switch (status) {
       case "approved":

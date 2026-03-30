@@ -122,7 +122,7 @@ const STAT_GRADIENTS = [
   "from-rose-500 to-rose-600",
 ];
 let _statIdx = 0;
-const StatCard = ({ label, value, icon: Icon, trend, gradient }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null; gradient?: string }) => {
+const StatCard = ({ label, value, icon: Icon, gradient }: { label: string; value: string | number; icon: any; trend?: "up" | "down" | null; gradient?: string }) => {
   const g = gradient || STAT_GRADIENTS[_statIdx++ % STAT_GRADIENTS.length];
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`rounded-xl bg-gradient-to-br ${g} p-4 text-white shadow-lg`}>
