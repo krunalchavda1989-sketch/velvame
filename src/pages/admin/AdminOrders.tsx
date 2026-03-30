@@ -243,6 +243,7 @@ const AdminOrders = () => {
                   <tr className="border-b border-border bg-secondary/50">
                      <th className="text-left p-3 text-muted-foreground font-medium"></th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
