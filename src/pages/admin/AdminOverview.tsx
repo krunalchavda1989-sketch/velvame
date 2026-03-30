@@ -189,8 +189,8 @@ const AdminOverview = () => {
               >
                 <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-20" style={{ background: 'white', transform: 'translate(30%, -30%)' }} />
                 <c.icon className="h-5 w-5 mb-2 opacity-90" />
-                <div className="text-xl font-display font-bold text-foreground">{c.value}</div>
-                <div className="text-xs text-muted-foreground">{c.label}</div>
+                <div className="text-xl font-display font-bold">{c.value}</div>
+                <div className="text-xs opacity-85">{c.label}</div>
               </motion.div>
             </Link>
           ))}
