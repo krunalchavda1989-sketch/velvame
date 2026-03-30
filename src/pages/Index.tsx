@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowLeft,
   ShoppingBag,
   Star,
   Users,
@@ -20,6 +21,7 @@ import {
   Eye,
   BadgeCheck,
   MapPin,
+  Quote,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,6 +77,7 @@ const Index = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [heroStats, setHeroStats] = useState<HeroStat[]>([]);
   const [heroSectionEnabled, setHeroSectionEnabled] = useState(false);
+  const [testimonialPage, setTestimonialPage] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -419,52 +422,81 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ===== Testimonials ===== */}
-      {testimonials.length > 0 && (
-        <section className="py-16 lg:py-20 bg-secondary/30">
-          <div className="container px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-10"
-            >
-              <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">Customer Testimonials</h2>
-              <p className="text-sm text-muted-foreground">See what our community has to say</p>
-            </motion.div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
-              {testimonials.map((t, i) => (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-6 rounded-2xl bg-card border border-border"
-                >
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t.text}"</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {t.avatar_url ? (
-                        <img src={t.avatar_url} alt={t.name} className="w-9 h-9 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
-                          {t.name[0]?.toUpperCase()}
-                        </div>
-                      )}
-                      <p className="text-sm font-semibold text-foreground">{t.name}</p>
-                    </div>
-                    <div className="flex items-center gap-0.5">
-                      <Star className="h-3.5 w-3.5 text-primary fill-primary" />
-                      <span className="text-xs font-medium text-foreground">{t.rating}.0</span>
-                    </div>
+      {/* ===== Testimonials Carousel ===== */}
+      {testimonials.length > 0 && (() => {
+        const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 3;
+        const totalPages = Math.ceil(testimonials.length / perPage);
+        const visibleTestimonials = testimonials.slice(testimonialPage * perPage, testimonialPage * perPage + perPage);
+
+        return (
+          <section className="py-16 lg:py-20">
+            <div className="container px-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="flex items-center justify-between mb-10"
+              >
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold mb-1">Customer Testimonials</h2>
+                  <p className="text-sm text-muted-foreground">See what our community has to say</p>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setTestimonialPage((p) => Math.max(0, p - 1))}
+                      disabled={testimonialPage === 0}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setTestimonialPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={testimonialPage === totalPages - 1}
+                      className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors disabled:opacity-30"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                </motion.div>
-              ))}
+                )}
+              </motion.div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                {visibleTestimonials.map((t, i) => (
+                  <motion.div
+                    key={t.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="p-6 rounded-2xl bg-card border border-border flex flex-col justify-between"
+                  >
+                    <div>
+                      <Quote className="h-8 w-8 text-muted-foreground/20 mb-3" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">{t.text}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-6 pt-4">
+                      <div className="flex items-center gap-2.5">
+                        {t.avatar_url ? (
+                          <img src={t.avatar_url} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
+                            {t.name[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-primary fill-primary" />
+                        <span className="text-sm font-medium text-foreground">{t.rating}.0</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* ===== Scrolling Marquee Banner (bottom) ===== */}
       <div className="border-y border-border bg-card overflow-hidden py-3">
