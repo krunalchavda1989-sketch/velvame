@@ -116,6 +116,7 @@ const Index = () => {
       setHeroSectionEnabled((bannerSettings as any)?.hero_section_enabled ?? true);
       if (nlSettings) setNewsletterSettings(nlSettings as any);
       if (tBgSetting) setTestimonialBgColor((tBgSetting as any).value as string);
+      if (catSectionSettings) setCatSettings(catSectionSettings as any);
 
       // Fetch featured section products
       const sectionsData = (fSections as any[] || []) as FeaturedSection[];
