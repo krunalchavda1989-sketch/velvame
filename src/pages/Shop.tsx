@@ -1,18 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ShoppingCart, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import OffersCarousel from "@/components/shop/OffersCarousel";
+import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/landing/Footer";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
-import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocalization, formatPrice } from "@/hooks/useLocalization";
-import { useAuth } from "@/contexts/AuthContext";
-import { getProductUrl } from "@/lib/productUrl";
+import { useLocalization } from "@/hooks/useLocalization";
 
 
 const Shop = () => {
