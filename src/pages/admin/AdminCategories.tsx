@@ -106,7 +106,7 @@ const AdminCategories = () => {
   const openAdd = () => { setEditing(null); setForm(emptyCategory); setDialogOpen(true); };
   const openEdit = (c: Category) => {
     setEditing(c);
-    setForm({ name: c.name, description: c.description || "", image_url: c.image_url || "", banner_url: c.banner_url || "", slug: c.slug || "", sort_order: c.sort_order, is_active: c.is_active });
+    setForm({ name: c.name, description: c.description || "", image_url: c.image_url || "", banner_url: c.banner_url || "", slug: c.slug || "", seo_title: c.seo_title || "", seo_description: c.seo_description || "", sort_order: c.sort_order, is_active: c.is_active });
     setDialogOpen(true);
   };
 
