@@ -570,46 +570,66 @@ const Index = () => {
         );
       })}
       {/* ===== How It Works ===== */}
-      <section className="py-16 lg:py-20">
-        <div className="container px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">
-              How It <span className="text-gradient-gold">Works</span>
-            </h2>
-            <p className="text-sm text-muted-foreground">Three simple steps to start earning rewards</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { step: "01", title: "Create Your Account", desc: "Sign up for free and unlock exclusive distributor pricing on all products.", icon: Users },
-              { step: "02", title: "Shop & Share", desc: "Buy quality products and share your unique referral link with friends.", icon: ShoppingBag },
-              { step: "03", title: "Earn Rewards", desc: "Earn generous rewards on every purchase from your network.", icon: Gift },
-            ].map((s, i) => (
-              <motion.div
-                key={s.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="relative p-8 rounded-2xl bg-card border border-border text-center group hover:shadow-lg transition-all"
-              >
-                <div className="text-5xl font-display font-black text-muted/50 absolute top-3 right-4">{s.step}</div>
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
-                    <s.icon className="h-6 w-6 text-foreground" />
-                  </div>
-                  <h3 className="font-display font-bold text-foreground text-lg mb-2">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
-                </div>
-              </motion.div>
-            ))}
+      {hiwSettings?.is_active && hiwItems.length > 0 && (
+        <section
+          className="py-16 lg:py-20"
+          style={{
+            backgroundColor: hiwSettings.bg_color,
+            backgroundImage: hiwSettings.bg_image_url ? `url(${hiwSettings.bg_image_url})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="container px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2" style={{ color: hiwSettings.title_color }}>
+                {hiwSettings.title}
+              </h2>
+              <p style={{ color: hiwSettings.desc_color, fontSize: `${hiwSettings.desc_font_size}px` }}>{hiwSettings.subtitle}</p>
+            </motion.div>
+            <div className={`grid gap-6 max-w-4xl mx-auto ${hiwItems.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4'}`}>
+              {hiwItems.map((item: any, i: number) => {
+                const IC = iconMap[item.icon] || Shield;
+                const cardClass = hiwSettings.display_style === "card"
+                  ? "rounded-2xl shadow-sm"
+                  : hiwSettings.display_style === "outline"
+                  ? "rounded-2xl border border-border"
+                  : "";
+                const cardBg = hiwSettings.display_style !== "minimal" ? hiwSettings.card_bg_color : "transparent";
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.15 }}
+                    className={`relative p-8 text-center group hover:shadow-lg transition-all ${cardClass}`}
+                    style={{ backgroundColor: cardBg }}
+                  >
+                    {hiwSettings.show_step_numbers && (
+                      <div className="text-5xl font-display font-black absolute top-3 right-4" style={{ color: hiwSettings.step_number_color, opacity: 0.5 }}>
+                        {String(i + 1).padStart(2, '0')}
+                      </div>
+                    )}
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+                        <IC style={{ width: hiwSettings.icon_size, height: hiwSettings.icon_size, color: hiwSettings.icon_color }} />
+                      </div>
+                      <h3 className="font-display font-bold mb-2" style={{ fontSize: `${hiwSettings.title_font_size}px`, color: hiwSettings.title_color }}>{item.title}</h3>
+                      <p className="leading-relaxed" style={{ fontSize: `${hiwSettings.desc_font_size}px`, color: hiwSettings.desc_color }}>{item.description}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ===== Testimonials Carousel ===== */}
       {testimonials.length > 0 && (() => {
