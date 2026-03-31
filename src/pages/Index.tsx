@@ -431,15 +431,32 @@ const Index = () => {
       );
     },
 
-    marquee_bottom: () => (
-      <div key="marquee_bottom" className="border-y border-border bg-card overflow-hidden py-3">
-        <motion.div animate={{ x: [0, -1000] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex items-center gap-8 whitespace-nowrap">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <span key={i} className="flex items-center gap-3 text-sm font-medium text-muted-foreground">Get up to 25% OFF <span className="text-primary">✦</span></span>
+    marquee_bottom: () => {
+      const bottomMarquees = marqueeData.length > 1 ? [marqueeData[1]] : marqueeData.length === 1 ? [marqueeData[0]] : [];
+      if (bottomMarquees.length === 0) return null;
+      return (
+        <div key="marquee_bottom">
+          {bottomMarquees.map((m: any) => (
+            <div key={m.id} className="overflow-hidden border-y border-border" style={{ backgroundColor: m.bg_color, height: `${m.height}px` }}>
+              <motion.div
+                animate={{ x: m.direction === "right" ? [-1200, 0] : [0, -1200] }}
+                transition={{ duration: Math.max(5, 40 - m.speed), repeat: Infinity, ease: "linear" }}
+                className="flex items-center gap-10 whitespace-nowrap h-full"
+              >
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const item = m.items[i % Math.max(1, m.items.length)];
+                  return (
+                    <span key={i} style={{ color: m.text_color, fontFamily: m.font_family, fontSize: `${m.font_size}px`, fontWeight: m.font_weight === "bold" ? 700 : m.font_weight === "semibold" ? 600 : m.font_weight === "medium" ? 500 : 400 }}>
+                      {item?.text || ""}
+                    </span>
+                  );
+                })}
+              </motion.div>
+            </div>
           ))}
-        </motion.div>
-      </div>
-    ),
+        </div>
+      );
+    },
 
     newsletter: () => (
       <section key="newsletter" className="py-16 lg:py-20" style={{ backgroundColor: newsletterSettings.bg_color }}>
