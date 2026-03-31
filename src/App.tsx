@@ -81,6 +81,7 @@ import AdminFeaturedSections from "./pages/admin/AdminFeaturedSections";
 import AdminCategorySection from "./pages/admin/AdminCategorySection";
 import AdminWhyChoose from "./pages/admin/AdminWhyChoose";
 import AdminHowItWorks from "./pages/admin/AdminHowItWorks";
+import AdminManageSections from "./pages/admin/AdminManageSections";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
@@ -257,6 +258,7 @@ const App = () => (
             <Route path="/admin/category-section" element={<AdminRoute><AdminCategorySection /></AdminRoute>} />
             <Route path="/admin/why-choose" element={<AdminRoute><AdminWhyChoose /></AdminRoute>} />
             <Route path="/admin/how-it-works" element={<AdminRoute><AdminHowItWorks /></AdminRoute>} />
+            <Route path="/admin/manage-sections" element={<AdminRoute><AdminManageSections /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />

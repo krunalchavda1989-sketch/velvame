@@ -1287,6 +1287,33 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_section_order: {
+        Row: {
+          id: string
+          is_visible: boolean
+          section_key: string
+          section_label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_visible?: boolean
+          section_key: string
+          section_label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_visible?: boolean
+          section_key?: string
+          section_label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       localization_settings: {
         Row: {
           available_currencies: Json
