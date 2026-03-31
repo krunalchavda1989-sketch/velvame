@@ -146,6 +146,8 @@ const Index = () => {
       if (catSectionSettings) setCatSettings(catSectionSettings as any);
       if (wcSettings) setWhySettings(wcSettings as any);
       if (wcItems) setWhyItems(wcItems as any);
+      if (hiwS) setHiwSettings(hiwS as any);
+      if (hiwI) setHiwItems(hiwI as any);
 
       // Fetch featured section products
       const sectionsData = (fSections as any[] || []) as FeaturedSection[];
