@@ -114,12 +114,6 @@ const Index = () => {
     return section.product_ids.map((pid) => products.find((p) => p.id === pid)).filter(Boolean) as typeof products;
   };
 
-  const isSectionVisible = (key: string) => {
-    if (sectionOrder.length === 0) return true;
-    const s = sectionOrder.find((o) => o.section_key === key);
-    return s ? s.is_visible : true;
-  };
-
   // Build ordered section renderers
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     banner: () => <div key="banner"><BannerSlider /></div>,
