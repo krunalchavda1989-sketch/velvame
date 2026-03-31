@@ -83,6 +83,7 @@ import AdminWhyChoose from "./pages/admin/AdminWhyChoose";
 import AdminHowItWorks from "./pages/admin/AdminHowItWorks";
 import AdminManageSections from "./pages/admin/AdminManageSections";
 import AdminMarquee from "./pages/admin/AdminMarquee";
+import AdminReviews from "./pages/admin/AdminReviews";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 import CategoryPage from "./pages/CategoryPage";
