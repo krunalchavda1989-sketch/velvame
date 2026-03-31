@@ -17,6 +17,8 @@ import { useLocalization, formatPrice } from "@/hooks/useLocalization";
 import SocialShareButtons from "@/components/share/SocialShareButtons";
 import { getProductUrl } from "@/lib/productUrl";
 import ProductCard from "@/components/shop/ProductCard";
+import ProductSEOHead from "@/components/product/ProductSEOHead";
+import ProductReviewSection from "@/components/product/ProductReviewSection";
 
 const ProductShareSection = ({ productName, productId, user }: { productName: string; productId: string; user: any }) => {
   const { data: profile } = useQuery({
@@ -32,13 +34,10 @@ const ProductShareSection = ({ productName, productId, user }: { productName: st
     enabled: !!user,
   });
 
-  const baseUrl = `${window.location.origin}${getProductUrl({ id: productId, seo_slug: undefined })}`;
-  // Use current page URL for sharing (which already has the SEO slug)
   const currentUrl = window.location.href.split('?')[0];
-  const shareUrl = currentUrl;
   const shareLink = user && profile?.referral_code
-    ? `${shareUrl}?ref=${profile.referral_code}`
-    : shareUrl;
+    ? `${currentUrl}?ref=${profile.referral_code}`
+    : currentUrl;
 
   return (
     <div className="flex justify-end mb-2">
@@ -85,22 +84,26 @@ const ProductDetail = () => {
     setZoomPos({ x, y });
   }, []);
 
-  // Update document title & meta for SEO
-  useEffect(() => {
-    if (!product) return;
-    const title = product.seo_title || product.name;
-    const desc = product.seo_description || (product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || '');
-    document.title = title;
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute('content', desc);
-    else {
-      const meta = document.createElement('meta');
-      meta.name = 'description';
-      meta.content = desc;
-      document.head.appendChild(meta);
-    }
-    return () => { document.title = 'Shop'; };
-  }, [product]);
+  // Fetch approved reviews
+  const { data: reviewData, refetch: refetchReviews } = useQuery({
+    queryKey: ["product-reviews", product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_reviews")
+        .select("*")
+        .eq("product_id", product!.id)
+        .eq("status", "approved")
+        .order("review_date", { ascending: false });
+      return data || [];
+    },
+    enabled: !!product?.id,
+  });
+
+  const approvedReviews = reviewData || [];
+  const reviewCount = approvedReviews.length;
+  const averageRating = reviewCount > 0
+    ? approvedReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewCount
+    : 0;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -108,24 +111,20 @@ const ProductDetail = () => {
       setLoading(true);
       setQty(1);
 
-      // Try seo_slug first, then fall back to id (UUID)
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
       let data: any = null;
-      let error: any = null;
 
       if (!isUUID) {
         const res = await supabase.from("products").select("*").eq("seo_slug", slug).single();
         data = res.data;
-        error = res.error;
       }
 
       if (!data) {
         const res = await supabase.from("products").select("*").eq("id", slug).single();
         data = res.data;
-        error = res.error;
       }
 
-      if (error || !data) {
+      if (!data) {
         toast.error("Product not found");
       }
       setProduct(data);
@@ -183,9 +182,24 @@ const ProductDetail = () => {
 
   const fp = (val: number) => formatPrice(val, currencySymbol);
 
+  const canonicalUrl = typeof window !== "undefined" ? window.location.href.split("?")[0] : "";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+
+      {/* SEO Head */}
+      {product && (
+        <ProductSEOHead
+          product={product}
+          productImages={productImages}
+          canonicalUrl={canonicalUrl}
+          approvedReviews={approvedReviews}
+          averageRating={averageRating}
+          reviewCount={reviewCount}
+        />
+      )}
+
       <div className="pb-16">
         <PageBreadcrumb
           title={product?.name || "Product Details"}
@@ -284,25 +298,28 @@ const ProductDetail = () => {
                   )}
                 </div>
 
-                <h1 className="text-3xl font-display font-bold text-foreground mb-4">
+                <h1 className="text-3xl font-display font-bold text-foreground mb-2">
                   {product.name}
                 </h1>
 
-                {product.rating > 0 && (
+                {/* Aggregate Rating Summary */}
+                {reviewCount > 0 && (
                   <div className="flex items-center gap-2 mb-5">
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < Math.round(product.rating)
+                            i < Math.round(averageRating)
                               ? "text-primary fill-primary"
                               : "text-muted-foreground/30"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-muted-foreground">{product.rating} / 5</span>
+                    <span className="text-sm text-muted-foreground">
+                      {averageRating.toFixed(1)} / 5 ({reviewCount} review{reviewCount !== 1 ? "s" : ""})
+                    </span>
                   </div>
                 )}
 
@@ -431,6 +448,15 @@ const ProductDetail = () => {
               </div>
             </motion.div>
 
+            {/* Reviews Section */}
+            <ProductReviewSection
+              productId={product.id}
+              averageRating={averageRating}
+              reviewCount={reviewCount}
+              approvedReviews={approvedReviews}
+              refetchReviews={refetchReviews}
+            />
+
             {/* Recommended Products */}
             {recommended.length > 0 && (
               <div className="mt-16">
@@ -451,6 +477,5 @@ const ProductDetail = () => {
     </div>
   );
 };
-
 
 export default ProductDetail;

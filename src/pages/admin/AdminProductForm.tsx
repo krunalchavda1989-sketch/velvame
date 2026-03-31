@@ -47,6 +47,7 @@ const emptyForm = {
   seo_title: "",
   seo_slug: "",
   seo_description: "",
+  seo_keywords: "",
 };
 
 const AdminProductForm = () => {
@@ -106,6 +107,7 @@ const AdminProductForm = () => {
         seo_title: (data as any).seo_title || "",
         seo_slug: (data as any).seo_slug || "",
         seo_description: (data as any).seo_description || "",
+        seo_keywords: (data as any).seo_keywords || "",
       });
       setPreviewUrl(data.image_url || null);
 
@@ -248,6 +250,7 @@ const AdminProductForm = () => {
       seo_title: form.seo_title || form.name,
       seo_slug: finalSlug,
       seo_description: form.seo_description,
+      seo_keywords: form.seo_keywords,
     };
 
     let productId: string;
@@ -672,6 +675,16 @@ const AdminProductForm = () => {
                   maxLength={160}
                 />
                 <p className="text-xs text-muted-foreground mt-1">{form.seo_description.length}/160 characters</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">SEO Keywords</Label>
+                <Input
+                  value={form.seo_keywords}
+                  onChange={(e) => setForm({ ...form, seo_keywords: e.target.value })}
+                  placeholder="keyword1, keyword2, keyword3"
+                  className="mt-1.5 bg-background border-border"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Comma-separated keywords for search engines</p>
               </div>
             </div>
           </div>

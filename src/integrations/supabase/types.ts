@@ -1976,6 +1976,78 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          images: Json
+          is_bulk_uploaded: boolean
+          is_verified_purchase: boolean
+          order_id: string | null
+          product_id: string
+          rating: number
+          review_body: string
+          review_date: string
+          review_title: string
+          reviewer_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          images?: Json
+          is_bulk_uploaded?: boolean
+          is_verified_purchase?: boolean
+          order_id?: string | null
+          product_id: string
+          rating: number
+          review_body?: string
+          review_date?: string
+          review_title?: string
+          reviewer_name?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          images?: Json
+          is_bulk_uploaded?: boolean
+          is_verified_purchase?: boolean
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          review_body?: string
+          review_date?: string
+          review_title?: string
+          reviewer_name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_tags: {
         Row: {
           created_at: string
@@ -2066,6 +2138,7 @@ export type Database = {
           rating: number | null
           retail_price: number
           seo_description: string | null
+          seo_keywords: string
           seo_slug: string | null
           seo_title: string | null
           sort_order: number
@@ -2084,6 +2157,7 @@ export type Database = {
           rating?: number | null
           retail_price: number
           seo_description?: string | null
+          seo_keywords?: string
           seo_slug?: string | null
           seo_title?: string | null
           sort_order?: number
@@ -2102,6 +2176,7 @@ export type Database = {
           rating?: number | null
           retail_price?: number
           seo_description?: string | null
+          seo_keywords?: string
           seo_slug?: string | null
           seo_title?: string | null
           sort_order?: number
