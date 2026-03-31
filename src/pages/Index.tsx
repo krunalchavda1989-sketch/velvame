@@ -311,7 +311,7 @@ const Index = () => {
           >
             <div className="container px-4">
               <div className="flex items-center justify-between mb-10">
-                <div className="text-left">
+                <div style={{ textAlign: catSettings.title_alignment as any }} className="flex-1">
                   <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">{catSettings.title}</h2>
                   <p className="text-sm text-muted-foreground mt-1">{catSettings.subtitle}</p>
                 </div>
