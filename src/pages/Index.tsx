@@ -334,7 +334,12 @@ const Index = () => {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className={`grid gap-5 ${
+                perPage === 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' :
+                perPage === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' :
+                perPage === 3 ? 'grid-cols-2 sm:grid-cols-3' :
+                'grid-cols-2'
+              }`}>
                 {visibleCats.map((cat, i) => (
                   <motion.div
                     key={cat.id}
