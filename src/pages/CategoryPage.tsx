@@ -15,7 +15,7 @@ const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { products, isMember } = useCart();
   const { taxEnabled, taxLabel } = useLocalization();
-  const { brand } = useBrand();
+  const brand = useBrand();
   const [category, setCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
