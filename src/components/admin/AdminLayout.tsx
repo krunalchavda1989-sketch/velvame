@@ -71,6 +71,7 @@ const menuItems: MenuItem[] = [
       { icon: Layers, label: "Featured Sections", href: "/admin/featured-sections" },
       { icon: FolderTree, label: "Category Section", href: "/admin/category-section" },
       { icon: Layers, label: "Why Choose", href: "/admin/why-choose" },
+      { icon: Layers, label: "How It Works", href: "/admin/how-it-works" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
       { icon: PanelTop, label: "Banners", href: "/admin/banners" },
