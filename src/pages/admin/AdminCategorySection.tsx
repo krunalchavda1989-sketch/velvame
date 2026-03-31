@@ -157,6 +157,22 @@ const AdminCategorySection = () => {
                 />
               </div>
               <div>
+                <Label>Title & Subtitle Alignment</Label>
+                <Select
+                  value={settings.title_alignment}
+                  onValueChange={(v) => setSettings({ ...settings, title_alignment: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alignmentOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>Categories to Display</Label>
                 <Input
                   type="number"
@@ -166,6 +182,70 @@ const AdminCategorySection = () => {
                   onChange={(e) => setSettings({ ...settings, display_count: parseInt(e.target.value) || 6 })}
                 />
                 <p className="text-xs text-muted-foreground mt-1">How many categories to show in the carousel</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Category Name Styling */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Category Name Styling</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Font Family</Label>
+                <Select
+                  value={settings.cat_name_font}
+                  onValueChange={(v) => setSettings({ ...settings, cat_name_font: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Font Size ({settings.cat_name_size}px)</Label>
+                <Input
+                  type="number"
+                  min={10}
+                  max={32}
+                  value={settings.cat_name_size}
+                  onChange={(e) => setSettings({ ...settings, cat_name_size: parseInt(e.target.value) || 14 })}
+                />
+              </div>
+              <div>
+                <Label>Text Color</Label>
+                <div className="flex items-center gap-3 mt-1">
+                  <input
+                    type="color"
+                    value={settings.cat_name_color}
+                    onChange={(e) => setSettings({ ...settings, cat_name_color: e.target.value })}
+                    className="w-10 h-10 rounded border cursor-pointer"
+                  />
+                  <Input
+                    value={settings.cat_name_color}
+                    onChange={(e) => setSettings({ ...settings, cat_name_color: e.target.value })}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="pt-2 border-t">
+                <Label className="text-xs text-muted-foreground">Preview</Label>
+                <p
+                  className="mt-1 font-semibold"
+                  style={{
+                    fontFamily: settings.cat_name_font,
+                    fontSize: `${settings.cat_name_size}px`,
+                    color: settings.cat_name_color,
+                  }}
+                >
+                  Sample Category
+                </p>
               </div>
             </CardContent>
           </Card>

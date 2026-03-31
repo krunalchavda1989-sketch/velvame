@@ -358,7 +358,14 @@ const Index = () => {
                           </div>
                         )}
                       </div>
-                      <span className="mt-3 text-sm font-display font-semibold text-foreground group-hover:text-primary transition-colors text-center">
+                      <span
+                        className="mt-3 font-semibold group-hover:text-primary transition-colors text-center"
+                        style={{
+                          fontFamily: catSettings.cat_name_font,
+                          fontSize: `${catSettings.cat_name_size}px`,
+                          color: catSettings.cat_name_color,
+                        }}
+                      >
                         {cat.name}
                       </span>
                     </Link>
