@@ -270,7 +270,9 @@ const Index = () => {
       {/* ===== Shop by Category ===== */}
       {catSettings.is_active && categories.length > 0 && (() => {
         const displayCats = categories.slice(0, catSettings.display_count);
-        const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 2 : 4;
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const isTablet = typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024;
+        const perPage = isMobile ? 2 : isTablet ? 3 : displayCats.length >= 5 ? 5 : displayCats.length >= 4 ? 4 : displayCats.length;
         const totalPages = Math.ceil(displayCats.length / perPage);
         const visibleCats = displayCats.slice(categoryPage * perPage, categoryPage * perPage + perPage);
 
