@@ -10,9 +10,8 @@ import { useLocalization } from "@/hooks/useLocalization";
 
 
 const Shop = () => {
-  const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
-  const { user } = useAuth();
-  const { currencySymbol, taxEnabled, taxLabel } = useLocalization();
+  const { products, isMember } = useCart();
+  const { taxEnabled, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
 
