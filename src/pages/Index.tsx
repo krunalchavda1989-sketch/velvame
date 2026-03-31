@@ -116,6 +116,8 @@ const Index = () => {
   const [newsletterSettings, setNewsletterSettings] = useState<{ bg_color: string; heading: string; subtext: string; button_text: string }>({
     bg_color: '#e8e0f0', heading: 'Stay in the Loop', subtext: 'No spam. Only useful tips, exclusive offers, and friendly reminders delivered to your inbox.', button_text: 'Sign up',
   });
+  const [whySettings, setWhySettings] = useState<any>(null);
+  const [whyItems, setWhyItems] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
