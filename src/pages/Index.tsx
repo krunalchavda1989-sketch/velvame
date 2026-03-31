@@ -213,7 +213,7 @@ const Index = () => {
             <div className={`grid gap-5 ${perPage === 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : perPage === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : perPage === 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
               {visibleCats.map((cat, i) => (
                 <motion.div key={cat.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                  <Link to={`/shop?category=${encodeURIComponent(cat.name)}`} className={`flex flex-col items-center group ${hoverCardClass} transition-all duration-300`}>
+                  <Link to={`/category/${cat.slug || encodeURIComponent(cat.name)}`} className={`flex flex-col items-center group ${hoverCardClass} transition-all duration-300`}>
                     <div className={`w-full ${imageShapeClass} overflow-hidden border border-border hover:border-primary/30 hover:shadow-lg transition-all bg-secondary`}>
                       {cat.image_url ? (
                         <img src={cat.image_url} alt={cat.name} className={`w-full h-full object-cover ${hoverImageClass} transition-transform duration-500`} />
