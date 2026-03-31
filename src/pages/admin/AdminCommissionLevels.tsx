@@ -187,8 +187,8 @@ const AdminCommissionLevels = () => {
                     <IndianRupee className="h-4 w-4 text-primary" />
                     Repurchase Qualification
                   </CardTitle>
-                  <CardDescription>
-                    Both the buyer and each upline must have at least this amount in purchases during the current month to qualify for repurchase commissions.
+                   <CardDescription>
+                    Both the purchasing user and each downline member must have at least this amount in purchases during the current month to qualify for repurchase commissions.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

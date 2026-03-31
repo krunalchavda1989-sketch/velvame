@@ -6,23 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// 9-level commission rates (first-purchase / level income)
-const LEVEL_RATES = [0.05, 0.045, 0.04, 0.035, 0.03, 0.025, 0.02, 0.015, 0.01];
-
-// 3-level commission rates (repurchase income)
-const REPURCHASE_RATES = [0.03, 0.02, 0.01];
-
-// Minimum direct referrals required to qualify for each level
-// L1: 1, L2-L5: 3, L6-L9: 6
-const QUALIFICATION_REQUIRED = [1, 3, 3, 3, 3, 6, 6, 6, 6];
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Use service role for elevated DB access (wallet updates, etc.)
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -99,9 +88,34 @@ Deno.serve(async (req: Request) => {
     }
 
     const isRepurchase = order.is_repurchase;
-    const maxLevels = isRepurchase ? 3 : 9;
-    const rates = isRepurchase ? REPURCHASE_RATES : LEVEL_RATES;
     const commissionType = isRepurchase ? "repurchase" : "level";
+
+    // ── Fetch dynamic commission levels from DB ──
+    const { data: dbLevels } = await supabase
+      .from("commission_levels")
+      .select("level, rate, min_referrals, is_active, commission_type")
+      .eq("commission_type", commissionType)
+      .eq("is_active", true)
+      .order("level", { ascending: true });
+
+    if (!dbLevels || dbLevels.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `No active ${commissionType} commission levels configured`,
+          commissions_distributed: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build a map: sequential index (1-based walking level) → { rate, min_referrals }
+    // For repurchase, levels are stored as 101, 102, 103... so normalize to 1, 2, 3
+    const levelConfigs = dbLevels.map((l) => ({
+      rate: Number(l.rate) / 100, // stored as percentage e.g. 5 → 0.05
+      min_referrals: Number(l.min_referrals),
+    }));
+    const maxLevels = levelConfigs.length;
 
     // Fetch dynamic min monthly purchase from settings
     let minMonthlyPurchase = 1000; // fallback default
@@ -163,18 +177,18 @@ Deno.serve(async (req: Request) => {
 
       if (!upline) break;
 
-      const minReferrals = isRepurchase ? 1 : QUALIFICATION_REQUIRED[level - 1];
-      const isQualified = upline.direct_referral_count >= minReferrals;
+      const config = levelConfigs[level - 1];
+      const isQualified = upline.direct_referral_count >= config.min_referrals;
 
       // For repurchase income, also check that the beneficiary has min monthly purchase
       let beneficiaryPurchaseOk = true;
-      if (isRepurchase && isQualified) {
+      if (isRepurchase && isQualified && minMonthlyPurchase > 0) {
         const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
         beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
       }
 
       if (isQualified && beneficiaryPurchaseOk) {
-        const rate = rates[level - 1];
+        const rate = config.rate;
         const amount = Math.round(order.total_amount * rate * 100) / 100;
 
         commissionsToInsert.push({
@@ -225,7 +239,7 @@ Deno.serve(async (req: Request) => {
             user_id,
             type: "credit",
             amount,
-            description: "Commission Earned",
+            description: `${isRepurchase ? "Repurchase" : "Level"} Commission Earned`,
             closing_balance: newBalance,
             balance_type: "commission",
           });
