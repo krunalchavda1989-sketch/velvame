@@ -19,7 +19,7 @@ interface ProductSEOHeadProps {
 }
 
 const ProductSEOHead = ({ product, productImages, canonicalUrl, approvedReviews, averageRating, reviewCount }: ProductSEOHeadProps) => {
-  const { brand } = useBrand();
+  const brand = useBrand();
   const { currencySymbol } = useLocalization();
 
   const siteName = brand?.brand_name || "Shop";

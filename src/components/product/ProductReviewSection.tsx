@@ -31,13 +31,22 @@ const ProductReviewSection = ({ productId, averageRating, reviewCount, approvedR
 
       if (existing && existing.length > 0) return { canReview: false, alreadyReviewed: true, orderId: null, userName: "" };
 
-      // Check for delivered orders with this product
+      // Check for delivered orders with this product - use two queries to avoid deep type
+      const { data: userOrders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "delivered");
+
+      if (!userOrders || userOrders.length === 0) return { canReview: false, orderId: null, userName: "", alreadyReviewed: false };
+
+      const orderIds = userOrders.map((o) => o.id);
       const { data: orderItems } = await supabase
         .from("order_items")
-        .select("order_id, orders!inner(id, user_id, status)")
+        .select("order_id")
         .eq("product_id", productId)
-        .eq("orders.user_id" as any, user.id)
-        .eq("orders.status" as any, "delivered");
+        .in("order_id", orderIds)
+        .limit(1);
 
       const hasDelivered = orderItems && orderItems.length > 0;
       const orderId = hasDelivered ? (orderItems[0] as any).order_id : null;
