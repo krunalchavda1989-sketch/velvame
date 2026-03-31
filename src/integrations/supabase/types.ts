@@ -1904,30 +1904,36 @@ export type Database = {
       }
       product_categories: {
         Row: {
+          banner_url: string
           created_at: string
           description: string | null
           id: string
           image_url: string | null
           is_active: boolean
           name: string
+          slug: string
           sort_order: number
         }
         Insert: {
+          banner_url?: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name: string
+          slug?: string
           sort_order?: number
         }
         Update: {
+          banner_url?: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name?: string
+          slug?: string
           sort_order?: number
         }
         Relationships: []
