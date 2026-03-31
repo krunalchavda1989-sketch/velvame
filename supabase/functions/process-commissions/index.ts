@@ -239,7 +239,7 @@ Deno.serve(async (req: Request) => {
             user_id,
             type: "credit",
             amount,
-            description: `${isRepurchase ? "Repurchase" : "Level"} Commission Earned (L${level})`,
+            description: `${isRepurchase ? "Repurchase" : "Level"} Commission Earned`,
             closing_balance: newBalance,
             balance_type: "commission",
           });
