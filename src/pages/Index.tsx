@@ -140,6 +140,8 @@ const Index = () => {
       if (nlSettings) setNewsletterSettings(nlSettings as any);
       if (tBgSetting) setTestimonialBgColor((tBgSetting as any).value as string);
       if (catSectionSettings) setCatSettings(catSectionSettings as any);
+      if (wcSettings) setWhySettings(wcSettings as any);
+      if (wcItems) setWhyItems(wcItems as any);
 
       // Fetch featured section products
       const sectionsData = (fSections as any[] || []) as FeaturedSection[];
