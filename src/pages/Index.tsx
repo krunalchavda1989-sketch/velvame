@@ -91,6 +91,12 @@ const Index = () => {
       if (hiwS) setHiwSettings(hiwS as any);
       if (hiwI) setHiwItems(hiwI as any);
       if (orderData) setSectionOrder(orderData as any);
+      // Build marquee data with items attached
+      const mSections = ((marqueeSections as any[]) || []).map((ms: any) => ({
+        ...ms,
+        items: ((marqueeItems as any[]) || []).filter((mi: any) => mi.marquee_id === ms.id),
+      }));
+      setMarqueeData(mSections);
 
       const sectionsData = (fSections as any[] || []) as FeaturedSection[];
       if (sectionsData.length > 0) {
