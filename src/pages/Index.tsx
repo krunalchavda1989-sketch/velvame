@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
   ArrowRight, ArrowLeft, ShoppingBag, Star, Users, TrendingUp, Shield,
-  ChevronRight, Gift, Zap, Heart, Award, Globe, Truck, Eye, BadgeCheck,
+  Gift, Zap, Heart, Award, Globe, Truck, Eye, BadgeCheck,
   MapPin, Quote, Package, Smartphone, Lock, Clock, ThumbsUp, Sparkles, Leaf, Gem,
   type LucideIcon,
 } from "lucide-react";
