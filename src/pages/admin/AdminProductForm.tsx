@@ -250,6 +250,7 @@ const AdminProductForm = () => {
       seo_title: form.seo_title || form.name,
       seo_slug: finalSlug,
       seo_description: form.seo_description,
+      seo_keywords: form.seo_keywords,
     };
 
     let productId: string;
