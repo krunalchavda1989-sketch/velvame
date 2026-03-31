@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import OffersCarousel from "@/components/shop/OffersCarousel";
 import ProductCard from "@/components/shop/ProductCard";
@@ -8,21 +9,25 @@ import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalization } from "@/hooks/useLocalization";
 
+interface CategoryItem {
+  name: string;
+  slug: string;
+}
 
 const Shop = () => {
   const { products, isMember } = useCart();
   const { taxEnabled, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
-  const [categories, setCategories] = useState<string[]>(["All"]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase
         .from("product_categories")
-        .select("name")
+        .select("name, slug")
         .eq("is_active", true)
         .order("sort_order");
-      if (data) setCategories(["All", ...data.map((c: any) => c.name)]);
+      if (data) setCategories(data.map((c: any) => ({ name: c.name, slug: c.slug })));
     };
     fetchCategories();
   }, []);
@@ -49,18 +54,24 @@ const Shop = () => {
           <OffersCarousel />
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            <button
+              onClick={() => setFilter("All")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                filter === "All"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All
+            </button>
             {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                  filter === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
+              <Link
+                key={cat.slug}
+                to={`/category/${cat.slug}`}
+                className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap bg-secondary text-muted-foreground hover:text-foreground"
               >
-                {cat}
-              </button>
+                {cat.name}
+              </Link>
             ))}
           </div>
 
