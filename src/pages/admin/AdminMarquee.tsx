@@ -357,7 +357,7 @@ const AdminMarquee = () => {
                               {marquee.items.length === 0 && (
                                 <p className="text-sm text-muted-foreground text-center py-4">No items yet. Add your first marquee text.</p>
                               )}
-                              {marquee.items.map((item, idx) => (
+                              {marquee.items.map((item) => (
                                 <div key={item.id} className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
                                   <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                   <Input
