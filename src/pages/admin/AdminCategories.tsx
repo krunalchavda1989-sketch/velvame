@@ -252,6 +252,22 @@ const AdminCategories = () => {
                   </label>
                 </div>
               </div>
+              {/* SEO Section */}
+              <div className="border-t border-border pt-4 mt-2">
+                <p className="text-sm font-semibold text-foreground mb-3">SEO Settings</p>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>SEO Title <span className="text-xs text-muted-foreground font-normal">(max 60 chars)</span></Label>
+                    <Input value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} placeholder={form.name || "Category name used if empty"} maxLength={60} />
+                    <p className="text-xs text-muted-foreground">{form.seo_title.length}/60</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SEO Description <span className="text-xs text-muted-foreground font-normal">(max 160 chars)</span></Label>
+                    <Textarea value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} rows={2} placeholder={form.description || "Category description used if empty"} maxLength={160} />
+                    <p className="text-xs text-muted-foreground">{form.seo_description.length}/160</p>
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center gap-2 pt-2">
                 <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
                 <Label>Active</Label>

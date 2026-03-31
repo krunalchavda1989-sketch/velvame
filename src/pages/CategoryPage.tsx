@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import ProductCard from "@/components/shop/ProductCard";
 import { useCart } from "@/contexts/CartContext";
 import { useLocalization } from "@/hooks/useLocalization";
+import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -13,6 +15,7 @@ const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { products, isMember } = useCart();
   const { taxEnabled, taxLabel } = useLocalization();
+  const { brand } = useBrand();
   const [category, setCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +35,44 @@ const CategoryPage = () => {
   }, [slug]);
 
   const filtered = category ? products.filter((p) => p.category === category.name) : [];
+
+  const pageTitle = category?.seo_title || category?.name || "Category";
+  const pageDescription = category?.seo_description || category?.description || `Browse ${category?.name || ""} products`;
+  const canonicalUrl = `${window.location.origin}/category/${slug}`;
+
+  // CollectionPage JSON-LD schema
+  const jsonLd = category ? {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": pageTitle,
+    "description": pageDescription,
+    "url": canonicalUrl,
+    ...(category.image_url && { "image": category.image_url }),
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": brand?.brand_name || "Store",
+      "url": window.location.origin,
+    },
+    ...(filtered.length > 0 && {
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": filtered.length,
+        "itemListElement": filtered.slice(0, 20).map((p: any, i: number) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "url": `${window.location.origin}/product/${p.seo_slug || p.id}`,
+          "name": p.name,
+        })),
+      },
+    }),
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": window.location.origin },
+        { "@type": "ListItem", "position": 2, "name": category.name, "item": canonicalUrl },
+      ],
+    },
+  } : null;
 
   if (loading) {
     return (
@@ -60,6 +101,18 @@ const CategoryPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{pageTitle} | {brand?.brand_name || "Store"}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        {category.image_url && <meta property="og:image" content={category.image_url} />}
+        {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
+      </Helmet>
+
       <Navbar />
       <div className="pb-16">
         <PageBreadcrumb
@@ -73,7 +126,6 @@ const CategoryPage = () => {
           pageType="category"
         />
 
-        {/* Category Banner */}
         {category.banner_url && (
           <div className="w-full">
             <img
