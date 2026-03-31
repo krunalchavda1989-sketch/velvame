@@ -1389,6 +1389,92 @@ export type Database = {
         }
         Relationships: []
       }
+      marquee_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          marquee_id: string
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          marquee_id: string
+          sort_order?: number
+          text?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          marquee_id?: string
+          sort_order?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marquee_items_marquee_id_fkey"
+            columns: ["marquee_id"]
+            isOneToOne: false
+            referencedRelation: "marquee_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marquee_sections: {
+        Row: {
+          bg_color: string
+          created_at: string
+          direction: string
+          font_family: string
+          font_size: number
+          font_weight: string
+          height: number
+          id: string
+          is_active: boolean
+          sort_order: number
+          speed: number
+          text_color: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          direction?: string
+          font_family?: string
+          font_size?: number
+          font_weight?: string
+          height?: number
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          speed?: number
+          text_color?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          direction?: string
+          font_family?: string
+          font_size?: number
+          font_weight?: string
+          height?: number
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          speed?: number
+          text_color?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monthly_offers: {
         Row: {
           created_at: string
