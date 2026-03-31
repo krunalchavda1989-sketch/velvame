@@ -123,7 +123,7 @@ const Index = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }, { data: hiwS }, { data: hiwI }] = await Promise.all([
         supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(20),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
@@ -134,6 +134,8 @@ const Index = () => {
         supabase.from("category_section_settings" as any).select("*").limit(1).single(),
         supabase.from("why_choose_settings" as any).select("*").limit(1).single(),
         supabase.from("why_choose_items" as any).select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("how_it_works_settings" as any).select("*").limit(1).single(),
+        supabase.from("how_it_works_items" as any).select("*").eq("is_active", true).order("sort_order"),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
