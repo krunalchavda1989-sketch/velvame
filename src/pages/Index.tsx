@@ -61,7 +61,7 @@ const Index = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }, { data: hiwS }, { data: hiwI }, { data: orderData }, { data: marqueeSections }, { data: marqueeItems }] = await Promise.all([
-        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(20),
+        supabase.from("product_categories").select("id, name, image_url, slug").eq("is_active", true).order("sort_order").limit(20),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
         supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
