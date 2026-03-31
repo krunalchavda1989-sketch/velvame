@@ -8,7 +8,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal
 } from "lucide-react";
 
 interface MenuItem {
@@ -73,6 +73,7 @@ const menuItems: MenuItem[] = [
       { icon: FolderTree, label: "Category Section", href: "/admin/category-section" },
       { icon: Layers, label: "Why Choose", href: "/admin/why-choose" },
       { icon: Layers, label: "How It Works", href: "/admin/how-it-works" },
+      { icon: MoveHorizontal, label: "Scrolling Marquee", href: "/admin/marquee" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
       { icon: PanelTop, label: "Banners", href: "/admin/banners" },

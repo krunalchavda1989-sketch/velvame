@@ -58,10 +58,11 @@ const Index = () => {
   const [hiwSettings, setHiwSettings] = useState<any>(null);
   const [hiwItems, setHiwItems] = useState<any[]>([]);
   const [sectionOrder, setSectionOrder] = useState<SectionOrder[]>([]);
+  const [marqueeData, setMarqueeData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }, { data: hiwS }, { data: hiwI }, { data: orderData }] = await Promise.all([
+      const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }, { data: hiwS }, { data: hiwI }, { data: orderData }, { data: marqueeSections }, { data: marqueeItems }] = await Promise.all([
         supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(20),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
@@ -75,6 +76,8 @@ const Index = () => {
         supabase.from("how_it_works_settings" as any).select("*").limit(1).single(),
         supabase.from("how_it_works_items" as any).select("*").eq("is_active", true).order("sort_order"),
         supabase.from("landing_section_order" as any).select("section_key, sort_order, is_visible").order("sort_order"),
+        supabase.from("marquee_sections" as any).select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("marquee_items" as any).select("*").eq("is_active", true).order("sort_order"),
       ]);
       setCategories((cats as unknown as Category[]) || []);
       setTestimonials((reviews as unknown as Testimonial[]) || []);
@@ -88,6 +91,12 @@ const Index = () => {
       if (hiwS) setHiwSettings(hiwS as any);
       if (hiwI) setHiwItems(hiwI as any);
       if (orderData) setSectionOrder(orderData as any);
+      // Build marquee data with items attached
+      const mSections = ((marqueeSections as any[]) || []).map((ms: any) => ({
+        ...ms,
+        items: ((marqueeItems as any[]) || []).filter((mi: any) => mi.marquee_id === ms.id),
+      }));
+      setMarqueeData(mSections);
 
       const sectionsData = (fSections as any[] || []) as FeaturedSection[];
       if (sectionsData.length > 0) {
@@ -224,15 +233,32 @@ const Index = () => {
       );
     },
 
-    marquee_top: () => (
-      <div key="marquee_top" className="border-y border-border bg-card overflow-hidden py-3">
-        <motion.div animate={{ x: [0, -1000] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex items-center gap-8 whitespace-nowrap">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <span key={i} className="flex items-center gap-3 text-sm font-medium text-muted-foreground">Get up to 25% OFF <span className="text-primary">✦</span></span>
+    marquee_top: () => {
+      const topMarquees = marqueeData.length > 0 ? [marqueeData[0]] : [];
+      if (topMarquees.length === 0) return null;
+      return (
+        <div key="marquee_top">
+          {topMarquees.map((m: any) => (
+            <div key={m.id} className="overflow-hidden border-y border-border" style={{ backgroundColor: m.bg_color, height: `${m.height}px` }}>
+              <motion.div
+                animate={{ x: m.direction === "right" ? [-1200, 0] : [0, -1200] }}
+                transition={{ duration: Math.max(5, 40 - m.speed), repeat: Infinity, ease: "linear" }}
+                className="flex items-center gap-10 whitespace-nowrap h-full"
+              >
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const item = m.items[i % Math.max(1, m.items.length)];
+                  return (
+                    <span key={i} style={{ color: m.text_color, fontFamily: m.font_family, fontSize: `${m.font_size}px`, fontWeight: m.font_weight === "bold" ? 700 : m.font_weight === "semibold" ? 600 : m.font_weight === "medium" ? 500 : 400 }}>
+                      {item?.text || ""}
+                    </span>
+                  );
+                })}
+              </motion.div>
+            </div>
           ))}
-        </motion.div>
-      </div>
-    ),
+        </div>
+      );
+    },
 
     monthly_offers: () => <MonthlyOffersSection key="monthly_offers" />,
 
@@ -405,15 +431,32 @@ const Index = () => {
       );
     },
 
-    marquee_bottom: () => (
-      <div key="marquee_bottom" className="border-y border-border bg-card overflow-hidden py-3">
-        <motion.div animate={{ x: [0, -1000] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="flex items-center gap-8 whitespace-nowrap">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <span key={i} className="flex items-center gap-3 text-sm font-medium text-muted-foreground">Get up to 25% OFF <span className="text-primary">✦</span></span>
+    marquee_bottom: () => {
+      const bottomMarquees = marqueeData.length > 1 ? [marqueeData[1]] : marqueeData.length === 1 ? [marqueeData[0]] : [];
+      if (bottomMarquees.length === 0) return null;
+      return (
+        <div key="marquee_bottom">
+          {bottomMarquees.map((m: any) => (
+            <div key={m.id} className="overflow-hidden border-y border-border" style={{ backgroundColor: m.bg_color, height: `${m.height}px` }}>
+              <motion.div
+                animate={{ x: m.direction === "right" ? [-1200, 0] : [0, -1200] }}
+                transition={{ duration: Math.max(5, 40 - m.speed), repeat: Infinity, ease: "linear" }}
+                className="flex items-center gap-10 whitespace-nowrap h-full"
+              >
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const item = m.items[i % Math.max(1, m.items.length)];
+                  return (
+                    <span key={i} style={{ color: m.text_color, fontFamily: m.font_family, fontSize: `${m.font_size}px`, fontWeight: m.font_weight === "bold" ? 700 : m.font_weight === "semibold" ? 600 : m.font_weight === "medium" ? 500 : 400 }}>
+                      {item?.text || ""}
+                    </span>
+                  );
+                })}
+              </motion.div>
+            </div>
           ))}
-        </motion.div>
-      </div>
-    ),
+        </div>
+      );
+    },
 
     newsletter: () => (
       <section key="newsletter" className="py-16 lg:py-20" style={{ backgroundColor: newsletterSettings.bg_color }}>
