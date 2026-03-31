@@ -170,12 +170,36 @@ const AdminCategorySection = () => {
                 </div>
               </div>
               <div>
-                <Label>Background Image URL (optional)</Label>
-                <Input
-                  value={settings.bg_image_url}
-                  onChange={(e) => setSettings({ ...settings, bg_image_url: e.target.value })}
-                  placeholder="https://example.com/bg.jpg"
+                <Label>Background Image (optional)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBgImageUpload}
                 />
+                {settings.bg_image_url ? (
+                  <div className="mt-1 relative rounded-lg overflow-hidden border border-border">
+                    <img src={settings.bg_image_url} alt="Background" className="w-full h-24 object-cover" />
+                    <button
+                      onClick={() => setSettings({ ...settings, bg_image_url: '' })}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mt-1"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploading ? "Uploading..." : "Upload Background Image"}
+                  </Button>
+                )}
               </div>
               <div>
                 <Label>Image Shape</Label>
