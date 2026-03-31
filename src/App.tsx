@@ -85,6 +85,7 @@ import AdminManageSections from "./pages/admin/AdminManageSections";
 import AdminMarquee from "./pages/admin/AdminMarquee";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
+import CategoryPage from "./pages/CategoryPage";
 
 const queryClient = new QueryClient();
 
