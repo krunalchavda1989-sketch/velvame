@@ -1158,6 +1158,99 @@ export type Database = {
         }
         Relationships: []
       }
+      how_it_works_items: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      how_it_works_settings: {
+        Row: {
+          bg_color: string
+          bg_image_url: string
+          card_bg_color: string
+          created_at: string
+          desc_color: string
+          desc_font_size: number
+          display_style: string
+          icon_color: string
+          icon_size: number
+          id: string
+          is_active: boolean
+          show_step_numbers: boolean
+          step_number_color: string
+          subtitle: string
+          title: string
+          title_color: string
+          title_font_size: number
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          bg_image_url?: string
+          card_bg_color?: string
+          created_at?: string
+          desc_color?: string
+          desc_font_size?: number
+          display_style?: string
+          icon_color?: string
+          icon_size?: number
+          id?: string
+          is_active?: boolean
+          show_step_numbers?: boolean
+          step_number_color?: string
+          subtitle?: string
+          title?: string
+          title_color?: string
+          title_font_size?: number
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          bg_image_url?: string
+          card_bg_color?: string
+          created_at?: string
+          desc_color?: string
+          desc_font_size?: number
+          display_style?: string
+          icon_color?: string
+          icon_size?: number
+          id?: string
+          is_active?: boolean
+          show_step_numbers?: boolean
+          step_number_color?: string
+          subtitle?: string
+          title?: string
+          title_color?: string
+          title_font_size?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kyc_documents: {
         Row: {
           admin_note: string | null
