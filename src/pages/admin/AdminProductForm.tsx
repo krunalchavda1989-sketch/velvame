@@ -107,6 +107,7 @@ const AdminProductForm = () => {
         seo_title: (data as any).seo_title || "",
         seo_slug: (data as any).seo_slug || "",
         seo_description: (data as any).seo_description || "",
+        seo_keywords: (data as any).seo_keywords || "",
       });
       setPreviewUrl(data.image_url || null);
 
