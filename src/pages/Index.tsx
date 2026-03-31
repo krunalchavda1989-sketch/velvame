@@ -19,7 +19,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
-interface Category { id: string; name: string; image_url: string; }
+interface Category { id: string; name: string; image_url: string; slug: string; }
 interface Testimonial { id: string; name: string; text: string; rating: number; avatar_url: string; }
 interface HeroStat { id: string; label: string; value: string; icon: string; sort_order: number; }
 interface FeaturedSection { id: string; title: string; selection_type: string; category_filter: string; bg_color: string; sort_order: number; product_ids: string[]; }
