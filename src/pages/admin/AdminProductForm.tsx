@@ -47,6 +47,7 @@ const emptyForm = {
   seo_title: "",
   seo_slug: "",
   seo_description: "",
+  seo_keywords: "",
 };
 
 const AdminProductForm = () => {
