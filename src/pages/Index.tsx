@@ -118,6 +118,8 @@ const Index = () => {
   });
   const [whySettings, setWhySettings] = useState<any>(null);
   const [whyItems, setWhyItems] = useState<any[]>([]);
+  const [hiwSettings, setHiwSettings] = useState<any>(null);
+  const [hiwItems, setHiwItems] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
