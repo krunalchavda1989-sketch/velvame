@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Shield,
   ChevronRight,
-  
   Gift,
   Zap,
   Heart,
@@ -22,6 +21,14 @@ import {
   BadgeCheck,
   MapPin,
   Quote,
+  Package,
+  Smartphone,
+  Lock,
+  Clock,
+  ThumbsUp,
+  Sparkles,
+  Leaf,
+  Gem,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
