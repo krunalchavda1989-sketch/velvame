@@ -573,6 +573,9 @@ export type Database = {
         Row: {
           bg_color: string
           bg_image_url: string
+          cat_name_color: string
+          cat_name_font: string
+          cat_name_size: number
           created_at: string
           display_count: number
           hover_effect: string
@@ -581,11 +584,15 @@ export type Database = {
           is_active: boolean
           subtitle: string
           title: string
+          title_alignment: string
           updated_at: string
         }
         Insert: {
           bg_color?: string
           bg_image_url?: string
+          cat_name_color?: string
+          cat_name_font?: string
+          cat_name_size?: number
           created_at?: string
           display_count?: number
           hover_effect?: string
@@ -594,11 +601,15 @@ export type Database = {
           is_active?: boolean
           subtitle?: string
           title?: string
+          title_alignment?: string
           updated_at?: string
         }
         Update: {
           bg_color?: string
           bg_image_url?: string
+          cat_name_color?: string
+          cat_name_font?: string
+          cat_name_size?: number
           created_at?: string
           display_count?: number
           hover_effect?: string
@@ -607,6 +618,7 @@ export type Database = {
           is_active?: boolean
           subtitle?: string
           title?: string
+          title_alignment?: string
           updated_at?: string
         }
         Relationships: []
