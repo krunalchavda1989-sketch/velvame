@@ -20,7 +20,30 @@ interface CategorySettings {
   image_style: string;
   hover_effect: string;
   is_active: boolean;
+  cat_name_font: string;
+  cat_name_size: number;
+  cat_name_color: string;
+  title_alignment: string;
 }
+
+const fontOptions = [
+  { value: "inherit", label: "Default (System)" },
+  { value: "'Poppins', sans-serif", label: "Poppins" },
+  { value: "'Inter', sans-serif", label: "Inter" },
+  { value: "'Roboto', sans-serif", label: "Roboto" },
+  { value: "'Playfair Display', serif", label: "Playfair Display" },
+  { value: "'Montserrat', sans-serif", label: "Montserrat" },
+  { value: "'Lora', serif", label: "Lora" },
+  { value: "'Nunito', sans-serif", label: "Nunito" },
+  { value: "'Raleway', sans-serif", label: "Raleway" },
+  { value: "'Open Sans', sans-serif", label: "Open Sans" },
+];
+
+const alignmentOptions = [
+  { value: "left", label: "Left" },
+  { value: "center", label: "Center" },
+  { value: "right", label: "Right" },
+];
 
 const AdminCategorySection = () => {
   const [settings, setSettings] = useState<CategorySettings | null>(null);
