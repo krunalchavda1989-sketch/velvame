@@ -421,37 +421,55 @@ const Index = () => {
       <MonthlyOffersSection />
 
       {/* ===== Why Choose Us ===== */}
-      <section className="py-16 lg:py-20">
-        <div className="container px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Why Choose Our Products</h2>
-            <p className="text-sm text-muted-foreground mt-2">Quality you can trust, rewards you'll love</p>
+      {whySettings?.is_active && whyItems.length > 0 && (
+        <section
+          className="py-16 lg:py-20"
+          style={{
+            backgroundColor: whySettings.bg_color,
+            backgroundImage: whySettings.bg_image_url ? `url(${whySettings.bg_image_url})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="container px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold" style={{ color: whySettings.title_color }}>{whySettings.title}</h2>
+              <p className="mt-2" style={{ color: whySettings.desc_color, fontSize: `${whySettings.desc_font_size}px` }}>{whySettings.subtitle}</p>
+            </div>
+            <div className={`grid gap-6 max-w-5xl mx-auto ${whyItems.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4'}`}>
+              {whyItems.map((item: any, i: number) => {
+                const ItemIcon = iconMap[item.icon] || Shield;
+                const cardStyle = whySettings.display_style === "card"
+                  ? "rounded-2xl p-6 shadow-sm"
+                  : whySettings.display_style === "outline"
+                  ? "rounded-2xl p-6 border border-border"
+                  : "";
+                const cardBg = whySettings.display_style !== "minimal" ? { backgroundColor: whySettings.card_bg_color } : {};
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`text-center ${cardStyle}`}
+                    style={cardBg}
+                  >
+                    <div
+                      className="w-16 h-16 rounded-full border-2 flex items-center justify-center mx-auto mb-4"
+                      style={{ borderColor: `${whySettings.icon_color}30` }}
+                    >
+                      <ItemIcon style={{ width: whySettings.icon_size, height: whySettings.icon_size, color: whySettings.icon_color }} />
+                    </div>
+                    <h3 className="font-display font-semibold mb-1" style={{ fontSize: `${whySettings.title_font_size}px`, color: whySettings.title_color }}>{item.title}</h3>
+                    <p className="leading-relaxed" style={{ fontSize: `${whySettings.desc_font_size}px`, color: whySettings.desc_color }}>{item.description}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {[
-              { icon: Truck, title: "Fast Delivery", desc: "Quick & reliable shipping straight to your doorstep." },
-              { icon: Eye, title: "Transparency", desc: "Honest ingredients and clear product details you can trust." },
-              { icon: BadgeCheck, title: "Affordable", desc: "Premium products at prices that suit every budget." },
-              { icon: MapPin, title: "Trusted Worldwide", desc: "Trusted by customers across multiple countries." },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="w-16 h-16 rounded-full border-2 border-border flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="h-6 w-6 text-foreground" />
-                </div>
-                <h3 className="font-display font-semibold text-foreground text-sm mb-1">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ===== Dynamic Featured Sections ===== */}
       {featuredSections.map((section) => {
