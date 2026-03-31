@@ -1911,6 +1911,8 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           name: string
+          seo_description: string
+          seo_title: string
           slug: string
           sort_order: number
         }
@@ -1922,6 +1924,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name: string
+          seo_description?: string
+          seo_title?: string
           slug?: string
           sort_order?: number
         }
@@ -1933,6 +1937,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name?: string
+          seo_description?: string
+          seo_title?: string
           slug?: string
           sort_order?: number
         }
