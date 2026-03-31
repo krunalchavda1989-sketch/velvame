@@ -270,7 +270,9 @@ const Index = () => {
       {/* ===== Shop by Category ===== */}
       {catSettings.is_active && categories.length > 0 && (() => {
         const displayCats = categories.slice(0, catSettings.display_count);
-        const perPage = typeof window !== 'undefined' && window.innerWidth < 768 ? 2 : 4;
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const isTablet = typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024;
+        const perPage = isMobile ? 2 : isTablet ? 3 : displayCats.length >= 5 ? 5 : displayCats.length >= 4 ? 4 : displayCats.length;
         const totalPages = Math.ceil(displayCats.length / perPage);
         const visibleCats = displayCats.slice(categoryPage * perPage, categoryPage * perPage + perPage);
 
@@ -332,7 +334,12 @@ const Index = () => {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className={`grid gap-5 ${
+                perPage === 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' :
+                perPage === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' :
+                perPage === 3 ? 'grid-cols-2 sm:grid-cols-3' :
+                'grid-cols-2'
+              }`}>
                 {visibleCats.map((cat, i) => (
                   <motion.div
                     key={cat.id}

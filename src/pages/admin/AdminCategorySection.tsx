@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, Eye } from "lucide-react";
+import { Save, Eye, Upload, X } from "lucide-react";
 
 interface CategorySettings {
   id: string;
@@ -25,6 +25,26 @@ interface CategorySettings {
 const AdminCategorySection = () => {
   const [settings, setSettings] = useState<CategorySettings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !settings) return;
+    const file = e.target.files[0];
+    const ext = file.name.split('.').pop();
+    const filePath = `category-section/bg-${Date.now()}.${ext}`;
+    setUploading(true);
+    const { error } = await supabase.storage.from("banners").upload(filePath, file);
+    if (error) {
+      toast.error("Upload failed");
+      setUploading(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from("banners").getPublicUrl(filePath);
+    setSettings({ ...settings, bg_image_url: publicUrl });
+    setUploading(false);
+    toast.success("Background image uploaded!");
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -150,12 +170,36 @@ const AdminCategorySection = () => {
                 </div>
               </div>
               <div>
-                <Label>Background Image URL (optional)</Label>
-                <Input
-                  value={settings.bg_image_url}
-                  onChange={(e) => setSettings({ ...settings, bg_image_url: e.target.value })}
-                  placeholder="https://example.com/bg.jpg"
+                <Label>Background Image (optional)</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBgImageUpload}
                 />
+                {settings.bg_image_url ? (
+                  <div className="mt-1 relative rounded-lg overflow-hidden border border-border">
+                    <img src={settings.bg_image_url} alt="Background" className="w-full h-24 object-cover" />
+                    <button
+                      onClick={() => setSettings({ ...settings, bg_image_url: '' })}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mt-1"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploading ? "Uploading..." : "Upload Background Image"}
+                  </Button>
+                )}
               </div>
               <div>
                 <Label>Image Shape</Label>
