@@ -34,8 +34,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const Index = () => {
-  const { products, addToCart } = useCart();
-  const { currencySymbol } = useLocalization();
+  const { products } = useCart();
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
