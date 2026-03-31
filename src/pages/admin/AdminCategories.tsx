@@ -28,13 +28,15 @@ interface Category {
   image_url: string;
   banner_url: string;
   slug: string;
+  seo_title: string;
+  seo_description: string;
   sort_order: number;
   is_active: boolean;
   product_count?: number;
 }
 
 const emptyCategory = {
-  name: "", description: "", image_url: "", banner_url: "", slug: "", sort_order: 0, is_active: true,
+  name: "", description: "", image_url: "", banner_url: "", slug: "", seo_title: "", seo_description: "", sort_order: 0, is_active: true,
 };
 
 const SortableCategoryRow = ({ cat, onEdit, onDelete }: { cat: Category; onEdit: (c: Category) => void; onDelete: (c: Category) => void }) => {
