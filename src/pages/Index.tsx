@@ -91,8 +91,8 @@ const Index = () => {
   const [featuredSections, setFeaturedSections] = useState<FeaturedSection[]>([]);
   const [sectionPages, setSectionPages] = useState<Record<string, number>>({});
   const [categoryPage, setCategoryPage] = useState(0);
-  const [catSettings, setCatSettings] = useState<{ title: string; subtitle: string; bg_color: string; bg_image_url: string; display_count: number; image_style: string; hover_effect: string; is_active: boolean }>({
-    title: 'Shop by Category', subtitle: 'Browse our curated collections', bg_color: '#ffffff', bg_image_url: '', display_count: 6, image_style: 'rounded', hover_effect: 'zoom', is_active: true,
+  const [catSettings, setCatSettings] = useState<{ title: string; subtitle: string; bg_color: string; bg_image_url: string; display_count: number; image_style: string; hover_effect: string; is_active: boolean; cat_name_font: string; cat_name_size: number; cat_name_color: string; title_alignment: string }>({
+    title: 'Shop by Category', subtitle: 'Browse our curated collections', bg_color: '#ffffff', bg_image_url: '', display_count: 6, image_style: 'rounded', hover_effect: 'zoom', is_active: true, cat_name_font: 'inherit', cat_name_size: 14, cat_name_color: '#000000', title_alignment: 'left',
   });
   const [newsletterSettings, setNewsletterSettings] = useState<{ bg_color: string; heading: string; subtext: string; button_text: string }>({
     bg_color: '#e8e0f0', heading: 'Stay in the Loop', subtext: 'No spam. Only useful tips, exclusive offers, and friendly reminders delivered to your inbox.', button_text: 'Sign up',
