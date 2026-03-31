@@ -437,46 +437,9 @@ const ProductDetail = () => {
                   Recommended Products
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {recommended.map((item, i) => {
-                    const recPrice = getPrice(item);
-                    return (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <Link
-                          to={getProductUrl(item)}
-                          className="block rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors"
-                        >
-                          <div className="bg-secondary flex items-center justify-center text-5xl">
-                            {isImageUrl(item.image_url) ? (
-                              <img src={item.image_url} alt={item.name} className="w-full h-auto object-contain" />
-                            ) : (
-                              item.image_url || "📦"
-                            )}
-                          </div>
-                          <div className="p-4">
-                            <div className="text-xs text-muted-foreground mb-1">{item.category}</div>
-                            <h3 className="font-display font-semibold text-foreground text-sm mb-2 line-clamp-1">
-                              {item.name}
-                            </h3>
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg font-display font-bold text-primary">
-                                {fp(recPrice)}
-                              </span>
-                              {isMember && (
-                                <span className="text-xs text-muted-foreground line-through">
-                                  {fp(item.retail_price)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
+                  {recommended.map((item, i) => (
+                    <ProductCard key={item.id} product={item} index={i} />
+                  ))}
                 </div>
               </div>
             )}
