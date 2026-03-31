@@ -349,12 +349,13 @@ const AdminCategorySection = () => {
           </CardHeader>
           <CardContent>
             <div
-              className="rounded-xl p-8 text-center"
+              className="rounded-xl p-8"
               style={{
                 backgroundColor: settings.bg_color,
                 backgroundImage: settings.bg_image_url ? `url(${settings.bg_image_url})` : undefined,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
+                textAlign: settings.title_alignment as any,
               }}
             >
               <h2 className="text-xl font-bold mb-1">{settings.title}</h2>
@@ -382,10 +383,21 @@ const AdminCategorySection = () => {
                       : "";
 
                   return (
-                    <div
-                      key={i}
-                      className={`w-24 bg-secondary border border-border ${shapeClass} ${hoverClass} transition-all duration-300`}
-                    />
+                    <div key={i} className="flex flex-col items-center">
+                      <div
+                        className={`w-24 bg-secondary border border-border ${shapeClass} ${hoverClass} transition-all duration-300`}
+                      />
+                      <span
+                        className="mt-2 font-semibold"
+                        style={{
+                          fontFamily: settings.cat_name_font,
+                          fontSize: `${settings.cat_name_size}px`,
+                          color: settings.cat_name_color,
+                        }}
+                      >
+                        Category {i + 1}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
