@@ -25,6 +25,26 @@ interface CategorySettings {
 const AdminCategorySection = () => {
   const [settings, setSettings] = useState<CategorySettings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !settings) return;
+    const file = e.target.files[0];
+    const ext = file.name.split('.').pop();
+    const filePath = `category-section/bg-${Date.now()}.${ext}`;
+    setUploading(true);
+    const { error } = await supabase.storage.from("banners").upload(filePath, file);
+    if (error) {
+      toast.error("Upload failed");
+      setUploading(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from("banners").getPublicUrl(filePath);
+    setSettings({ ...settings, bg_image_url: publicUrl });
+    setUploading(false);
+    toast.success("Background image uploaded!");
+  };
 
   useEffect(() => {
     const fetch = async () => {
