@@ -58,6 +58,7 @@ const Index = () => {
   const [hiwSettings, setHiwSettings] = useState<any>(null);
   const [hiwItems, setHiwItems] = useState<any[]>([]);
   const [sectionOrder, setSectionOrder] = useState<SectionOrder[]>([]);
+  const [marqueeData, setMarqueeData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
