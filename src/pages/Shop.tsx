@@ -1,24 +1,17 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ShoppingCart, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import OffersCarousel from "@/components/shop/OffersCarousel";
+import ProductCard from "@/components/shop/ProductCard";
 import Footer from "@/components/landing/Footer";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
-import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocalization, formatPrice } from "@/hooks/useLocalization";
-import { useAuth } from "@/contexts/AuthContext";
-import { getProductUrl } from "@/lib/productUrl";
+import { useLocalization } from "@/hooks/useLocalization";
 
 
 const Shop = () => {
-  const { products, addToCart, totalItems, setCartOpen, isMember, getPrice } = useCart();
-  const { user } = useAuth();
-  const { currencySymbol, taxEnabled, taxLabel } = useLocalization();
+  const { products, isMember } = useCart();
+  const { taxEnabled, taxLabel } = useLocalization();
   const [filter, setFilter] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
 
@@ -77,70 +70,9 @@ const Shop = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map((product, i) => {
-                const price = getPrice(product);
-                const otherPrice = isMember ? product.retail_price : product.distributor_price;
-                return (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="rounded-xl bg-card border border-border overflow-hidden group hover:border-primary/30 transition-colors cursor-pointer"
-                  >
-                    <Link to={getProductUrl(product)}>
-                      <div className="bg-secondary flex items-center justify-center text-5xl">
-                        {product.image_url?.startsWith("http") ? (
-                          <img src={product.image_url} alt={product.name} className="w-full h-auto object-contain" />
-                        ) : (
-                          product.image_url || "📦"
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <div className="text-xs text-muted-foreground mb-1">{product.category}</div>
-                        <h3 className="font-display font-semibold text-foreground text-sm mb-2">{product.name}</h3>
-                        <div className="flex items-center gap-1 mb-3">
-                          <Star className="h-3 w-3 text-primary fill-primary" />
-                          <span className="text-xs text-muted-foreground">{product.rating}</span>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="px-4 pb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-lg font-display font-bold text-primary">
-                            {formatPrice(price, currencySymbol)}
-                          </div>
-                          {isMember && (
-                            <div className="text-xs text-muted-foreground line-through">
-                              {formatPrice(otherPrice, currencySymbol)}
-                            </div>
-                          )}
-                          {!isMember && !!user && product.distributor_price < product.retail_price && (
-                            <div className="text-xs text-muted-foreground">
-                              Member price: {formatPrice(product.distributor_price, currencySymbol)}
-                            </div>
-                          )}
-                        </div>
-                        {product.stock <= 0 && !(product as any).allow_backorder ? (
-                          <Button size="sm" disabled className="opacity-50 cursor-not-allowed">
-                            Out of Stock
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => { addToCart(product.id); toast.success(`Added ${product.name} to cart`); }}
-                            className="bg-gradient-gold text-primary-foreground hover:opacity-90"
-                          >
-                            <ShoppingCart className="h-4 w-4 mr-1" />
-                            {product.stock <= 0 ? "Pre-Order" : "Add to Cart"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {filtered.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
             </div>
           )}
         </div>

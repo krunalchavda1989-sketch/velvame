@@ -15,8 +15,7 @@ import BannerSlider from "@/components/landing/BannerSlider";
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
-import { getProductUrl } from "@/lib/productUrl";
-import { useLocalization, formatPrice } from "@/hooks/useLocalization";
+import ProductCard from "@/components/shop/ProductCard";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -35,8 +34,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const Index = () => {
-  const { products, addToCart } = useCart();
-  const { currencySymbol } = useLocalization();
+  const { products } = useCart();
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -318,36 +316,7 @@ const Index = () => {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
                     {visibleProducts.map((product, i) => (
-                      <motion.div key={product.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="rounded-2xl bg-card border border-border overflow-hidden group hover:shadow-lg transition-all">
-                        <Link to={getProductUrl(product)}>
-                          <div className="bg-secondary aspect-square flex items-center justify-center overflow-hidden">
-                            {product.image_url?.startsWith("http") ? (
-                              <img src={product.image_url} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                            ) : (
-                              <span className="text-4xl">{product.image_url || "📦"}</span>
-                            )}
-                          </div>
-                        </Link>
-                        <div className="p-4">
-                          <Link to={getProductUrl(product)}><h3 className="font-display font-semibold text-foreground text-sm truncate hover:text-primary transition-colors">{product.name}</h3></Link>
-                          <div className="flex items-center gap-1 my-1.5"><Star className="h-3 w-3 text-primary fill-primary" /><span className="text-xs text-muted-foreground">{product.rating}</span></div>
-                          <div className="flex items-center justify-between mt-2">
-                            <div>
-                              {user ? (
-                                <>
-                                  <span className="text-base font-display font-bold text-foreground">{formatPrice(product.distributor_price, currencySymbol)}</span>
-                                  <span className="text-xs text-muted-foreground line-through ml-1.5">{formatPrice(product.retail_price, currencySymbol)}</span>
-                                </>
-                              ) : (
-                                <span className="text-base font-display font-bold text-foreground">{formatPrice(product.retail_price, currencySymbol)}</span>
-                              )}
-                            </div>
-                          </div>
-                          <Button size="sm" variant="outline" className="w-full mt-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors text-xs font-medium h-9" onClick={() => { addToCart(product.id); toast.success(`Added ${product.name}`); }}>
-                            <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />Add to Cart
-                          </Button>
-                        </div>
-                      </motion.div>
+                      <ProductCard key={product.id} product={product} index={i} />
                     ))}
                   </div>
                 </div>
