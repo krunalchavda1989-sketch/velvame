@@ -83,6 +83,18 @@ const iconMap: Record<string, LucideIcon> = {
   gift: Gift,
   star: Star,
   globe: Globe,
+  truck: Truck,
+  eye: Eye,
+  "badge-check": BadgeCheck,
+  "map-pin": MapPin,
+  package: Package,
+  smartphone: Smartphone,
+  lock: Lock,
+  clock: Clock,
+  "thumbs-up": ThumbsUp,
+  sparkles: Sparkles,
+  leaf: Leaf,
+  gem: Gem,
 };
 
 const Index = () => {
