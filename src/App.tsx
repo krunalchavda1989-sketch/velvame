@@ -85,6 +85,7 @@ import AdminManageSections from "./pages/admin/AdminManageSections";
 import AdminMarquee from "./pages/admin/AdminMarquee";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
+import CategoryPage from "./pages/CategoryPage";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/product/:slug" element={<ProductDetail />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />

@@ -19,7 +19,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
-interface Category { id: string; name: string; image_url: string; }
+interface Category { id: string; name: string; image_url: string; slug: string; }
 interface Testimonial { id: string; name: string; text: string; rating: number; avatar_url: string; }
 interface HeroStat { id: string; label: string; value: string; icon: string; sort_order: number; }
 interface FeaturedSection { id: string; title: string; selection_type: string; category_filter: string; bg_color: string; sort_order: number; product_ids: string[]; }
@@ -61,7 +61,7 @@ const Index = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [{ data: cats }, { data: reviews }, { data: stats }, { data: bannerSettings }, { data: nlSettings }, { data: tBgSetting }, { data: fSections }, { data: catSectionSettings }, { data: wcSettings }, { data: wcItems }, { data: hiwS }, { data: hiwI }, { data: orderData }, { data: marqueeSections }, { data: marqueeItems }] = await Promise.all([
-        supabase.from("product_categories").select("id, name, image_url").eq("is_active", true).order("sort_order").limit(20),
+        supabase.from("product_categories").select("id, name, image_url, slug").eq("is_active", true).order("sort_order").limit(20),
         supabase.from("testimonials").select("id, name, text, rating, avatar_url").eq("is_active", true).order("sort_order").limit(6),
         supabase.from("hero_stats").select("id, label, value, icon, sort_order").eq("is_active", true).order("sort_order").limit(4),
         supabase.from("banner_settings").select("hero_section_enabled").limit(1).single(),
@@ -213,7 +213,7 @@ const Index = () => {
             <div className={`grid gap-5 ${perPage === 5 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : perPage === 4 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : perPage === 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
               {visibleCats.map((cat, i) => (
                 <motion.div key={cat.id} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                  <Link to={`/shop?category=${encodeURIComponent(cat.name)}`} className={`flex flex-col items-center group ${hoverCardClass} transition-all duration-300`}>
+                  <Link to={`/category/${cat.slug || encodeURIComponent(cat.name)}`} className={`flex flex-col items-center group ${hoverCardClass} transition-all duration-300`}>
                     <div className={`w-full ${imageShapeClass} overflow-hidden border border-border hover:border-primary/30 hover:shadow-lg transition-all bg-secondary`}>
                       {cat.image_url ? (
                         <img src={cat.image_url} alt={cat.name} className={`w-full h-full object-cover ${hoverImageClass} transition-transform duration-500`} />
