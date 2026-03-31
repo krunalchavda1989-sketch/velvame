@@ -35,7 +35,7 @@ const ProductCard = ({ product, index = 0, showAddToCart = true }: ProductCardPr
       style={{ backgroundColor: "#ffffff" }}
     >
       <Link to={getProductUrl(product)}>
-        <div className="bg-secondary aspect-square flex items-center justify-center overflow-hidden">
+        <div className="aspect-square flex items-center justify-center overflow-hidden p-3" style={{ backgroundColor: "#ffffff" }}>
           {product.image_url && isImageUrl(product.image_url) ? (
             <img
               src={product.image_url}
