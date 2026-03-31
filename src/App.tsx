@@ -80,6 +80,7 @@ import AdminSystemColors from "./pages/admin/AdminSystemColors";
 import AdminFeaturedSections from "./pages/admin/AdminFeaturedSections";
 import AdminCategorySection from "./pages/admin/AdminCategorySection";
 import AdminWhyChoose from "./pages/admin/AdminWhyChoose";
+import AdminHowItWorks from "./pages/admin/AdminHowItWorks";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 
