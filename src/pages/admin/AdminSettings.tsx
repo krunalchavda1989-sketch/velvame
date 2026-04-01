@@ -1147,7 +1147,6 @@ const SmtpTab = () => {
           smtp_host: c.smtp_host || "",
           smtp_port: c.smtp_port || "587",
           smtp_user: c.smtp_user || "",
-          smtp_password: c.smtp_password ? "••••••••" : "",
           from_email: c.from_email || "",
           from_name: c.from_name || "",
           use_tls: c.use_tls !== false,
