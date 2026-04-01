@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { useBrand } from "@/contexts/BrandContext";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 
 const Login = () => {
