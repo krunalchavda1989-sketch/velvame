@@ -170,13 +170,10 @@ const AdminSmtpSettings = () => {
             </div>
             <div>
               <Label className="text-foreground">Password</Label>
-              <Input
-                type="password"
-                value={form.smtp_password}
-                onChange={(e) => setForm({ ...form, smtp_password: e.target.value })}
-                placeholder="App password"
-                className="mt-1 bg-secondary border-border"
-              />
+              <div className="mt-1 px-3 py-2 rounded-md bg-muted border border-border text-sm text-muted-foreground">
+                Managed securely as a backend secret
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">SMTP password is stored securely and cannot be viewed here.</p>
             </div>
           </div>
 
