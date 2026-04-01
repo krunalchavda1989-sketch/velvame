@@ -49,6 +49,7 @@ const menuItems: MenuItem[] = [
     children: [
       { icon: FolderTree, label: "Categories", href: "/admin/categories" },
       { icon: Star, label: "Reviews", href: "/admin/reviews" },
+      { icon: Package, label: "Inventory", href: "/admin/inventory" },
     ],
   },
   {
