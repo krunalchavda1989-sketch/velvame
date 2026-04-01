@@ -927,7 +927,84 @@ const BankProofPreview = ({ path }: { path: string }) => {
   );
 };
 
-/* ─── KYC Admin Tab (Card View with Image Previews) ─── */
+/* ─── Team Tab with Direct & All Team ─── */
+const TeamTab = ({ profileId, directReferrals }: { profileId: string; directReferrals: any[] }) => {
+  const [tab, setTab] = useState<"direct" | "all">("direct");
+  const [allTeam, setAllTeam] = useState<any[]>([]);
+  const [loadingAll, setLoadingAll] = useState(false);
+  const [loadedAll, setLoadedAll] = useState(false);
+
+  useEffect(() => {
+    if (tab === "all" && !loadedAll) {
+      setLoadingAll(true);
+      supabase
+        .rpc("get_admin_genealogy_tree", { _root_profile_id: profileId, _max_depth: 9 })
+        .then(({ data }) => {
+          // Exclude root (depth 0)
+          setAllTeam((data || []).filter((m: any) => m.depth > 0));
+          setLoadedAll(true);
+          setLoadingAll(false);
+        });
+    }
+  }, [tab, profileId, loadedAll]);
+
+  const list = tab === "direct" ? directReferrals : allTeam;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-base">Team Members</CardTitle>
+          <div className="flex gap-1 rounded-lg border border-border p-0.5">
+            <button onClick={() => setTab("direct")} className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${tab === "direct" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              Direct ({directReferrals.length})
+            </button>
+            <button onClick={() => setTab("all")} className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${tab === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              All Team {loadedAll ? `(${allTeam.length})` : ""}
+            </button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loadingAll && tab === "all" ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        ) : list.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No {tab === "direct" ? "direct referrals" : "team members"} yet.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {list.map((r: any) => (
+              <Link to={`/admin/users/${r.id || r.profile_id}`} key={r.id || r.profile_id} className="flex items-center justify-between p-3 hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">{(r.full_name || "U")[0]}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{r.full_name || "User"}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{r.referral_code}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {tab === "all" && r.depth != null && (
+                    <Badge variant="outline" className="text-[10px]">L{r.depth}</Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs">{r.title}</Badge>
+                  <Badge variant={r.subscription_paid ? "default" : "outline"}
+                    className={`text-xs ${r.subscription_paid ? "bg-success text-success-foreground" : "text-muted-foreground"}`}>
+                    {r.subscription_paid ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+
 const DOC_LABELS: Record<string, string> = { aadhar: "Aadhar Card", aadhar_front: "Aadhar Card (Front)", aadhar_back: "Aadhar Card (Back)", pan: "PAN Card" };
 const STATUS_MAP: Record<string, { icon: any; label: string; cls: string }> = {
   pending: { icon: Clock, label: "Pending", cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
