@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -163,7 +164,7 @@ const DynamicPage = () => {
               [&_a]:text-primary [&_a]:underline
               [&_strong]:font-semibold
               [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic"
-            dangerouslySetInnerHTML={{ __html: bodyContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyContent) }}
           />
         </div>
       </main>
