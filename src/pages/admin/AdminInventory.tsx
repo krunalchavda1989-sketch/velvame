@@ -21,6 +21,13 @@ interface ProductStock {
 
 const LOW_STOCK_THRESHOLD = 10;
 
+const CARD_GRADIENTS = [
+  { from: "#4f46e5", to: "#6366f1" },
+  { from: "#10b981", to: "#34d399" },
+  { from: "#f59e0b", to: "#fbbf24" },
+  { from: "#ef4444", to: "#f87171" },
+];
+
 const AdminInventory = () => {
   const [products, setProducts] = useState<ProductStock[]>([]);
   const [loading, setLoading] = useState(true);
