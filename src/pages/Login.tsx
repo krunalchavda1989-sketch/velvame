@@ -33,15 +33,15 @@ const Login = () => {
           throw new Error("No account found with this User ID. Please check and try again.");
         }
 
-        // Get the email from auth user via a lookup – use the user_id to find email
-        const { data: userData, error: userError } = await supabase
-          .rpc("get_user_email_by_id", { _user_id: profile.user_id });
+        // Look up email via security definer function
+        const { data: emailResult, error: emailError } = await supabase
+          .rpc("get_user_email_by_id" as any, { _user_id: profile.user_id });
 
-        if (userError || !userData) {
+        if (emailError || !emailResult) {
           throw new Error("Unable to retrieve account details. Please try logging in with your email.");
         }
 
-        email = userData as string;
+        email = emailResult as unknown as string;
       }
 
       const { error } = await supabase.auth.signInWithPassword({
