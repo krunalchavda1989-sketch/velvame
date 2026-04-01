@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Package, Search, AlertTriangle, CheckCircle, XCircle, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface ProductStock {
   id: string;
@@ -21,6 +21,13 @@ interface ProductStock {
 
 const LOW_STOCK_THRESHOLD = 10;
 
+const CARD_GRADIENTS = [
+  { from: "#4f46e5", to: "#6366f1" },
+  { from: "#10b981", to: "#34d399" },
+  { from: "#f59e0b", to: "#fbbf24" },
+  { from: "#ef4444", to: "#f87171" },
+];
+
 const AdminInventory = () => {
   const [products, setProducts] = useState<ProductStock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,13 +35,23 @@ const AdminInventory = () => {
   const [filter, setFilter] = useState<"all" | "low" | "out" | "in">("all");
   const [editedStocks, setEditedStocks] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
+  const [statColors, setStatColors] = useState(CARD_GRADIENTS);
 
   const fetchProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("id, name, category, stock, allow_backorder, active, image_url")
-      .order("name", { ascending: true });
+    const [{ data }, { data: brandData }] = await Promise.all([
+      supabase.from("products").select("id, name, category, stock, allow_backorder, active, image_url").order("name", { ascending: true }),
+      supabase.from("brand_settings").select("stat_color_1, stat_color_2, stat_color_3, stat_color_4").limit(1).maybeSingle(),
+    ]);
     setProducts((data as ProductStock[]) || []);
+    if (brandData) {
+      const bd = brandData as any;
+      setStatColors([
+        { from: bd.stat_color_1 || "#4f46e5", to: `${bd.stat_color_1 || "#4f46e5"}cc` },
+        { from: bd.stat_color_2 || "#10b981", to: `${bd.stat_color_2 || "#10b981"}cc` },
+        { from: bd.stat_color_3 || "#f59e0b", to: `${bd.stat_color_3 || "#f59e0b"}cc` },
+        { from: bd.stat_color_4 || "#ec4899", to: `${bd.stat_color_4 || "#ec4899"}cc` },
+      ]);
+    }
     setLoading(false);
   };
 
@@ -82,10 +99,10 @@ const AdminInventory = () => {
   };
 
   const statCards = [
-    { label: "Total Products", value: totalProducts, icon: Package, color: "text-primary", bg: "bg-primary/10", filterKey: "all" as const },
-    { label: "In Stock", value: inStock, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-500/10", filterKey: "in" as const },
-    { label: "Low Stock", value: lowStock, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-500/10", filterKey: "low" as const },
-    { label: "Out of Stock", value: outOfStock, icon: XCircle, color: "text-destructive", bg: "bg-destructive/10", filterKey: "out" as const },
+    { label: "Total Products", value: totalProducts, icon: Package, filterKey: "all" as const },
+    { label: "In Stock", value: inStock, icon: CheckCircle, filterKey: "in" as const },
+    { label: "Low Stock", value: lowStock, icon: AlertTriangle, filterKey: "low" as const },
+    { label: "Out of Stock", value: outOfStock, icon: XCircle, filterKey: "out" as const },
   ];
 
   return (
@@ -112,22 +129,24 @@ const AdminInventory = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((stat) => (
-            <Card
+          {statCards.map((stat, i) => (
+            <motion.div
               key={stat.label}
-              className={`cursor-pointer transition-all hover:shadow-md ${filter === stat.filterKey ? "ring-2 ring-primary" : ""}`}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className={`cursor-pointer p-4 rounded-2xl text-white relative overflow-hidden hover:scale-[1.02] transition-transform ${filter === stat.filterKey ? "ring-2 ring-white/50 ring-offset-2 ring-offset-background" : ""}`}
+              style={{
+                background: `linear-gradient(135deg, ${statColors[i].from}, ${statColors[i].to})`,
+                boxShadow: `0 8px 24px -4px ${statColors[i].from}44`,
+              }}
               onClick={() => setFilter(stat.filterKey)}
             >
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className={`p-2 rounded-lg ${stat.bg}`}>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-20" style={{ background: 'white', transform: 'translate(30%, -30%)' }} />
+              <stat.icon className="h-5 w-5 mb-2 opacity-90" />
+              <div className="text-2xl font-display font-bold">{stat.value}</div>
+              <div className="text-xs opacity-85">{stat.label}</div>
+            </motion.div>
           ))}
         </div>
 
