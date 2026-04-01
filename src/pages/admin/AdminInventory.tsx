@@ -35,6 +35,7 @@ const AdminInventory = () => {
   const [filter, setFilter] = useState<"all" | "low" | "out" | "in">("all");
   const [editedStocks, setEditedStocks] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
+  const [statColors, setStatColors] = useState(CARD_GRADIENTS);
 
   const fetchProducts = async () => {
     const { data } = await supabase
