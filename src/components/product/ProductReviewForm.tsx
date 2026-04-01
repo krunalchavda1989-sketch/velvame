@@ -41,7 +41,7 @@ const ProductReviewForm = ({ productId, userId, userName, orderId, onSubmitted }
         continue;
       }
       const ext = file.name.split(".").pop();
-      const path = `${productId}/${userId}-${Date.now()}.${ext}`;
+      const path = `${userId}/${productId}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("review-images").upload(path, file);
       if (error) {
         toast.error("Upload failed");
