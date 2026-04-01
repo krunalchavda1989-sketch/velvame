@@ -6,23 +6,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { useBrand } from "@/contexts/BrandContext";
 import AuthPageLayout from "@/components/auth/AuthPageLayout";
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ identifier: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      let email = form.identifier.trim();
+
+      // If the identifier doesn't look like an email, treat it as a referral ID
+      if (!email.includes("@")) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("referral_code", email.toUpperCase())
+          .maybeSingle();
+
+        if (profileError || !profile) {
+          throw new Error("No account found with this User ID. Please check and try again.");
+        }
+
+        // Look up email via security definer function
+        const { data: emailResult, error: emailError } = await supabase
+          .rpc("get_user_email_by_id" as any, { _user_id: profile.user_id });
+
+        if (emailError || !emailResult) {
+          throw new Error("Unable to retrieve account details. Please try logging in with your email.");
+        }
+
+        email = emailResult as unknown as string;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email: form.email,
+        email,
         password: form.password,
       });
       if (error) throw error;
@@ -43,19 +66,19 @@ const Login = () => {
         <p className="text-sm text-muted-foreground mt-1">Sign in to your account to continue</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
         <div>
-          <Label htmlFor="email" className="text-foreground text-sm font-medium">
-            Email Address
+          <Label htmlFor="identifier" className="text-foreground text-sm font-medium">
+            Email Address or User ID
           </Label>
           <Input
-            id="email"
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            id="identifier"
+            type="text"
+            value={form.identifier}
+            onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
             className="mt-1.5 h-11 bg-background border-border"
-            placeholder="you@example.com"
+            placeholder="you@example.com or VEL001"
           />
         </div>
 
