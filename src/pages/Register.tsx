@@ -229,7 +229,7 @@ const Register = () => {
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin mr-2" />Creating account...</>
               ) : (
-                `Join ${brand.brand_name} — ₹${membershipAmount.toLocaleString("en-IN")}`
+                `Join ${brand.brand_name}`
               )}
             </Button>
 
