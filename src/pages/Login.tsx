@@ -19,36 +19,39 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let email = form.identifier.trim();
+      const identifier = form.identifier.trim();
 
-      // If the identifier doesn't look like an email, treat it as a referral ID
-      if (!email.includes("@")) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("referral_code", email.toUpperCase())
-          .maybeSingle();
+      if (!identifier.includes("@")) {
+        const { data, error } = await supabase.functions.invoke("login-with-identifier", {
+          body: {
+            identifier,
+            password: form.password,
+          },
+        });
 
-        if (profileError || !profile) {
-          throw new Error("No account found with this User ID. Please check and try again.");
+        if (error) {
+          throw new Error("Unable to sign in right now. Please try again.");
         }
 
-        // Look up email via security definer function
-        const { data: emailResult, error: emailError } = await supabase
-          .rpc("get_user_email_by_id" as any, { _user_id: profile.user_id });
-
-        if (emailError || !emailResult) {
-          throw new Error("Unable to retrieve account details. Please try logging in with your email.");
+        if (!data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
+          throw new Error(data?.error || "Login failed");
         }
 
-        email = emailResult as unknown as string;
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        if (sessionError) throw sessionError;
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: identifier.toLowerCase(),
+          password: form.password,
+        });
+
+        if (error) throw error;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: form.password,
-      });
-      if (error) throw error;
       toast.success("Welcome back!");
       const redirectTo = searchParams.get("redirect");
       navigate(redirectTo || "/");
@@ -63,7 +66,7 @@ const Login = () => {
     <AuthPageLayout>
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Welcome Back</h1>
-        <p className="text-sm text-muted-foreground mt-1">Sign in to your account to continue</p>
+        <p className="text-sm text-muted-foreground mt-1">Sign in with your email address or referral ID</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
@@ -78,7 +81,7 @@ const Login = () => {
             onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
             className="mt-1.5 h-11 bg-background border-border"
-            placeholder="you@example.com or VM508"
+            placeholder="you@example.com or VM502"
           />
         </div>
 
