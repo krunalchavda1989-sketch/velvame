@@ -720,37 +720,7 @@ const AdminUserDetail = () => {
 
           {/* Team Tab */}
           <TabsContent value="team">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Direct Referrals</CardTitle></CardHeader>
-              <CardContent>
-                {referrals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">No referrals yet.</p>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {referrals.map((r) => (
-                      <Link to={`/admin/users/${r.id}`} key={r.id} className="flex items-center justify-between p-3 hover:bg-secondary/30 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">{(r.full_name || "U")[0]}</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{r.full_name || "User"}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{r.referral_code}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">{r.title}</Badge>
-                          <Badge variant={r.subscription_paid ? "default" : "outline"}
-                            className={`text-xs ${r.subscription_paid ? "bg-success text-success-foreground" : "text-muted-foreground"}`}>
-                            {r.subscription_paid ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <TeamTab profileId={profile.id} directReferrals={referrals} />
           </TabsContent>
 
           {/* Commissions Tab */}
