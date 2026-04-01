@@ -1251,6 +1251,50 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_logs: {
+        Row: {
+          change_quantity: number
+          change_type: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_stock: number
+          note: string | null
+          previous_stock: number
+          product_id: string
+        }
+        Insert: {
+          change_quantity?: number
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_stock?: number
+          note?: string | null
+          previous_stock?: number
+          product_id: string
+        }
+        Update: {
+          change_quantity?: number
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_stock?: number
+          note?: string | null
+          previous_stock?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_documents: {
         Row: {
           admin_note: string | null
