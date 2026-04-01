@@ -158,7 +158,7 @@ const Register = () => {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
             <div>
               <Label htmlFor="fullName" className="text-foreground text-sm font-medium">Full Name</Label>
               <Input
