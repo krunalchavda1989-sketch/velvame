@@ -62,10 +62,8 @@ const AdminSmtpSettings = () => {
         from_name: form.from_name,
         use_tls: form.use_tls,
       };
-      // Only update password if changed
-      if (form.smtp_password && form.smtp_password !== "••••••••") {
-        payload.smtp_password = form.smtp_password;
-      }
+      // Password is now stored as a backend secret (SMTP_PASSWORD)
+      // Do not persist it in the database
 
       const { data: existing } = await supabase
         .from("pages_content")
