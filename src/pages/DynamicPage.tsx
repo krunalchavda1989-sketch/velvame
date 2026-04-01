@@ -163,7 +163,7 @@ const DynamicPage = () => {
               [&_a]:text-primary [&_a]:underline
               [&_strong]:font-semibold
               [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic"
-            dangerouslySetInnerHTML={{ __html: bodyContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bodyContent) }}
           />
         </div>
       </main>
