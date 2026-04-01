@@ -1129,7 +1129,6 @@ const SmtpTab = () => {
     smtp_host: "",
     smtp_port: "587",
     smtp_user: "",
-    smtp_password: "",
     from_email: "",
     from_name: "",
     use_tls: true,
