@@ -69,7 +69,7 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
         <div>
           <Label htmlFor="identifier" className="text-foreground text-sm font-medium">
-            Email Address or User ID
+            Email Address or Referral ID
           </Label>
           <Input
             id="identifier"
@@ -78,7 +78,7 @@ const Login = () => {
             onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
             className="mt-1.5 h-11 bg-background border-border"
-            placeholder="you@example.com or VEL001"
+            placeholder="you@example.com or VM508"
           />
         </div>
 
