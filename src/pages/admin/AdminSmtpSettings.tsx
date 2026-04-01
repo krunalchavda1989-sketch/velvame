@@ -16,7 +16,6 @@ const AdminSmtpSettings = () => {
     smtp_host: "",
     smtp_port: "587",
     smtp_user: "",
-    smtp_password: "",
     from_email: "",
     from_name: "",
     use_tls: true,
@@ -39,7 +38,6 @@ const AdminSmtpSettings = () => {
         smtp_host: c.smtp_host || "",
         smtp_port: c.smtp_port || "587",
         smtp_user: c.smtp_user || "",
-        smtp_password: c.smtp_password ? "••••••••" : "",
         from_email: c.from_email || "",
         from_name: c.from_name || "",
         use_tls: c.use_tls !== false,
@@ -62,10 +60,8 @@ const AdminSmtpSettings = () => {
         from_name: form.from_name,
         use_tls: form.use_tls,
       };
-      // Only update password if changed
-      if (form.smtp_password && form.smtp_password !== "••••••••") {
-        payload.smtp_password = form.smtp_password;
-      }
+      // Password is now stored as a backend secret (SMTP_PASSWORD)
+      // Do not persist it in the database
 
       const { data: existing } = await supabase
         .from("pages_content")
@@ -173,13 +169,10 @@ const AdminSmtpSettings = () => {
             </div>
             <div>
               <Label className="text-foreground">Password</Label>
-              <Input
-                type="password"
-                value={form.smtp_password}
-                onChange={(e) => setForm({ ...form, smtp_password: e.target.value })}
-                placeholder="App password"
-                className="mt-1 bg-secondary border-border"
-              />
+              <div className="mt-1 px-3 py-2 rounded-md bg-muted border border-border text-sm text-muted-foreground">
+                Managed securely as a backend secret
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">SMTP password is stored securely and cannot be viewed here.</p>
             </div>
           </div>
 

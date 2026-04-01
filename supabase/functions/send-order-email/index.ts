@@ -275,7 +275,8 @@ Deno.serve(async (req: Request) => {
       { number: tracking_number, url: tracking_url }
     );
 
-    // Send via SMTP
+    // Send via SMTP - prefer env secret over DB-stored password
+    const smtpPassword = Deno.env.get("SMTP_PASSWORD") || smtp.smtp_password;
     const client = new SMTPClient({
       connection: {
         hostname: smtp.smtp_host,
@@ -283,7 +284,7 @@ Deno.serve(async (req: Request) => {
         tls: smtp.use_tls !== false,
         auth: {
           username: smtp.smtp_user,
-          password: smtp.smtp_password,
+          password: smtpPassword,
         },
       },
     });

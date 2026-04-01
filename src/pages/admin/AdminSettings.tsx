@@ -1129,7 +1129,6 @@ const SmtpTab = () => {
     smtp_host: "",
     smtp_port: "587",
     smtp_user: "",
-    smtp_password: "",
     from_email: "",
     from_name: "",
     use_tls: true,
@@ -1148,7 +1147,6 @@ const SmtpTab = () => {
           smtp_host: c.smtp_host || "",
           smtp_port: c.smtp_port || "587",
           smtp_user: c.smtp_user || "",
-          smtp_password: c.smtp_password ? "••••••••" : "",
           from_email: c.from_email || "",
           from_name: c.from_name || "",
           use_tls: c.use_tls !== false,
@@ -1170,9 +1168,7 @@ const SmtpTab = () => {
         from_name: form.from_name,
         use_tls: form.use_tls,
       };
-      if (form.smtp_password && form.smtp_password !== "••••••••") {
-        payload.smtp_password = form.smtp_password;
-      }
+      // Password is managed as a backend secret (SMTP_PASSWORD)
 
       const { data: existing } = await supabase
         .from("pages_content")
@@ -1248,7 +1244,10 @@ const SmtpTab = () => {
             </div>
             <div className="space-y-2">
               <Label>Password</Label>
-              <Input type="password" value={form.smtp_password} onChange={(e) => setForm({ ...form, smtp_password: e.target.value })} placeholder="App password" />
+              <div className="px-3 py-2 rounded-md bg-muted border border-border text-sm text-muted-foreground">
+                Managed securely as a backend secret
+              </div>
+              <p className="text-xs text-muted-foreground">SMTP password is stored securely and cannot be viewed here.</p>
             </div>
           </div>
 
