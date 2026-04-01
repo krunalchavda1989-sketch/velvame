@@ -38,11 +38,20 @@ const AdminInventory = () => {
   const [statColors, setStatColors] = useState(CARD_GRADIENTS);
 
   const fetchProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("id, name, category, stock, allow_backorder, active, image_url")
-      .order("name", { ascending: true });
+    const [{ data }, { data: brandData }] = await Promise.all([
+      supabase.from("products").select("id, name, category, stock, allow_backorder, active, image_url").order("name", { ascending: true }),
+      supabase.from("brand_settings").select("stat_color_1, stat_color_2, stat_color_3, stat_color_4").limit(1).maybeSingle(),
+    ]);
     setProducts((data as ProductStock[]) || []);
+    if (brandData) {
+      const bd = brandData as any;
+      setStatColors([
+        { from: bd.stat_color_1 || "#4f46e5", to: `${bd.stat_color_1 || "#4f46e5"}cc` },
+        { from: bd.stat_color_2 || "#10b981", to: `${bd.stat_color_2 || "#10b981"}cc` },
+        { from: bd.stat_color_3 || "#f59e0b", to: `${bd.stat_color_3 || "#f59e0b"}cc` },
+        { from: bd.stat_color_4 || "#ec4899", to: `${bd.stat_color_4 || "#ec4899"}cc` },
+      ]);
+    }
     setLoading(false);
   };
 
