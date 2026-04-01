@@ -1168,9 +1168,7 @@ const SmtpTab = () => {
         from_name: form.from_name,
         use_tls: form.use_tls,
       };
-      if (form.smtp_password && form.smtp_password !== "••••••••") {
-        payload.smtp_password = form.smtp_password;
-      }
+      // Password is managed as a backend secret (SMTP_PASSWORD)
 
       const { data: existing } = await supabase
         .from("pages_content")
