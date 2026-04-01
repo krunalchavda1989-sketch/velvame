@@ -359,6 +359,24 @@ const AdminCommissions = () => {
   );
 };
 
+/* ─── Format rate: stored as decimal (0.05) → display as 5% ─── */
+const formatRate = (rate: number) => {
+  const pct = rate < 1 ? rate * 100 : rate;
+  return `${parseFloat(pct.toFixed(2))}%`;
+};
+
+const LEVEL_CARD_GRADIENTS = [
+  "from-blue-500 to-blue-600",
+  "from-emerald-500 to-emerald-600",
+  "from-purple-500 to-purple-600",
+  "from-amber-500 to-amber-600",
+  "from-rose-500 to-rose-600",
+  "from-cyan-500 to-cyan-600",
+  "from-indigo-500 to-indigo-600",
+  "from-teal-500 to-teal-600",
+  "from-orange-500 to-orange-600",
+];
+
 /* ─── Level Breakdown ─── */
 const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, pendingCount }: {
   data: any[]; getName: (id: string) => string;
@@ -381,16 +399,20 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {levelStats.map(([level, s]) => (
-          <div key={level} className="p-3 rounded-xl bg-card border border-border">
-            <div className="text-xs text-muted-foreground mb-1">Level {level}</div>
-            <div className="text-lg font-display font-bold text-foreground">₹{s.total.toLocaleString()}</div>
-            <div className="flex gap-2 mt-1 text-[10px]">
-              <span className="text-green-500">{s.count} txns</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="text-amber-500">₹{s.pending.toLocaleString()} pending</span>
+        {levelStats.map(([level, s], i) => (
+          <motion.div key={level} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+            className={`p-4 rounded-xl bg-gradient-to-br ${LEVEL_CARD_GRADIENTS[i % LEVEL_CARD_GRADIENTS.length]} text-white shadow-lg`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs opacity-80">Level {level}</span>
+              <Layers className="h-4 w-4 opacity-80" />
             </div>
-          </div>
+            <div className="text-lg font-display font-bold">₹{s.total.toLocaleString()}</div>
+            <div className="flex gap-2 mt-1 text-[10px]">
+              <span className="opacity-90">{s.count} txns</span>
+              <span className="opacity-60">·</span>
+              <span className="opacity-90">₹{s.pending.toLocaleString()} pending</span>
+            </div>
+          </motion.div>
         ))}
       </div>
       {barData.length > 0 && (
@@ -412,6 +434,8 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
   );
 };
 
+const PAGE_SIZE = 25;
+
 /* ─── Commission Table ─── */
 const CommissionTable = ({
   data, getName, showType, csvFilename, selected, setSelected, onBulkApprove, pendingCount,
@@ -420,16 +444,32 @@ const CommissionTable = ({
   selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
   onBulkApprove?: () => void; pendingCount: number;
 }) => {
-  const allSelected = data.length > 0 && data.every((c) => selected.has(c.id));
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedData = data.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Reset page when data changes
+  useEffect(() => { setPage(1); }, [data.length]);
+
+  const allSelected = pagedData.length > 0 && pagedData.every((c) => selected.has(c.id));
   const toggleAll = () => {
-    if (allSelected) { setSelected((prev) => { const n = new Set(prev); data.forEach((c) => n.delete(c.id)); return n; }); }
-    else { setSelected((prev) => { const n = new Set(prev); data.forEach((c) => n.add(c.id)); return n; }); }
+    if (allSelected) { setSelected((prev) => { const n = new Set(prev); pagedData.forEach((c) => n.delete(c.id)); return n; }); }
+    else { setSelected((prev) => { const n = new Set(prev); pagedData.forEach((c) => n.add(c.id)); return n; }); }
   };
   const toggle = (id: string) => setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const handleExport = () => {
     const cols = ["Beneficiary", ...(showType ? ["Type"] : []), "Level", "Rate", "Amount", "Status", "Date"];
-    const rows = data.map((c) => [getName(c.beneficiary_id), ...(showType ? [c.commission_type] : []), String(c.level), `${c.rate}%`, `₹${Number(c.amount).toLocaleString()}`, c.status, format(new Date(c.created_at), "dd MMM yyyy")]);
+    const rows = data.map((c) => [
+      getName(c.beneficiary_id),
+      ...(showType ? [c.commission_type] : []),
+      String(c.level),
+      formatRate(Number(c.rate)),
+      String(Number(c.amount).toFixed(2)),
+      c.status,
+      format(new Date(c.created_at), "dd MMM yyyy"),
+    ]);
     exportCsv(cols, rows, csvFilename);
   };
 
@@ -463,10 +503,10 @@ const CommissionTable = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.length === 0 ? (
+              {pagedData.length === 0 ? (
                 <TableRow><TableCell colSpan={showType ? 9 : 8} className="text-center py-10 text-muted-foreground">No commissions found</TableCell></TableRow>
               ) : (
-                data.map((c) => (
+                pagedData.map((c) => (
                   <TableRow key={c.id} className={`hover:bg-secondary/30 ${selected.has(c.id) ? "bg-primary/5" : ""}`}>
                     <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} /></TableCell>
                     <TableCell className="font-medium text-foreground">{getName(c.beneficiary_id)}</TableCell>
@@ -474,7 +514,7 @@ const CommissionTable = ({
                       <TableCell><Badge variant="outline" className="capitalize text-[10px]">{c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}</Badge></TableCell>
                     )}
                     <TableCell><Badge variant="secondary" className="text-[10px]">L{c.level}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{c.rate}%</TableCell>
+                    <TableCell className="text-muted-foreground">{formatRate(Number(c.rate))}</TableCell>
                     <TableCell className="font-semibold text-primary">₹{Number(c.amount).toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{getName(c.source_user_id)}</TableCell>
                     <TableCell>
@@ -488,6 +528,34 @@ const CommissionTable = ({
           </Table>
         </div>
       </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-xs text-muted-foreground">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, data.length)} of {data.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Previous</Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - (arr[idx - 1]) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === "..." ? (
+                  <span key={`dots-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                ) : (
+                  <Button key={p} variant={p === currentPage ? "default" : "outline"} size="sm" className="min-w-[32px] h-8 text-xs" onClick={() => setPage(p as number)}>
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Next</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
