@@ -11,7 +11,6 @@ import AuthPageLayout from "@/components/auth/AuthPageLayout";
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const brand = useBrand();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ identifier: "", password: "" });
