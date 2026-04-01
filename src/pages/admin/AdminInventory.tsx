@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Search, AlertTriangle, CheckCircle, XCircle, Save, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Package, Search, AlertTriangle, CheckCircle, XCircle, ClipboardList, PlusCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import AddStockDialog from "@/components/admin/AddStockDialog";
+import StockLogDialog from "@/components/admin/StockLogDialog";
 
 interface ProductStock {
   id: string;
@@ -16,7 +17,6 @@ interface ProductStock {
   allow_backorder: boolean;
   active: boolean;
   image_url: string | null;
-  sku?: string;
 }
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -33,9 +33,12 @@ const AdminInventory = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "low" | "out" | "in">("all");
-  const [editedStocks, setEditedStocks] = useState<Record<string, number>>({});
-  const [saving, setSaving] = useState(false);
   const [statColors, setStatColors] = useState(CARD_GRADIENTS);
+
+  // Dialog state
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductStock | null>(null);
 
   const fetchProducts = async () => {
     const [{ data }, { data: brandData }] = await Promise.all([
@@ -73,31 +76,6 @@ const AdminInventory = () => {
   const lowStock = products.filter((p) => p.stock > 0 && p.stock <= LOW_STOCK_THRESHOLD).length;
   const inStock = products.filter((p) => p.stock > LOW_STOCK_THRESHOLD).length;
 
-  const handleStockChange = (id: string, value: string) => {
-    const num = parseInt(value);
-    if (isNaN(num) || num < 0) return;
-    setEditedStocks((prev) => ({ ...prev, [id]: num }));
-  };
-
-  const hasChanges = Object.keys(editedStocks).length > 0;
-
-  const handleSaveAll = async () => {
-    setSaving(true);
-    const entries = Object.entries(editedStocks);
-    for (const [id, stock] of entries) {
-      const { error } = await supabase.from("products").update({ stock }).eq("id", id);
-      if (error) {
-        toast.error(`Failed to update stock for product`);
-        setSaving(false);
-        return;
-      }
-    }
-    toast.success(`Updated stock for ${entries.length} product(s)`);
-    setEditedStocks({});
-    setSaving(false);
-    fetchProducts();
-  };
-
   const statCards = [
     { label: "Total Products", value: totalProducts, icon: Package, filterKey: "all" as const },
     { label: "In Stock", value: inStock, icon: CheckCircle, filterKey: "in" as const },
@@ -109,22 +87,14 @@ const AdminInventory = () => {
     <AdminLayout>
       <div className="p-6 lg:p-8 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10">
-              <Package className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">Inventory Management</h1>
-              <p className="text-sm text-muted-foreground">Track and manage product stock levels</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10">
+            <Package className="h-6 w-6 text-primary" />
           </div>
-          {hasChanges && (
-            <Button onClick={handleSaveAll} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {saving ? "Saving..." : `Save Changes (${Object.keys(editedStocks).length})`}
-            </Button>
-          )}
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Inventory Management</h1>
+            <p className="text-sm text-muted-foreground">Track and manage product stock levels</p>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -174,10 +144,10 @@ const AdminInventory = () => {
                   <tr className="border-b border-border bg-secondary/50">
                     <th className="text-left p-3 text-muted-foreground font-medium">Product</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Category</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Current Stock</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Update Stock</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Stock</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Back Order</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,10 +159,8 @@ const AdminInventory = () => {
                     </tr>
                   ) : (
                     filtered.map((p) => {
-                      const currentStock = editedStocks[p.id] ?? p.stock;
-                      const isEdited = p.id in editedStocks;
                       const stockStatus =
-                        currentStock <= 0 ? "out" : currentStock <= LOW_STOCK_THRESHOLD ? "low" : "in";
+                        p.stock <= 0 ? "out" : p.stock <= LOW_STOCK_THRESHOLD ? "low" : "in";
 
                       return (
                         <tr key={p.id} className="border-b border-border hover:bg-secondary/30 transition-colors">
@@ -209,16 +177,7 @@ const AdminInventory = () => {
                             </div>
                           </td>
                           <td className="p-3 text-muted-foreground">{p.category}</td>
-                          <td className="p-3 font-medium text-foreground">{p.stock}</td>
-                          <td className="p-3">
-                            <Input
-                              type="number"
-                              min={0}
-                              value={currentStock}
-                              onChange={(e) => handleStockChange(p.id, e.target.value)}
-                              className={`w-24 ${isEdited ? "border-primary ring-1 ring-primary" : ""}`}
-                            />
-                          </td>
+                          <td className="p-3 font-semibold text-foreground">{p.stock}</td>
                           <td className="p-3">
                             <Badge
                               variant={stockStatus === "out" ? "destructive" : stockStatus === "low" ? "outline" : "default"}
@@ -238,6 +197,28 @@ const AdminInventory = () => {
                               {p.allow_backorder ? "Enabled" : "Disabled"}
                             </Badge>
                           </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5 text-xs"
+                                onClick={() => { setSelectedProduct(p); setStockDialogOpen(true); }}
+                              >
+                                <PlusCircle className="h-3.5 w-3.5" />
+                                Add Stock
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="gap-1.5 text-xs"
+                                onClick={() => { setSelectedProduct(p); setLogDialogOpen(true); }}
+                              >
+                                <ClipboardList className="h-3.5 w-3.5" />
+                                View Log
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })
@@ -248,6 +229,18 @@ const AdminInventory = () => {
           </div>
         )}
       </div>
+
+      <AddStockDialog
+        open={stockDialogOpen}
+        onOpenChange={setStockDialogOpen}
+        product={selectedProduct}
+        onSuccess={fetchProducts}
+      />
+      <StockLogDialog
+        open={logDialogOpen}
+        onOpenChange={setLogDialogOpen}
+        product={selectedProduct}
+      />
     </AdminLayout>
   );
 };
