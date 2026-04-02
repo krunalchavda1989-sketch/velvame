@@ -3007,6 +3007,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_direct_referrals: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          direct_referral_count: number
+          first_name: string
+          full_name: string
+          id: string
+          last_name: string
+          middle_name: string
+          referral_code: string
+          referred_by: string
+          subscription_paid: boolean
+          title: string
+          user_id: string
+        }[]
+      }
       get_genealogy_tree: {
         Args: {
           _max_depth?: number
