@@ -20,6 +20,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     staleTime: 300000,
   });
 
+  const { data: forceBankDetails, isLoading: bankSettingLoading } = useQuery({
+    queryKey: ["site-setting-force-bank-details"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "force_bank_details")
+        .maybeSingle();
+      return data?.value === true;
+    },
+    staleTime: 300000,
+  });
+
   const { data: kycDocs, isLoading: kycLoading } = useQuery({
     queryKey: ["kyc-check", user?.id],
     queryFn: async () => {
@@ -33,7 +46,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     staleTime: 60000,
   });
 
-  if (loading || kycSettingLoading || (forceKyc && kycLoading)) {
+  const { data: bankDetails, isLoading: bankLoading } = useQuery({
+    queryKey: ["bank-details-check", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("bank_details")
+        .select("account_holder_name, bank_name, account_number, ifsc_code")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user && forceBankDetails === true,
+    staleTime: 60000,
+  });
+
+  const isSettingsLoading = kycSettingLoading || bankSettingLoading;
+  const isDataLoading = (forceKyc && kycLoading) || (forceBankDetails && bankLoading);
+
+  if (loading || isSettingsLoading || isDataLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -57,6 +87,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       
       if (!hasAadharFront || !hasAadharBack || !hasPan) {
         return <Navigate to="/dashboard/settings?tab=kyc" replace />;
+      }
+    }
+  }
+
+  // Check bank details completion only if forced bank details is enabled
+  if (forceBankDetails) {
+    const isSettingsProfilePage = location.pathname === "/dashboard/settings" &&
+      (new URLSearchParams(location.search).get("tab") === "profile" || !new URLSearchParams(location.search).get("tab"));
+
+    if (!isSettingsProfilePage) {
+      const bankComplete = bankDetails?.account_holder_name?.trim() &&
+        bankDetails?.bank_name?.trim() &&
+        bankDetails?.account_number?.trim() &&
+        bankDetails?.ifsc_code?.trim();
+
+      if (!bankComplete) {
+        return <Navigate to="/dashboard/settings?tab=profile" replace />;
       }
     }
   }
