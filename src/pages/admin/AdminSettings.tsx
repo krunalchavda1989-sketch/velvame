@@ -55,7 +55,7 @@ const SETTINGS_TABS = [
   { key: "membership", label: "Membership", icon: DollarSign },
   { key: "ordernumber", label: "Order Number", icon: Hash },
   { key: "referralcode", label: "Referral Code", icon: Shield },
-  { key: "kyc", label: "KYC Settings", icon: ShieldCheck },
+  { key: "kyc", label: "KYC / Bank", icon: ShieldCheck },
   { key: "authpage", label: "Login Page", icon: Image },
 ];
 
