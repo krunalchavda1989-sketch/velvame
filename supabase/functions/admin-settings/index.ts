@@ -267,6 +267,35 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (action === "get_user_emails") {
+      const { user_ids } = body;
+      if (!user_ids || !Array.isArray(user_ids)) {
+        return new Response(JSON.stringify({ error: "user_ids array is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const emails: { id: string; email: string }[] = [];
+      // Fetch in batches to avoid overloading
+      const batchSize = 50;
+      for (let i = 0; i < user_ids.length; i += batchSize) {
+        const batch = user_ids.slice(i, i + batchSize);
+        const results = await Promise.all(
+          batch.map(async (uid: string) => {
+            const { data } = await serviceClient.auth.admin.getUserById(uid);
+            return { id: uid, email: data?.user?.email || "" };
+          })
+        );
+        emails.push(...results);
+      }
+
+      return new Response(
+        JSON.stringify({ emails }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
