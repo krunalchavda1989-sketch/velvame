@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  Search, Shield, Users, UserCheck, UserX, FileCheck, Landmark,
+  Search, Shield, Users, UserCheck, FileCheck, Landmark,
   Download, CalendarIcon, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
