@@ -42,7 +42,7 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
   // For admin: multiple roots possible (referred_by IS NULL)
   const nodesMap = new Map<string, TreeNode>();
   flatList.forEach((m) => {
-    nodesMap.set(m.profile_id, { ...m, children: [] });
+    nodesMap.set(m.profile_id, { ...m, children: [], total_team: 0, active_team: 0 });
   });
 
   const roots: TreeNode[] = [];
