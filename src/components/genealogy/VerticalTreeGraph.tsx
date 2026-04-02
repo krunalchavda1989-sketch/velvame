@@ -375,6 +375,7 @@ const VerticalTreeGraph = ({
               isOwnTree={isOwnTree}
             />
           ))}
+          </g>
         </svg>
       </div>
     </div>
