@@ -55,6 +55,23 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
     }
   });
 
+  // Compute total_team and active_team bottom-up
+  const computeStats = (node: TreeNode): { total: number; active: number } => {
+    let total = 0;
+    let active = 0;
+    for (const child of node.children) {
+      total += 1;
+      if (child.subscription_paid) active += 1;
+      const sub = computeStats(child);
+      total += sub.total;
+      active += sub.active;
+    }
+    node.total_team = total;
+    node.active_team = active;
+    return { total, active };
+  };
+  roots.forEach(computeStats);
+
   // If single root, return it. If multiple, wrap in virtual root.
   if (roots.length === 1) return roots[0];
   if (roots.length === 0) return null;
