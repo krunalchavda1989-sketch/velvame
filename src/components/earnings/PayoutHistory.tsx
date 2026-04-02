@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Clock, DollarSign, Banknote, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, DollarSign, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
