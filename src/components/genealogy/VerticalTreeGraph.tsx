@@ -329,13 +329,17 @@ const VerticalTreeGraph = ({
         onTouchEnd={handleTouchEnd}
       >
         <svg
-          width={svgWidth}
-          height={svgHeight}
+          width="100%"
+          height="100%"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: "0 0",
             overflow: "visible",
           }}
+        >
+          <g
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "0 0",
+            }}
         >
           {/* Edges - vertical connectors */}
           {edges.map((edge, i) => {
