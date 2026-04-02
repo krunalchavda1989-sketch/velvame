@@ -3044,6 +3044,28 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_products: {
+        Args: never
+        Returns: {
+          active: boolean
+          allow_backorder: boolean
+          category: string
+          created_at: string
+          description: string
+          distributor_price: number
+          id: string
+          image_url: string
+          name: string
+          rating: number
+          retail_price: number
+          seo_description: string
+          seo_keywords: string
+          seo_slug: string
+          seo_title: string
+          sort_order: number
+          stock: number
+        }[]
+      }
       get_user_earnings_report: {
         Args: { _end_date?: string; _start_date?: string; _user_id: string }
         Returns: {
