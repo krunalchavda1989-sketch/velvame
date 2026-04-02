@@ -229,7 +229,7 @@ const TreeNodeCard = ({
             >
               {node.subscription_paid ? "Active" : "Inactive"}
             </Badge>
-            {node.direct_referral_count > 0 && (
+            {node.total_team > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
