@@ -57,6 +57,7 @@ const SETTINGS_TABS = [
   { key: "referralcode", label: "Referral Code", icon: Shield },
   { key: "kyc", label: "KYC / Bank", icon: ShieldCheck },
   { key: "authpage", label: "Login Page", icon: Image },
+  { key: "featurelog", label: "Feature Log", icon: ClipboardList },
 ];
 
 const AdminSettings = () => {
