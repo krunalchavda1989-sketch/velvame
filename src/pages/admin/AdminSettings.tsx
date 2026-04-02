@@ -84,6 +84,7 @@ const AdminSettings = () => {
       case "referralcode": return <ReferralCodeTab />;
       case "kyc": return <KycSettingsTab />;
       case "authpage": return <AuthPageTab />;
+      case "featurelog": return <FeatureLogTab />;
       default: return <PaymentTab />;
     }
   };
