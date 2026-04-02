@@ -88,12 +88,7 @@ const MyTeam = () => {
     const fetchTeam = async () => {
       setLoading(true);
       const { data } = await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, referral_code, title, subscription_paid, direct_referral_count, created_at, avatar_url"
-        )
-        .eq("referred_by", profile.id)
-        .order("created_at", { ascending: true });
+        .rpc("get_direct_referrals" as any, { _user_id: user.id });
       setMembers((data as TeamMember[]) || []);
       setLoading(false);
     };
