@@ -28,6 +28,8 @@ interface TreeMember {
 
 interface TreeNode extends TreeMember {
   children: TreeNode[];
+  total_team: number;
+  active_team: number;
 }
 
 interface BreadcrumbItem {
