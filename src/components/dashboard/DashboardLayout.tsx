@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 
 
 const menuItems = [
@@ -32,6 +34,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const brand = useBrand();
+  const { user } = useAuth();
+
+  // Check if bank details are incomplete for red indicator
+  const { data: bankIncomplete } = useQuery({
+    queryKey: ["bank-details-incomplete", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("bank_details")
+        .select("account_holder_name, bank_name, account_number, ifsc_code")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (!data) return true;
+      return !data.account_holder_name?.trim() || !data.bank_name?.trim() || !data.account_number?.trim() || !data.ifsc_code?.trim();
+    },
+    enabled: !!user,
+    staleTime: 60000,
+  });
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -49,19 +68,20 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       const active = location.pathname === item.href ||
         (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
       const iconBg = ICON_COLORS[idx % ICON_COLORS.length];
+      const showRedDot = item.href === "/dashboard/settings" && bankIncomplete;
       return (
         <Link
           key={item.label}
           to={item.href}
           onClick={() => isMobile && setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative ${
             active
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           }`}
         >
           <span
-            className="flex items-center justify-center rounded-full flex-shrink-0"
+            className="flex items-center justify-center rounded-full flex-shrink-0 relative"
             style={{
               backgroundColor: iconBg,
               width: !isMobile && collapsed ? 28 : 26,
@@ -69,8 +89,18 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             }}
           >
             <item.icon className="h-3.5 w-3.5 text-white" />
+            {showRedDot && (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-destructive border-2 border-card" />
+            )}
           </span>
-          {(isMobile || !collapsed) && <span>{item.label}</span>}
+          {(isMobile || !collapsed) && (
+            <span className="flex items-center gap-2">
+              {item.label}
+              {showRedDot && (
+                <span className="text-[10px] font-medium text-destructive">●</span>
+              )}
+            </span>
+          )}
         </Link>
       );
     });

@@ -55,7 +55,7 @@ const SETTINGS_TABS = [
   { key: "membership", label: "Membership", icon: DollarSign },
   { key: "ordernumber", label: "Order Number", icon: Hash },
   { key: "referralcode", label: "Referral Code", icon: Shield },
-  { key: "kyc", label: "KYC Settings", icon: ShieldCheck },
+  { key: "kyc", label: "KYC / Bank", icon: ShieldCheck },
   { key: "authpage", label: "Login Page", icon: Image },
 ];
 
@@ -3035,38 +3035,60 @@ const ReferralCodeTab = () => {
   );
 };
 
-/* ───────── KYC Settings Tab ───────── */
+/* ───────── KYC / Bank Settings Tab ───────── */
 const KycSettingsTab = () => {
   const [forceKyc, setForceKyc] = useState(true);
+  const [forceBankDetails, setForceBankDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingKyc, setSavingKyc] = useState(false);
+  const [savingBank, setSavingBank] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
       const { data } = await supabase
         .from("site_settings")
-        .select("value")
-        .eq("key", "force_kyc")
-        .maybeSingle();
-      if (data) setForceKyc(data.value === true);
+        .select("key, value")
+        .in("key", ["force_kyc", "force_bank_details"]);
+      if (data) {
+        const kycRow = data.find((r: any) => r.key === "force_kyc");
+        const bankRow = data.find((r: any) => r.key === "force_bank_details");
+        if (kycRow) setForceKyc(kycRow.value === true);
+        if (bankRow) setForceBankDetails(bankRow.value === true);
+      }
       setLoading(false);
     };
     fetch();
   }, []);
 
-  const handleToggle = async (checked: boolean) => {
+  const handleKycToggle = async (checked: boolean) => {
     setForceKyc(checked);
-    setSaving(true);
+    setSavingKyc(true);
     const { error } = await supabase
       .from("site_settings")
       .update({ value: checked, updated_at: new Date().toISOString() })
       .eq("key", "force_kyc");
-    setSaving(false);
+    setSavingKyc(false);
     if (error) {
       toast.error("Failed to update KYC setting");
       setForceKyc(!checked);
     } else {
       toast.success(`Forced KYC ${checked ? "enabled" : "disabled"}`);
+    }
+  };
+
+  const handleBankToggle = async (checked: boolean) => {
+    setForceBankDetails(checked);
+    setSavingBank(true);
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ value: checked, updated_at: new Date().toISOString() })
+      .eq("key", "force_bank_details");
+    setSavingBank(false);
+    if (error) {
+      toast.error("Failed to update Bank Details setting");
+      setForceBankDetails(!checked);
+    } else {
+      toast.success(`Forced Bank Details ${checked ? "enabled" : "disabled"}`);
     }
   };
 
@@ -3082,6 +3104,7 @@ const KycSettingsTab = () => {
 
   return (
     <div className="space-y-6">
+      {/* KYC Settings */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -3101,8 +3124,49 @@ const KycSettingsTab = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-              <Switch checked={forceKyc} onCheckedChange={handleToggle} disabled={saving} />
+              {savingKyc && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Switch checked={forceKyc} onCheckedChange={handleKycToggle} disabled={savingKyc} />
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-3 p-3 rounded-lg ${forceKyc ? "bg-primary/10 border border-primary/20" : "bg-muted border border-border"}`}>
+            {forceKyc ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                <p className="text-sm font-medium text-primary">Forced KYC is currently <strong>active</strong>.</p>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                <p className="text-sm font-medium text-muted-foreground">Forced KYC is currently <strong>disabled</strong>.</p>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bank Details Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Bank Details Settings
+          </CardTitle>
+          <CardDescription>
+            Control whether users are required to fill in their bank details before accessing the dashboard.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+            <div className="space-y-1">
+              <Label className="text-base font-medium">Force Bank Details</Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, users must fill in their bank account details (Account Holder Name, Bank Name, Account Number, IFSC Code) before accessing any dashboard page.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {savingBank && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Switch checked={forceBankDetails} onCheckedChange={handleBankToggle} disabled={savingBank} />
             </div>
           </div>
 
@@ -3111,23 +3175,23 @@ const KycSettingsTab = () => {
           <div className="rounded-lg border border-border p-4 space-y-3">
             <h4 className="text-sm font-medium text-foreground">How it works</h4>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-5">
-              <li><strong>Enabled:</strong> Users without complete KYC documents will be redirected to the KYC upload page on every dashboard visit.</li>
-              <li><strong>Disabled:</strong> Users can freely access all dashboard pages without KYC verification.</li>
-              <li>Required documents: Aadhar Card (Front &amp; Back) and PAN Card.</li>
-              <li>Admin can still review and manage KYC submissions regardless of this setting.</li>
+              <li><strong>Enabled:</strong> Users without complete bank details will be redirected to the Settings → Profile page to fill in their bank information.</li>
+              <li><strong>Disabled:</strong> Users can freely access all dashboard pages without filling bank details.</li>
+              <li>Required fields: Account Holder Name, Bank Name, Account Number, and IFSC Code.</li>
+              <li>The Settings tab in the user sidebar will show a red indicator when bank details are incomplete.</li>
             </ul>
           </div>
 
-          <div className={`flex items-center gap-3 p-3 rounded-lg ${forceKyc ? "bg-primary/10 border border-primary/20" : "bg-muted border border-border"}`}>
-            {forceKyc ? (
+          <div className={`flex items-center gap-3 p-3 rounded-lg ${forceBankDetails ? "bg-primary/10 border border-primary/20" : "bg-muted border border-border"}`}>
+            {forceBankDetails ? (
               <>
                 <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium text-primary">Forced KYC is currently <strong>active</strong>. Users must complete KYC to access the dashboard.</p>
+                <p className="text-sm font-medium text-primary">Forced Bank Details is currently <strong>active</strong>. Users must complete bank details to access the dashboard.</p>
               </>
             ) : (
               <>
                 <XCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                <p className="text-sm font-medium text-muted-foreground">Forced KYC is currently <strong>disabled</strong>. Users can access the dashboard without KYC.</p>
+                <p className="text-sm font-medium text-muted-foreground">Forced Bank Details is currently <strong>disabled</strong>. Users can access the dashboard without bank details.</p>
               </>
             )}
           </div>

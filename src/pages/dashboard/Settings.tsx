@@ -425,6 +425,14 @@ const Settings = () => {
               </Card>
             </motion.div>
 
+            {/* Bank Details Warning */}
+            {bankDetailsLoaded && (!accountHolderName.trim() || !bankName.trim() || !accountNumber.trim() || !ifscCode.trim()) && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive flex items-center gap-2">
+                <Landmark className="h-4 w-4 flex-shrink-0" />
+                ⚠️ Please complete your bank details below to receive payouts. All fields marked are required.
+              </div>
+            )}
+
             {/* Bank Details Section */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <Card>
