@@ -66,7 +66,7 @@ const Login = () => {
     <AuthPageLayout>
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Welcome Back</h1>
-        <p className="text-sm text-muted-foreground mt-1">Sign in with your email address or referral ID</p>
+        <p className="text-sm text-muted-foreground mt-1">Sign in with your email address or VM ID</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
