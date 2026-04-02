@@ -86,6 +86,8 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
     avatar_url: null,
     referred_by: null,
     direct_referral_count: roots.length,
+    total_team: 0,
+    active_team: 0,
     depth: 0,
     children: roots.map((r) => ({ ...r, depth: 1, children: r.children.map(c => adjustDepth(c, 1)) })),
   };
