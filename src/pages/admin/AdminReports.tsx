@@ -16,6 +16,7 @@ import {
 } from "recharts";
 
 import { VIBRANT_COLORS, ChartGradients, chartTooltipStyle, axisTick } from "@/components/admin/ChartStyles";
+import PayoutReport from "@/components/admin/reports/PayoutReport";
 const CHART_COLORS = VIBRANT_COLORS;
 
 // ─── Helpers ───
@@ -77,6 +78,7 @@ const AdminReports = () => {
           <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="users" className="gap-1.5 text-xs"><Users className="h-3.5 w-3.5" /> User Report</TabsTrigger>
             <TabsTrigger value="income" className="gap-1.5 text-xs"><DollarSign className="h-3.5 w-3.5" /> Income Report</TabsTrigger>
+            <TabsTrigger value="payout" className="gap-1.5 text-xs"><DollarSign className="h-3.5 w-3.5" /> Payout Report</TabsTrigger>
             <TabsTrigger value="product" className="gap-1.5 text-xs"><Package className="h-3.5 w-3.5" /> Product Report</TabsTrigger>
             <TabsTrigger value="sales" className="gap-1.5 text-xs"><ShoppingCart className="h-3.5 w-3.5" /> Sales Report</TabsTrigger>
             <TabsTrigger value="shipping" className="gap-1.5 text-xs"><Truck className="h-3.5 w-3.5" /> Shipping Report</TabsTrigger>
@@ -84,6 +86,7 @@ const AdminReports = () => {
 
           <TabsContent value="users"><UserReport from={from} to={to} /></TabsContent>
           <TabsContent value="income"><IncomeReport from={from} to={to} /></TabsContent>
+          <TabsContent value="payout"><PayoutReport /></TabsContent>
           <TabsContent value="product"><ProductReport from={from} to={to} /></TabsContent>
           <TabsContent value="sales"><SalesReport from={from} to={to} /></TabsContent>
           <TabsContent value="shipping"><ShippingReport from={from} to={to} /></TabsContent>

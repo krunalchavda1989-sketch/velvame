@@ -1946,6 +1946,45 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          paid_by_admin_id: string
+          payment_date: string
+          payment_mode: string
+          status: string
+          transaction_ref: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_by_admin_id: string
+          payment_date?: string
+          payment_mode?: string
+          status?: string
+          transaction_ref: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          paid_by_admin_id?: string
+          payment_date?: string
+          payment_mode?: string
+          status?: string
+          transaction_ref?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           banner_url: string

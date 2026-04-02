@@ -8,6 +8,8 @@ import IncomeByLevelTable from "@/components/earnings/IncomeByLevelTable";
 import DownlineSearch from "@/components/earnings/DownlineSearch";
 import TransactionLog from "@/components/earnings/TransactionLog";
 import EarningsCharts from "@/components/earnings/EarningsCharts";
+import PayoutHistory from "@/components/earnings/PayoutHistory";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Earnings = () => {
   const { currencySymbol } = useLocalization();
@@ -47,59 +49,72 @@ const Earnings = () => {
           <p className="text-sm text-muted-foreground">Comprehensive income analysis & breakdown</p>
         </div>
 
-        {/* Date Filter */}
-        <EarningsDateFilter
-          preset={preset}
-          setPreset={setPreset}
-          customStart={customStart}
-          setCustomStart={setCustomStart}
-          customEnd={customEnd}
-          setCustomEnd={setCustomEnd}
-        />
+        <Tabs defaultValue="earnings" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="earnings">Earnings Report</TabsTrigger>
+            <TabsTrigger value="payouts">Payout History</TabsTrigger>
+          </TabsList>
 
-        {/* Summary Cards */}
-        <EarningsSummaryCards
-          summary={summary}
-          currencySymbol={currencySymbol}
-          onCardClick={scrollTo}
-        />
-
-        {/* Level Income */}
-        <div ref={levelRef}>
-          <IncomeByLevelTable
-            title="Level / Referral Income"
-            summaries={levelSummaries}
-            currencySymbol={currencySymbol}
-          />
-        </div>
-
-        {/* Repurchase Income */}
-        <div ref={repurchaseRef}>
-          <IncomeByLevelTable
-            title="Repurchase Income"
-            summaries={repurchaseSummaries}
-            currencySymbol={currencySymbol}
-          />
-        </div>
-
-        {/* Downline Search */}
-        <div ref={searchRef}>
-          {user && (
-            <DownlineSearch
-              earnings={earnings}
-              userId={user.id}
-              currencySymbol={currencySymbol}
+          <TabsContent value="earnings" className="space-y-6">
+            {/* Date Filter */}
+            <EarningsDateFilter
+              preset={preset}
+              setPreset={setPreset}
+              customStart={customStart}
+              setCustomStart={setCustomStart}
+              customEnd={customEnd}
+              setCustomEnd={setCustomEnd}
             />
-          )}
-        </div>
 
-        {/* Transaction Log */}
-        <div ref={logRef}>
-          <TransactionLog earnings={earnings} currencySymbol={currencySymbol} />
-        </div>
+            {/* Summary Cards */}
+            <EarningsSummaryCards
+              summary={summary}
+              currencySymbol={currencySymbol}
+              onCardClick={scrollTo}
+            />
 
-        {/* Charts */}
-        <EarningsCharts earnings={earnings} />
+            {/* Level Income */}
+            <div ref={levelRef}>
+              <IncomeByLevelTable
+                title="Level / Referral Income"
+                summaries={levelSummaries}
+                currencySymbol={currencySymbol}
+              />
+            </div>
+
+            {/* Repurchase Income */}
+            <div ref={repurchaseRef}>
+              <IncomeByLevelTable
+                title="Repurchase Income"
+                summaries={repurchaseSummaries}
+                currencySymbol={currencySymbol}
+              />
+            </div>
+
+            {/* Downline Search */}
+            <div ref={searchRef}>
+              {user && (
+                <DownlineSearch
+                  earnings={earnings}
+                  userId={user.id}
+                  currencySymbol={currencySymbol}
+                />
+              )}
+            </div>
+
+            {/* Transaction Log */}
+            <div ref={logRef}>
+              <TransactionLog earnings={earnings} currencySymbol={currencySymbol} />
+            </div>
+
+            {/* Charts */}
+            <EarningsCharts earnings={earnings} />
+          </TabsContent>
+
+          <TabsContent value="payouts">
+            <PayoutHistory />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
