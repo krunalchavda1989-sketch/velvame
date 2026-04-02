@@ -28,6 +28,8 @@ interface TreeMember {
 
 interface TreeNode extends TreeMember {
   children: TreeNode[];
+  total_team: number;
+  active_team: number;
 }
 
 interface BreadcrumbItem {
@@ -35,18 +37,34 @@ interface BreadcrumbItem {
   full_name: string;
 }
 
+const computeStats = (node: TreeNode): { total: number; active: number } => {
+  let total = 0;
+  let active = 0;
+  for (const child of node.children) {
+    total += 1;
+    if (child.subscription_paid) active += 1;
+    const sub = computeStats(child);
+    total += sub.total;
+    active += sub.active;
+  }
+  node.total_team = total;
+  node.active_team = active;
+  return { total, active };
+};
+
 const buildTree = (flatList: TreeMember[]): TreeNode | null => {
   if (flatList.length === 0) return null;
-  const root = { ...flatList[0], children: [] as TreeNode[] };
+  const root: TreeNode = { ...flatList[0], children: [], total_team: 0, active_team: 0 };
   const map = new Map<string, TreeNode>();
   map.set(root.profile_id, root);
 
   for (let i = 1; i < flatList.length; i++) {
-    const node: TreeNode = { ...flatList[i], children: [] };
+    const node: TreeNode = { ...flatList[i], children: [], total_team: 0, active_team: 0 };
     map.set(node.profile_id, node);
     const parent = node.referred_by ? map.get(node.referred_by) : null;
     if (parent) parent.children.push(node);
   }
+  computeStats(root);
   return root;
 };
 
@@ -174,9 +192,15 @@ const TreeNodeCard = ({
           {/* Actions */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {node.direct_referral_count > 0 && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              <div className="flex items-center gap-1 text-xs bg-amber-500/10 text-amber-600 px-2 py-1 rounded-full" title="Direct Referrals">
                 <Users className="h-3 w-3" />
                 <span>{node.direct_referral_count}</span>
+              </div>
+            )}
+            {node.total_team > 0 && (
+              <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full" title="Active / Total Team">
+                <Users className="h-3 w-3" />
+                <span>{node.active_team}/{node.total_team}</span>
               </div>
             )}
             <Badge
