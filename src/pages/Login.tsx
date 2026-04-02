@@ -72,7 +72,7 @@ const Login = () => {
       <form onSubmit={handleSubmit} className="space-y-5 p-6 rounded-xl bg-white border border-border shadow-lg">
         <div>
           <Label htmlFor="identifier" className="text-foreground text-sm font-medium">
-            Email Address or Referral ID
+            Email Address or VM ID
           </Label>
           <Input
             id="identifier"
