@@ -27,6 +27,8 @@ interface TreeMember {
 
 interface TreeNode extends TreeMember {
   children: TreeNode[];
+  total_team: number;
+  active_team: number;
 }
 
 interface BreadcrumbItem {
@@ -40,7 +42,7 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
   // For admin: multiple roots possible (referred_by IS NULL)
   const nodesMap = new Map<string, TreeNode>();
   flatList.forEach((m) => {
-    nodesMap.set(m.profile_id, { ...m, children: [] });
+    nodesMap.set(m.profile_id, { ...m, children: [], total_team: 0, active_team: 0 });
   });
 
   const roots: TreeNode[] = [];
@@ -52,6 +54,23 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
       roots.push(node);
     }
   });
+
+  // Compute total_team and active_team bottom-up
+  const computeStats = (node: TreeNode): { total: number; active: number } => {
+    let total = 0;
+    let active = 0;
+    for (const child of node.children) {
+      total += 1;
+      if (child.subscription_paid) active += 1;
+      const sub = computeStats(child);
+      total += sub.total;
+      active += sub.active;
+    }
+    node.total_team = total;
+    node.active_team = active;
+    return { total, active };
+  };
+  roots.forEach(computeStats);
 
   // If single root, return it. If multiple, wrap in virtual root.
   if (roots.length === 1) return roots[0];
@@ -67,6 +86,8 @@ const buildTree = (flatList: TreeMember[]): TreeNode | null => {
     avatar_url: null,
     referred_by: null,
     direct_referral_count: roots.length,
+    total_team: 0,
+    active_team: 0,
     depth: 0,
     children: roots.map((r) => ({ ...r, depth: 1, children: r.children.map(c => adjustDepth(c, 1)) })),
   };
@@ -198,10 +219,10 @@ const TreeNodeCard = ({
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {node.direct_referral_count > 0 && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+            {node.total_team > 0 && (
+              <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full" title="Total Team / Active Team">
                 <Users className="h-3 w-3" />
-                <span>{node.direct_referral_count}</span>
+                <span>{node.active_team}/{node.total_team}</span>
               </div>
             )}
             <Badge
@@ -210,7 +231,7 @@ const TreeNodeCard = ({
             >
               {node.subscription_paid ? "Active" : "Inactive"}
             </Badge>
-            {node.direct_referral_count > 0 && (
+            {node.total_team > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
