@@ -219,8 +219,14 @@ const TreeNodeCard = ({
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            {node.direct_referral_count > 0 && (
+              <div className="flex items-center gap-1 text-xs bg-amber-500/10 text-amber-600 px-2 py-1 rounded-full" title="Direct Referrals">
+                <Users className="h-3 w-3" />
+                <span>{node.direct_referral_count}</span>
+              </div>
+            )}
             {node.total_team > 0 && (
-              <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full" title="Total Team / Active Team">
+              <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded-full" title="Active / Total Team">
                 <Users className="h-3 w-3" />
                 <span>{node.active_team}/{node.total_team}</span>
               </div>
