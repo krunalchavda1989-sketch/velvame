@@ -37,18 +37,34 @@ interface BreadcrumbItem {
   full_name: string;
 }
 
+const computeStats = (node: TreeNode): { total: number; active: number } => {
+  let total = 0;
+  let active = 0;
+  for (const child of node.children) {
+    total += 1;
+    if (child.subscription_paid) active += 1;
+    const sub = computeStats(child);
+    total += sub.total;
+    active += sub.active;
+  }
+  node.total_team = total;
+  node.active_team = active;
+  return { total, active };
+};
+
 const buildTree = (flatList: TreeMember[]): TreeNode | null => {
   if (flatList.length === 0) return null;
-  const root = { ...flatList[0], children: [] as TreeNode[] };
+  const root: TreeNode = { ...flatList[0], children: [], total_team: 0, active_team: 0 };
   const map = new Map<string, TreeNode>();
   map.set(root.profile_id, root);
 
   for (let i = 1; i < flatList.length; i++) {
-    const node: TreeNode = { ...flatList[i], children: [] };
+    const node: TreeNode = { ...flatList[i], children: [], total_team: 0, active_team: 0 };
     map.set(node.profile_id, node);
     const parent = node.referred_by ? map.get(node.referred_by) : null;
     if (parent) parent.children.push(node);
   }
+  computeStats(root);
   return root;
 };
 
