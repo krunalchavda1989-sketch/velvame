@@ -161,7 +161,7 @@ const AdminOrders = () => {
     }
 
     return result;
-  }, [orders, datePreset, statusFilter, searchQuery]);
+  }, [orders, datePreset, statusFilter, searchQuery, customFrom, customTo]);
 
   // Status counts (from filtered-by-date orders, not status-filtered)
   const counts = useMemo(() => {
