@@ -984,8 +984,6 @@ const AdminManualOrder = () => {
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 ) : remainingAmount <= 0 && useWallet ? (
                   <Wallet className="h-4 w-4 mr-2" />
-                ) : sendPaymentLink ? (
-                  <Send className="h-4 w-4 mr-2" />
                 ) : (
                   <ShoppingBag className="h-4 w-4 mr-2" />
                 )}
@@ -993,9 +991,7 @@ const AdminManualOrder = () => {
                   ? "Creating order..."
                   : remainingAmount <= 0 && useWallet
                     ? `Create Order (Wallet) — ₹${totalAmount.toFixed(2)}`
-                    : sendPaymentLink
-                      ? `Create Order & Send Link — ₹${remainingAmount.toFixed(2)}`
-                      : `Create Order — ₹${remainingAmount > 0 ? remainingAmount.toFixed(2) : totalAmount.toFixed(2)}`}
+                    : `Create Order — ₹${remainingAmount > 0 ? remainingAmount.toFixed(2) : totalAmount.toFixed(2)}`}
               </Button>
             </div>
           </div>
