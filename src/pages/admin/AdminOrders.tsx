@@ -194,7 +194,7 @@ const AdminOrders = () => {
       delivered: base.filter((o) => o.status === "delivered").length,
       cancelled: base.filter((o) => o.status === "cancelled").length,
     };
-  }, [orders, datePreset, searchQuery]);
+  }, [orders, datePreset, searchQuery, customFrom, customTo]);
 
   const handleCancelOrder = async (orderId: string) => {
     try {
