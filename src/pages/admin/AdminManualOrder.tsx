@@ -913,48 +913,30 @@ const AdminManualOrder = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
-                        <SelectItem value="razorpay">Razorpay (Online)</SelectItem>
                         <SelectItem value="cod">Cash on Delivery</SelectItem>
                         <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                         <SelectItem value="manual">Manual / Cash</SelectItem>
                       </SelectContent>
                     </Select>
 
-                    {["manual", "bank_transfer", "cod"].includes(paymentMethod) && (
-                      <div className="space-y-2">
-                        <Label className="text-sm text-muted-foreground">
-                          Payment Note <span className="text-xs">(optional)</span>
-                        </Label>
-                        <Textarea
-                          placeholder={
-                            paymentMethod === "bank_transfer"
-                              ? "e.g., Transaction ID, bank name, transfer date..."
-                              : paymentMethod === "cod"
-                                ? "e.g., Expected delivery date, collection notes..."
-                                : "e.g., Cash received by, receipt number..."
-                          }
-                          value={paymentNote}
-                          onChange={(e) => setPaymentNote(e.target.value)}
-                          className="bg-secondary border-border resize-none"
-                          rows={2}
-                        />
-                      </div>
-                    )}
-
-                    {paymentMethod === "razorpay" && (
-                      <div className="flex items-center gap-3 pt-2">
-                        <input
-                          type="checkbox"
-                          id="sendLink"
-                          checked={sendPaymentLink}
-                          onChange={(e) => setSendPaymentLink(e.target.checked)}
-                          className="rounded border-border"
-                        />
-                        <Label htmlFor="sendLink" className="text-sm text-foreground cursor-pointer">
-                          Send payment link to user's email
-                        </Label>
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">
+                        Payment Note <span className="text-xs">(optional)</span>
+                      </Label>
+                      <Textarea
+                        placeholder={
+                          paymentMethod === "bank_transfer"
+                            ? "e.g., Transaction ID, bank name, transfer date..."
+                            : paymentMethod === "cod"
+                              ? "e.g., Expected delivery date, collection notes..."
+                              : "e.g., Cash received by, receipt number..."
+                        }
+                        value={paymentNote}
+                        onChange={(e) => setPaymentNote(e.target.value)}
+                        className="bg-secondary border-border resize-none"
+                        rows={2}
+                      />
+                    </div>
                   </>
                 )}
               </div>
