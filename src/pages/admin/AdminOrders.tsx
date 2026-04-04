@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw, Eye, ShoppingBag } from "lucide-react";
+import { Coins, RefreshCw, Eye, ShoppingBag, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import type { OrderEmailType } from "@/lib/orderEmail";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
@@ -16,6 +26,8 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; orderNumber: string; userName: string; walletUsed: number } | null>(null);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -96,10 +108,21 @@ const AdminOrders = () => {
     }
   };
 
+  const confirmCancelOrder = (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    setCancelTarget({
+      id: orderId,
+      orderNumber: order.order_number || orderId.slice(0, 8),
+      userName: order.profile?.full_name || "Unknown",
+      walletUsed: order.wallet_amount_used || 0,
+    });
+    setCancelDialogOpen(true);
+  };
+
   const updateStatus = async (id: string, status: string) => {
     if (status === "cancelled") {
-      await handleCancelOrder(id);
-      sendOrderEmail(id, "order_cancelled");
+      confirmCancelOrder(id);
       return;
     }
 
@@ -302,6 +325,43 @@ const AdminOrders = () => {
             </div>
           </div>
         )}
+
+        {/* Cancel Confirmation Dialog */}
+        <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <AlertDialogContent className="bg-card border-border">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Cancel Order?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2 text-muted-foreground">
+                <p>
+                  Are you sure you want to cancel order <strong className="text-foreground">{cancelTarget?.orderNumber}</strong> for <strong className="text-foreground">{cancelTarget?.userName}</strong>?
+                </p>
+                {cancelTarget && cancelTarget.walletUsed > 0 && (
+                  <p className="text-sm bg-accent/50 border border-accent rounded-lg p-2">
+                    ₹{cancelTarget.walletUsed.toFixed(2)} wallet balance will be refunded automatically.
+                  </p>
+                )}
+                <p className="text-xs">This action cannot be undone. Stock will be restored and commissions will not be refunded.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="border-border">Keep Order</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (!cancelTarget) return;
+                  await handleCancelOrder(cancelTarget.id);
+                  sendOrderEmail(cancelTarget.id, "order_cancelled");
+                  setCancelTarget(null);
+                }}
+              >
+                Yes, Cancel Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

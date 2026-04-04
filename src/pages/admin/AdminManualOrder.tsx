@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search } from "lucide-react";
+import { Plus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -36,8 +36,8 @@ const AdminManualOrder = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
-  const [sendPaymentLink, setSendPaymentLink] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
@@ -298,6 +298,7 @@ const AdminManualOrder = () => {
       const effectivePaymentMethod = remainingAmount <= 0 ? "wallet" : paymentMethod;
       const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -360,21 +361,6 @@ const AdminManualOrder = () => {
         });
       }
 
-      if (sendPaymentLink && effectivePaymentMethod === "razorpay" && remainingAmount > 0) {
-        try {
-          await supabase.functions.invoke("send-payment-link", {
-            body: {
-              order_id: order.id,
-              user_id: selectedUserId,
-              amount: remainingAmount,
-            },
-          });
-          toast.success("Payment link sent to user's email!");
-        } catch {
-          toast.warning("Order created but payment link could not be sent.");
-        }
-      }
-
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
@@ -383,8 +369,7 @@ const AdminManualOrder = () => {
 
       setSelectedUserId("");
       setOrderItems([]);
-      setPaymentMethod("razorpay");
-      setSendPaymentLink(false);
+      setPaymentMethod("cod");
       setUseWallet(false);
       setPaymentNote("");
       setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
@@ -928,48 +913,30 @@ const AdminManualOrder = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border">
-                        <SelectItem value="razorpay">Razorpay (Online)</SelectItem>
                         <SelectItem value="cod">Cash on Delivery</SelectItem>
                         <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                         <SelectItem value="manual">Manual / Cash</SelectItem>
                       </SelectContent>
                     </Select>
 
-                    {["manual", "bank_transfer", "cod"].includes(paymentMethod) && (
-                      <div className="space-y-2">
-                        <Label className="text-sm text-muted-foreground">
-                          Payment Note <span className="text-xs">(optional)</span>
-                        </Label>
-                        <Textarea
-                          placeholder={
-                            paymentMethod === "bank_transfer"
-                              ? "e.g., Transaction ID, bank name, transfer date..."
-                              : paymentMethod === "cod"
-                                ? "e.g., Expected delivery date, collection notes..."
-                                : "e.g., Cash received by, receipt number..."
-                          }
-                          value={paymentNote}
-                          onChange={(e) => setPaymentNote(e.target.value)}
-                          className="bg-secondary border-border resize-none"
-                          rows={2}
-                        />
-                      </div>
-                    )}
-
-                    {paymentMethod === "razorpay" && (
-                      <div className="flex items-center gap-3 pt-2">
-                        <input
-                          type="checkbox"
-                          id="sendLink"
-                          checked={sendPaymentLink}
-                          onChange={(e) => setSendPaymentLink(e.target.checked)}
-                          className="rounded border-border"
-                        />
-                        <Label htmlFor="sendLink" className="text-sm text-foreground cursor-pointer">
-                          Send payment link to user's email
-                        </Label>
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">
+                        Payment Note <span className="text-xs">(optional)</span>
+                      </Label>
+                      <Textarea
+                        placeholder={
+                          paymentMethod === "bank_transfer"
+                            ? "e.g., Transaction ID, bank name, transfer date..."
+                            : paymentMethod === "cod"
+                              ? "e.g., Expected delivery date, collection notes..."
+                              : "e.g., Cash received by, receipt number..."
+                        }
+                        value={paymentNote}
+                        onChange={(e) => setPaymentNote(e.target.value)}
+                        className="bg-secondary border-border resize-none"
+                        rows={2}
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -1017,8 +984,6 @@ const AdminManualOrder = () => {
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 ) : remainingAmount <= 0 && useWallet ? (
                   <Wallet className="h-4 w-4 mr-2" />
-                ) : sendPaymentLink ? (
-                  <Send className="h-4 w-4 mr-2" />
                 ) : (
                   <ShoppingBag className="h-4 w-4 mr-2" />
                 )}
@@ -1026,9 +991,7 @@ const AdminManualOrder = () => {
                   ? "Creating order..."
                   : remainingAmount <= 0 && useWallet
                     ? `Create Order (Wallet) — ₹${totalAmount.toFixed(2)}`
-                    : sendPaymentLink
-                      ? `Create Order & Send Link — ₹${remainingAmount.toFixed(2)}`
-                      : `Create Order — ₹${remainingAmount > 0 ? remainingAmount.toFixed(2) : totalAmount.toFixed(2)}`}
+                    : `Create Order — ₹${remainingAmount > 0 ? remainingAmount.toFixed(2) : totalAmount.toFixed(2)}`}
               </Button>
             </div>
           </div>
