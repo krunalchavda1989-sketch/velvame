@@ -191,6 +191,13 @@ const AdminOrders = () => {
     return result;
   }, [orders, datePreset, statusFilter, searchQuery, customFrom, customTo]);
 
+  // Reset page when filters change
+  const totalPages = Math.ceil(filteredOrders.length / pageSize);
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredOrders.slice(start, start + pageSize);
+  }, [filteredOrders, currentPage, pageSize]);
+
   // Status counts (from filtered-by-date orders, not status-filtered)
   const counts = useMemo(() => {
     let base = orders;
