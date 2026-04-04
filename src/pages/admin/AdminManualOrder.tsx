@@ -34,6 +34,8 @@ const AdminManualOrder = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [sendPaymentLink, setSendPaymentLink] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
