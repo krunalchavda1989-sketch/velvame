@@ -68,7 +68,19 @@ const AdminOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [datePreset, setDatePreset] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
   const navigate = useNavigate();
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setDatePreset("all");
+    setStatusFilter("all");
+    setCustomFrom(undefined);
+    setCustomTo(undefined);
+  };
+
+  const hasActiveFilters = searchQuery.trim() !== "" || datePreset !== "all" || statusFilter !== "all";
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
