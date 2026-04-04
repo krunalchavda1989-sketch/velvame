@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -34,6 +34,8 @@ const AdminManualOrder = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [sendPaymentLink, setSendPaymentLink] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -381,18 +383,61 @@ const AdminManualOrder = () => {
           {/* User Selection */}
           <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
             <h2 className="font-semibold text-foreground">Select User</h2>
-            <Select value={selectedUserId} onValueChange={(v) => { setSelectedUserId(v); setPaymentMethod("razorpay"); setUseWallet(false); setPaymentNote(""); }}>
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue placeholder="Choose a user..." />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border max-h-60">
-                {users.map((u) => (
-                  <SelectItem key={u.user_id} value={u.user_id}>
-                    {u.full_name || "Unnamed"} ({u.referral_code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search by name or referral code..."
+                value={userSearchQuery}
+                onChange={(e) => { setUserSearchQuery(e.target.value); setUserDropdownOpen(true); }}
+                onFocus={() => setUserDropdownOpen(true)}
+                className="pl-9 bg-secondary border-border"
+              />
+              {selectedUserId && (
+                <button
+                  type="button"
+                  onClick={() => { setSelectedUserId(""); setUserSearchQuery(""); setPaymentMethod("razorpay"); setUseWallet(false); setPaymentNote(""); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {userDropdownOpen && !selectedUserId && (
+              <div className="max-h-52 overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
+                {users
+                  .filter((u) => {
+                    if (!userSearchQuery.trim()) return true;
+                    const q = userSearchQuery.toLowerCase();
+                    return (u.full_name || "").toLowerCase().includes(q) || (u.referral_code || "").toLowerCase().includes(q);
+                  })
+                  .slice(0, 50)
+                  .map((u) => (
+                    <button
+                      key={u.user_id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedUserId(u.user_id);
+                        setUserSearchQuery(`${u.full_name || "Unnamed"} (${u.referral_code})`);
+                        setUserDropdownOpen(false);
+                        setPaymentMethod("razorpay");
+                        setUseWallet(false);
+                        setPaymentNote("");
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary/80 transition-colors flex items-center justify-between"
+                    >
+                      <span className="text-foreground">{u.full_name || "Unnamed"}</span>
+                      <Badge variant="outline" className="text-xs ml-2">{u.referral_code}</Badge>
+                    </button>
+                  ))}
+                {users.filter((u) => {
+                  if (!userSearchQuery.trim()) return true;
+                  const q = userSearchQuery.toLowerCase();
+                  return (u.full_name || "").toLowerCase().includes(q) || (u.referral_code || "").toLowerCase().includes(q);
+                }).length === 0 && (
+                  <div className="px-4 py-3 text-sm text-muted-foreground text-center">No users found</div>
+                )}
+              </div>
+            )}
 
             {/* Wallet Balance Display */}
             {selectedUserId && (
