@@ -36,8 +36,8 @@ const AdminManualOrder = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
-  const [sendPaymentLink, setSendPaymentLink] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
