@@ -505,12 +505,14 @@ const AdminManualOrder = () => {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-muted-foreground">Price (₹)</Label>
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                            Price (₹) <Lock className="h-3 w-3 text-muted-foreground" />
+                          </Label>
                           <Input
                             type="number"
                             value={item.price}
-                            onChange={(e) => updateItem(index, "price", parseFloat(e.target.value) || 0)}
-                            className="mt-1 bg-background border-border"
+                            disabled
+                            className="mt-1 bg-muted border-border cursor-not-allowed opacity-70"
                           />
                         </div>
                       </div>
