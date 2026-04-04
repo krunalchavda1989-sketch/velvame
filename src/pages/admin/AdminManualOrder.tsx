@@ -298,6 +298,7 @@ const AdminManualOrder = () => {
       const effectivePaymentMethod = remainingAmount <= 0 ? "wallet" : paymentMethod;
       const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
