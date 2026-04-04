@@ -361,21 +361,6 @@ const AdminManualOrder = () => {
         });
       }
 
-      if (sendPaymentLink && effectivePaymentMethod === "razorpay" && remainingAmount > 0) {
-        try {
-          await supabase.functions.invoke("send-payment-link", {
-            body: {
-              order_id: order.id,
-              user_id: selectedUserId,
-              amount: remainingAmount,
-            },
-          });
-          toast.success("Payment link sent to user's email!");
-        } catch {
-          toast.warning("Order created but payment link could not be sent.");
-        }
-      }
-
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
