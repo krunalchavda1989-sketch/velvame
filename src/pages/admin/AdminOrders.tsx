@@ -325,6 +325,43 @@ const AdminOrders = () => {
             </div>
           </div>
         )}
+
+        {/* Cancel Confirmation Dialog */}
+        <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <AlertDialogContent className="bg-card border-border">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Cancel Order?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2 text-muted-foreground">
+                <p>
+                  Are you sure you want to cancel order <strong className="text-foreground">{cancelTarget?.orderNumber}</strong> for <strong className="text-foreground">{cancelTarget?.userName}</strong>?
+                </p>
+                {cancelTarget && cancelTarget.walletUsed > 0 && (
+                  <p className="text-sm bg-accent/50 border border-accent rounded-lg p-2">
+                    ₹{cancelTarget.walletUsed.toFixed(2)} wallet balance will be refunded automatically.
+                  </p>
+                )}
+                <p className="text-xs">This action cannot be undone. Stock will be restored and commissions will not be refunded.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="border-border">Keep Order</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (!cancelTarget) return;
+                  await handleCancelOrder(cancelTarget.id);
+                  sendOrderEmail(cancelTarget.id, "order_cancelled");
+                  setCancelTarget(null);
+                }}
+              >
+                Yes, Cancel Order
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
