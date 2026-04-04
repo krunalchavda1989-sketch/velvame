@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin } from "lucide-react";
+import { Plus, Trash2, Send, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -41,6 +41,10 @@ const AdminManualOrder = () => {
   const [walletLoading, setWalletLoading] = useState(false);
   const [useWallet, setUseWallet] = useState(false);
   const [paymentNote, setPaymentNote] = useState("");
+
+  // Admin discount state
+  const [discountType, setDiscountType] = useState<"percentage" | "amount">("percentage");
+  const [discountValue, setDiscountValue] = useState<number>(0);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
@@ -142,17 +146,26 @@ const AdminManualOrder = () => {
 
   const subtotalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Coupon discount calculation
+  // Admin discount calculation
+  const adminDiscount = discountValue > 0
+    ? discountType === "percentage"
+      ? Math.min((subtotalAmount * discountValue) / 100, subtotalAmount)
+      : Math.min(discountValue, subtotalAmount)
+    : 0;
+
+  const afterAdminDiscount = Math.max(0, subtotalAmount - adminDiscount);
+
+  // Coupon discount calculation (applied after admin discount)
   const couponDiscount = appliedCoupon
     ? appliedCoupon.discount_type === "percentage"
       ? Math.min(
-          (subtotalAmount * appliedCoupon.discount_value) / 100,
+          (afterAdminDiscount * appliedCoupon.discount_value) / 100,
           appliedCoupon.max_discount_amount > 0 ? appliedCoupon.max_discount_amount : Infinity
         )
-      : appliedCoupon.discount_value
+      : Math.min(appliedCoupon.discount_value, afterAdminDiscount)
     : 0;
 
-  const totalAmount = Math.max(0, subtotalAmount - couponDiscount);
+  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount);
 
   // Wallet usage calculation
   const walletAmountToUse = useWallet && userWallet
@@ -332,6 +345,8 @@ const AdminManualOrder = () => {
       setPaymentNote("");
       setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
       removeCoupon();
+      setDiscountType("percentage");
+      setDiscountValue(0);
     } catch (err: any) {
       toast.error(err.message || "Failed to create order");
     } finally {
@@ -492,12 +507,14 @@ const AdminManualOrder = () => {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-muted-foreground">Price (₹)</Label>
+                          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                            Price (₹) <Lock className="h-3 w-3 text-muted-foreground" />
+                          </Label>
                           <Input
                             type="number"
                             value={item.price}
-                            onChange={(e) => updateItem(index, "price", parseFloat(e.target.value) || 0)}
-                            className="mt-1 bg-background border-border"
+                            disabled
+                            className="mt-1 bg-muted border-border cursor-not-allowed opacity-70"
                           />
                         </div>
                       </div>
@@ -516,6 +533,14 @@ const AdminManualOrder = () => {
                   <span className="text-sm text-muted-foreground mr-2">Subtotal:</span>
                   <span className="font-medium text-foreground">₹{subtotalAmount.toFixed(2)}</span>
                 </div>
+                {adminDiscount > 0 && (
+                  <div className="flex justify-end">
+                    <span className="text-sm text-accent-foreground mr-2">
+                      Admin Discount ({discountType === "percentage" ? `${discountValue}%` : `₹${discountValue}`}):
+                    </span>
+                    <span className="font-medium text-accent-foreground">-₹{adminDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {appliedCoupon && couponDiscount > 0 && (
                   <div className="flex justify-end">
                     <span className="text-sm text-green-600 mr-2">Coupon ({appliedCoupon.code}):</span>
@@ -526,6 +551,56 @@ const AdminManualOrder = () => {
                   <span className="text-sm text-muted-foreground mr-2">Total:</span>
                   <span className="font-bold text-primary">₹{totalAmount.toFixed(2)}</span>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Admin Discount */}
+          <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+            <div className="flex items-center gap-2">
+              <Percent className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Admin Discount</h2>
+            </div>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">Discount Type</Label>
+                <Select value={discountType} onValueChange={(v) => setDiscountType(v as "percentage" | "amount")}>
+                  <SelectTrigger className="bg-secondary border-border mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="percentage">Percentage (%)</SelectItem>
+                    <SelectItem value="amount">Fixed Amount (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">
+                  {discountType === "percentage" ? "Percentage" : "Amount (₹)"}
+                </Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={discountType === "percentage" ? 100 : undefined}
+                  step={discountType === "percentage" ? 1 : 0.01}
+                  value={discountValue || ""}
+                  placeholder="0"
+                  onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                  className="mt-1 bg-secondary border-border"
+                />
+              </div>
+              {discountValue > 0 && (
+                <Button variant="ghost" size="icon" className="text-destructive h-9 w-9" onClick={() => setDiscountValue(0)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {adminDiscount > 0 && (
+              <div className="p-2.5 rounded-lg bg-accent/50 border border-accent">
+                <p className="text-sm font-medium text-accent-foreground">
+                  Discount: ₹{adminDiscount.toFixed(2)} off
+                  {discountType === "percentage" && ` (${discountValue}% of ₹${subtotalAmount.toFixed(2)})`}
+                </p>
               </div>
             )}
           </div>
@@ -796,6 +871,12 @@ const AdminManualOrder = () => {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="text-foreground">₹{subtotalAmount.toFixed(2)}</span>
                   </div>
+                  {adminDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-accent-foreground">Admin Discount</span>
+                      <span className="text-accent-foreground">-₹{adminDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   {appliedCoupon && couponDiscount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-green-600">Coupon ({appliedCoupon.code})</span>
