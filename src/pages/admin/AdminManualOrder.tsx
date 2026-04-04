@@ -155,13 +155,19 @@ const AdminManualOrder = () => {
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
+  // Helper to get the correct base price based on user's pricing tier
+  const getBasePrice = (product: any) => {
+    if (!product) return 0;
+    return priceType === "distributor" ? (product.distributor_price || product.retail_price) : product.retail_price;
+  };
+
   const updateItem = (index: number, field: string, value: any) => {
     const updated = [...orderItems];
     updated[index] = { ...updated[index], [field]: value };
     if (field === "product_id") {
       const product = products.find((p) => p.id === value);
       if (product) {
-        updated[index].price = product.retail_price;
+        updated[index].price = getBasePrice(product);
         updated[index].variation_id = "";
         updated[index].variation_label = "";
       }
@@ -171,7 +177,7 @@ const AdminManualOrder = () => {
       const selectedVar = vars.find((v: any) => v.id === value);
       if (selectedVar) {
         const product = products.find((p) => p.id === updated[index].product_id);
-        const basePrice = product?.retail_price || 0;
+        const basePrice = getBasePrice(product);
         updated[index].price = basePrice + Number(selectedVar.price_adjustment);
         updated[index].variation_label = `${selectedVar.attribute_name}: ${selectedVar.attribute_value}`;
       }
