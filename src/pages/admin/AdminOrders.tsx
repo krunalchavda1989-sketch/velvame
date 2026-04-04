@@ -224,8 +224,8 @@ const AdminOrders = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/50">
-                     <th className="text-left p-3 text-muted-foreground font-medium"></th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Type</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
@@ -234,17 +234,20 @@ const AdminOrders = () => {
                     <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {orders.map((o) => (
                     <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="p-3">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate(`/admin/orders/${o.id}`)}>
-                          <Eye className="w-3 h-3" /> View
-                        </Button>
-                      </td>
                       <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
+                      <td className="p-3">
+                        {o.order_source === "manual" ? (
+                          <Badge variant="outline" className="text-[10px] bg-accent/10 text-accent-foreground border-accent/20">Manual</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">User</Badge>
+                        )}
+                      </td>
                       <td className="p-3">
                         <div className="flex items-center -space-x-2">
                           {(o.products || []).slice(0, 3).map((p: any, idx: number) => (
@@ -317,6 +320,11 @@ const AdminOrders = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                      </td>
+                      <td className="p-3">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate(`/admin/orders/${o.id}`)}>
+                          <Eye className="w-3 h-3" /> View
+                        </Button>
                       </td>
                     </tr>
                   ))}

@@ -1815,6 +1815,7 @@ export type Database = {
           is_first_order: boolean | null
           is_repurchase: boolean
           order_number: string | null
+          order_source: string
           payment_method: string | null
           price_type_used: string | null
           razorpay_amount: number
@@ -1832,6 +1833,7 @@ export type Database = {
           is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
+          order_source?: string
           payment_method?: string | null
           price_type_used?: string | null
           razorpay_amount?: number
@@ -1849,6 +1851,7 @@ export type Database = {
           is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
+          order_source?: string
           payment_method?: string | null
           price_type_used?: string | null
           razorpay_amount?: number
