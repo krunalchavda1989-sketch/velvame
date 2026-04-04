@@ -33,6 +33,7 @@ const datePresets = [
   { label: "Quarter", value: "quarter" },
   { label: "Half Year", value: "half_year" },
   { label: "Year to Date", value: "ytd" },
+  { label: "Custom", value: "custom" },
 ];
 
 const getDateStart = (preset: string): Date | null => {
