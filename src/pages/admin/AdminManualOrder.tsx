@@ -146,17 +146,26 @@ const AdminManualOrder = () => {
 
   const subtotalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Coupon discount calculation
+  // Admin discount calculation
+  const adminDiscount = discountValue > 0
+    ? discountType === "percentage"
+      ? Math.min((subtotalAmount * discountValue) / 100, subtotalAmount)
+      : Math.min(discountValue, subtotalAmount)
+    : 0;
+
+  const afterAdminDiscount = Math.max(0, subtotalAmount - adminDiscount);
+
+  // Coupon discount calculation (applied after admin discount)
   const couponDiscount = appliedCoupon
     ? appliedCoupon.discount_type === "percentage"
       ? Math.min(
-          (subtotalAmount * appliedCoupon.discount_value) / 100,
+          (afterAdminDiscount * appliedCoupon.discount_value) / 100,
           appliedCoupon.max_discount_amount > 0 ? appliedCoupon.max_discount_amount : Infinity
         )
-      : appliedCoupon.discount_value
+      : Math.min(appliedCoupon.discount_value, afterAdminDiscount)
     : 0;
 
-  const totalAmount = Math.max(0, subtotalAmount - couponDiscount);
+  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount);
 
   // Wallet usage calculation
   const walletAmountToUse = useWallet && userWallet
