@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw, Eye, ShoppingBag } from "lucide-react";
+import { Coins, RefreshCw, Eye, ShoppingBag, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import type { OrderEmailType } from "@/lib/orderEmail";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
@@ -16,6 +26,8 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; orderNumber: string; userName: string; walletUsed: number } | null>(null);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
