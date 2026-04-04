@@ -44,6 +44,11 @@ const AdminManualOrder = () => {
   const [useWallet, setUseWallet] = useState(false);
   const [paymentNote, setPaymentNote] = useState("");
 
+  // First order & pricing state
+  const [isUserFirstOrder, setIsUserFirstOrder] = useState(true);
+  const [isUserSubscriber, setIsUserSubscriber] = useState(false);
+  const [priceType, setPriceType] = useState<"retail" | "distributor">("retail");
+
   // Admin discount state
   const [discountType, setDiscountType] = useState<"percentage" | "amount">("percentage");
   const [discountValue, setDiscountValue] = useState<number>(0);
