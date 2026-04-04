@@ -369,8 +369,7 @@ const AdminManualOrder = () => {
 
       setSelectedUserId("");
       setOrderItems([]);
-      setPaymentMethod("razorpay");
-      setSendPaymentLink(false);
+      setPaymentMethod("cod");
       setUseWallet(false);
       setPaymentNote("");
       setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
