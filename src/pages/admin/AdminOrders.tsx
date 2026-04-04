@@ -1,26 +1,58 @@
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Coins, RefreshCw, Eye, ShoppingBag, AlertTriangle } from "lucide-react";
+import {
+  Coins, RefreshCw, Eye, ShoppingBag, AlertTriangle, Search,
+  Package, XCircle, Truck, PackageCheck, Clock, CheckCircle, Archive, CalendarDays,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { sendOrderEmail } from "@/lib/orderEmail";
 import type { OrderEmailType } from "@/lib/orderEmail";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { startOfDay, startOfWeek, startOfMonth, startOfQuarter, startOfYear, subMonths } from "date-fns";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+
+const datePresets = [
+  { label: "All", value: "all" },
+  { label: "Today", value: "today" },
+  { label: "This Week", value: "week" },
+  { label: "This Month", value: "month" },
+  { label: "Quarter", value: "quarter" },
+  { label: "Half Year", value: "half_year" },
+  { label: "Year to Date", value: "ytd" },
+];
+
+const getDateStart = (preset: string): Date | null => {
+  const now = new Date();
+  switch (preset) {
+    case "today": return startOfDay(now);
+    case "week": return startOfWeek(now, { weekStartsOn: 1 });
+    case "month": return startOfMonth(now);
+    case "quarter": return startOfQuarter(now);
+    case "half_year": return subMonths(now, 6);
+    case "ytd": return startOfYear(now);
+    default: return null;
+  }
+};
+
+const statCards = [
+  { key: "total", label: "Total Orders", icon: Package, color: "#4f46e5" },
+  { key: "pending", label: "Pending", icon: Clock, color: "#f59e0b" },
+  { key: "confirmed", label: "Confirmed", icon: CheckCircle, color: "#10b981" },
+  { key: "dispatched", label: "Dispatched", icon: Archive, color: "#6366f1" },
+  { key: "shipped", label: "Shipped", icon: Truck, color: "#3b82f6" },
+  { key: "delivered", label: "Delivered", icon: PackageCheck, color: "#059669" },
+  { key: "cancelled", label: "Cancelled", icon: XCircle, color: "#ef4444" },
+];
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -28,45 +60,34 @@ const AdminOrders = () => {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ id: string; orderNumber: string; userName: string; walletUsed: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [datePreset, setDatePreset] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from("orders").select("*").order("created_at", { ascending: false });
 
     const { data: profilesData } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, referral_code");
+      .from("profiles").select("user_id, full_name, referral_code");
     const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
 
-    // Check which orders already have commissions processed
-    const { data: commData } = await supabase
-      .from("commissions")
-      .select("order_id");
+    const { data: commData } = await supabase.from("commissions").select("order_id");
     const processedOrderIds = new Set((commData || []).map((c) => c.order_id));
 
-    // Fetch order items with product images
     const orderIds = (ordersData || []).map((o) => o.id);
     const { data: orderItemsData } = orderIds.length > 0
-      ? await supabase
-          .from("order_items")
-          .select("order_id, product_id")
-          .in("order_id", orderIds)
+      ? await supabase.from("order_items").select("order_id, product_id").in("order_id", orderIds)
       : { data: [] };
 
     const productIds = [...new Set((orderItemsData || []).map((i: any) => i.product_id))];
     let productMap = new Map<string, any>();
     if (productIds.length > 0) {
-      const { data: productsData } = await supabase
-        .from("products")
-        .select("id, name, image_url")
-        .in("id", productIds);
+      const { data: productsData } = await supabase.from("products").select("id, name, image_url").in("id", productIds);
       productMap = new Map((productsData || []).map((p: any) => [p.id, p]));
     }
 
-    // Group items by order
     const orderItemsMap = new Map<string, any[]>();
     (orderItemsData || []).forEach((item: any) => {
       const existing = orderItemsMap.get(item.order_id) || [];
@@ -88,14 +109,63 @@ const AdminOrders = () => {
 
   useEffect(() => { fetchOrders(); }, []);
 
+  // Filtered orders
+  const filteredOrders = useMemo(() => {
+    let result = orders;
+
+    // Date filter
+    const dateStart = getDateStart(datePreset);
+    if (dateStart) {
+      result = result.filter((o) => new Date(o.created_at) >= dateStart);
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter((o) => o.status === statusFilter);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((o) =>
+        (o.order_number || "").toLowerCase().includes(q) ||
+        (o.profile?.full_name || "").toLowerCase().includes(q) ||
+        (o.profile?.referral_code || "").toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [orders, datePreset, statusFilter, searchQuery]);
+
+  // Status counts (from filtered-by-date orders, not status-filtered)
+  const counts = useMemo(() => {
+    let base = orders;
+    const dateStart = getDateStart(datePreset);
+    if (dateStart) base = base.filter((o) => new Date(o.created_at) >= dateStart);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      base = base.filter((o) =>
+        (o.order_number || "").toLowerCase().includes(q) ||
+        (o.profile?.full_name || "").toLowerCase().includes(q) ||
+        (o.profile?.referral_code || "").toLowerCase().includes(q)
+      );
+    }
+    return {
+      total: base.length,
+      pending: base.filter((o) => o.status === "pending").length,
+      confirmed: base.filter((o) => o.status === "confirmed").length,
+      dispatched: base.filter((o) => o.status === "dispatched").length,
+      shipped: base.filter((o) => o.status === "shipped").length,
+      delivered: base.filter((o) => o.status === "delivered").length,
+      cancelled: base.filter((o) => o.status === "cancelled").length,
+    };
+  }, [orders, datePreset, searchQuery]);
+
   const handleCancelOrder = async (orderId: string) => {
     try {
-      const { data: result, error } = await supabase.rpc("admin_cancel_order_and_refund" as any, {
-        _order_id: orderId,
-      });
+      const { data: result, error } = await supabase.rpc("admin_cancel_order_and_refund" as any, { _order_id: orderId });
       if (error) throw error;
       if (!result?.success) throw new Error(result?.error || "Cancel failed");
-
       if (result.refunded > 0) {
         toast.success(`Order cancelled. ₹${result.refunded} refunded to wallet.`);
       } else {
@@ -121,26 +191,14 @@ const AdminOrders = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    if (status === "cancelled") {
-      confirmCancelOrder(id);
-      return;
-    }
-
+    if (status === "cancelled") { confirmCancelOrder(id); return; }
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Order status updated to ${status}`);
-
-    // Send email based on status
     const emailMap: Record<string, OrderEmailType> = {
-      confirmed: "order_confirmed",
-      shipped: "order_shipped",
-      delivered: "order_delivered",
+      confirmed: "order_confirmed", shipped: "order_shipped", delivered: "order_delivered",
     };
-    if (emailMap[status]) {
-      sendOrderEmail(id, emailMap[status]);
-    }
-
-    // Auto-process commissions when order is confirmed
+    if (emailMap[status]) sendOrderEmail(id, emailMap[status]);
     if (status === "confirmed") {
       await processCommissions(id, true);
     } else {
@@ -153,7 +211,6 @@ const AdminOrders = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
-
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-commissions`,
         {
@@ -166,11 +223,8 @@ const AdminOrders = () => {
           body: JSON.stringify({ order_id: orderId }),
         }
       );
-
       const result = await response.json();
-
       if (!result.success) throw new Error(result.error);
-
       if (result.message === "Already processed") {
         if (!silent) toast.info("Commissions were already processed for this order.");
       } else if (result.commissions_distributed === 0) {
@@ -178,7 +232,7 @@ const AdminOrders = () => {
         else toast.info("Order confirmed. No referral chain found.");
       } else {
         toast.success(
-          `✅ ${result.commissions_distributed} commission${result.commissions_distributed > 1 ? "s" : ""} distributed — ₹${result.total_distributed} across ${result.commissions_distributed} level${result.commissions_distributed > 1 ? "s" : ""}`
+          `✅ ${result.commissions_distributed} commission${result.commissions_distributed > 1 ? "s" : ""} distributed — ₹${result.total_distributed}`
         );
       }
     } catch (err: any) {
@@ -201,23 +255,75 @@ const AdminOrders = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 lg:p-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Order Tracking</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Commissions are auto-processed when an order is confirmed.
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Commissions are auto-processed when an order is confirmed.</p>
           </div>
-          <Badge variant="outline" className="text-muted-foreground">{orders.length} orders</Badge>
+          <Badge variant="outline" className="text-muted-foreground">{filteredOrders.length} orders</Badge>
         </div>
 
+        {/* Colorful Stat Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+          {statCards.map((card) => {
+            const count = counts[card.key as keyof typeof counts] ?? 0;
+            const isActive = statusFilter === (card.key === "total" ? "all" : card.key);
+            return (
+              <button
+                key={card.key}
+                onClick={() => setStatusFilter(card.key === "total" ? "all" : card.key)}
+                className={`relative overflow-hidden rounded-xl p-4 text-white text-left transition-all hover:scale-[1.03] active:scale-[0.98] ${isActive ? "ring-2 ring-offset-2 ring-offset-background" : ""}`}
+                style={{
+                  background: `linear-gradient(135deg, ${card.color}, ${card.color}cc)`,
+                  boxShadow: `0 6px 20px -4px ${card.color}44`,
+                  ...(isActive ? { ringColor: card.color } : {}),
+                }}
+              >
+                <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-20" style={{ background: "white", transform: "translate(30%, -30%)" }} />
+                <card.icon className="h-5 w-5 mb-2 opacity-90" />
+                <div className="text-2xl font-bold leading-none">{count}</div>
+                <div className="text-[11px] mt-1 opacity-85 font-medium">{card.label}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search & Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, order number, or referral code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {datePresets.map((dp) => (
+              <Button
+                key={dp.value}
+                size="sm"
+                variant={datePreset === dp.value ? "default" : "outline"}
+                className={`h-9 text-xs ${datePreset === dp.value ? "" : "border-border text-muted-foreground"}`}
+                onClick={() => setDatePreset(dp.value)}
+              >
+                {dp.value !== "all" && <CalendarDays className="h-3 w-3 mr-1" />}
+                {dp.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Orders Table */}
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : orders.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground rounded-xl border border-border bg-card">No orders yet.</div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground rounded-xl border border-border bg-card">No orders found.</div>
         ) : (
           <div className="rounded-xl border border-border overflow-hidden">
             <div className="overflow-x-auto">
@@ -234,11 +340,11 @@ const AdminOrders = () => {
                     <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium"></th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {orders.map((o) => (
+                  {filteredOrders.map((o) => (
                     <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
                       <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
                       <td className="p-3">
@@ -286,24 +392,13 @@ const AdminOrders = () => {
                       <td className="p-3">
                         {o.commissions_processed ? (
                           <div className="flex items-center gap-1.5 text-xs text-success font-medium">
-                            <Coins className="w-3.5 h-3.5" />
-                            Distributed
+                            <Coins className="w-3.5 h-3.5" /> Distributed
                           </div>
                         ) : o.status === "cancelled" ? (
                           <span className="text-xs text-muted-foreground">N/A</span>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10"
-                            disabled={processingId === o.id}
-                            onClick={() => processCommissions(o.id)}
-                          >
-                            {processingId === o.id ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Coins className="w-3 h-3" />
-                            )}
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10" disabled={processingId === o.id} onClick={() => processCommissions(o.id)}>
+                            {processingId === o.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
                             {processingId === o.id ? "Processing…" : "Process"}
                           </Button>
                         )}
@@ -322,8 +417,12 @@ const AdminOrders = () => {
                         </Select>
                       </td>
                       <td className="p-3">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate(`/admin/orders/${o.id}`)}>
-                          <Eye className="w-3 h-3" /> View
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                          onClick={() => navigate(`/admin/orders/${o.id}`)}
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View Order
                         </Button>
                       </td>
                     </tr>
@@ -339,19 +438,16 @@ const AdminOrders = () => {
           <AlertDialogContent className="bg-card border-border">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                Cancel Order?
+                <AlertTriangle className="h-5 w-5" /> Cancel Order?
               </AlertDialogTitle>
               <AlertDialogDescription className="space-y-2 text-muted-foreground">
-                <p>
-                  Are you sure you want to cancel order <strong className="text-foreground">{cancelTarget?.orderNumber}</strong> for <strong className="text-foreground">{cancelTarget?.userName}</strong>?
-                </p>
+                <p>Are you sure you want to cancel order <strong className="text-foreground">{cancelTarget?.orderNumber}</strong> for <strong className="text-foreground">{cancelTarget?.userName}</strong>?</p>
                 {cancelTarget && cancelTarget.walletUsed > 0 && (
                   <p className="text-sm bg-accent/50 border border-accent rounded-lg p-2">
                     ₹{cancelTarget.walletUsed.toFixed(2)} wallet balance will be refunded automatically.
                   </p>
                 )}
-                <p className="text-xs">This action cannot be undone. Stock will be restored and commissions will not be refunded.</p>
+                <p className="text-xs">This action cannot be undone.</p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
