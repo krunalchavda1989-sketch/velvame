@@ -436,145 +436,147 @@ const AdminOrders = () => {
         ) : filteredOrders.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground rounded-xl border border-border bg-card">No orders found.</div>
         ) : (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary/50">
-                    <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Type</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">User</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
-                    <th className="text-left p-3 text-muted-foreground font-medium">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {paginatedOrders.map((o) => (
-                    <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
-                      <td className="p-3">
-                        {o.order_source === "manual" ? (
-                          <Badge variant="outline" className="text-[10px] bg-accent/10 text-accent-foreground border-accent/20">Manual</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">User</Badge>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center -space-x-2">
-                          {(o.products || []).slice(0, 3).map((p: any, idx: number) => (
-                            <div key={idx} className="w-8 h-8 rounded-md border-2 border-background bg-secondary overflow-hidden flex-shrink-0">
-                              {p.image_url ? (
-                                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <ShoppingBag className="h-3 w-3 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          {(o.products || []).length > 3 && (
-                            <div className="w-8 h-8 rounded-md border-2 border-background bg-secondary flex items-center justify-center text-xs font-medium text-muted-foreground flex-shrink-0">
-                              +{o.products.length - 3}
-                            </div>
-                          )}
-                          {(o.products || []).length === 0 && (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
-                      <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
-                      <td className="p-3">
-                        {o.is_repurchase ? (
-                          <Badge className="bg-accent text-accent-foreground">Yes</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">No</span>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <Badge className={statusColor(o.status)}>{o.status}</Badge>
-                      </td>
-                      <td className="p-3">
-                        {o.commissions_processed ? (
-                          <div className="flex items-center gap-1.5 text-xs text-success font-medium">
-                            <Coins className="w-3.5 h-3.5" /> Distributed
-                          </div>
-                        ) : o.status === "cancelled" ? (
-                          <span className="text-xs text-muted-foreground">N/A</span>
-                        ) : (
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10" disabled={processingId === o.id} onClick={() => processCommissions(o.id)}>
-                            {processingId === o.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
-                            {processingId === o.id ? "Processing…" : "Process"}
-                          </Button>
-                        )}
-                      </td>
-                      <td className="p-3 text-muted-foreground text-xs">{new Date(o.created_at).toLocaleDateString()}</td>
-                      <td className="p-3">
-                        <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
-                          <SelectTrigger className="w-[130px] h-8 bg-background border-border text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border-border">
-                            {statusOptions.map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="p-3">
-                        <Button
-                          size="sm"
-                          className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-                          onClick={() => navigate(`/admin/orders/${o.id}`)}
-                        >
-                          <Eye className="w-3.5 h-3.5" /> View Order
-                        </Button>
-                      </td>
+          <>
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/50">
+                      <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Type</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">User</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Repurchase</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
+                      <th className="text-left p-3 text-muted-foreground font-medium">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {paginatedOrders.map((o) => (
+                      <tr key={o.id} className="hover:bg-secondary/30 transition-colors">
+                        <td className="p-3 font-mono text-xs text-foreground font-medium">{o.order_number || o.id.slice(0, 8)}</td>
+                        <td className="p-3">
+                          {o.order_source === "manual" ? (
+                            <Badge variant="outline" className="text-[10px] bg-accent/10 text-accent-foreground border-accent/20">Manual</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">User</Badge>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center -space-x-2">
+                            {(o.products || []).slice(0, 3).map((p: any, idx: number) => (
+                              <div key={idx} className="w-8 h-8 rounded-md border-2 border-background bg-secondary overflow-hidden flex-shrink-0">
+                                {p.image_url ? (
+                                  <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {(o.products || []).length > 3 && (
+                              <div className="w-8 h-8 rounded-md border-2 border-background bg-secondary flex items-center justify-center text-xs font-medium text-muted-foreground flex-shrink-0">
+                                +{o.products.length - 3}
+                              </div>
+                            )}
+                            {(o.products || []).length === 0 && (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3 text-foreground">{o.profile?.full_name || "—"}</td>
+                        <td className="p-3 font-medium text-primary">₹{o.total_amount}</td>
+                        <td className="p-3">
+                          {o.is_repurchase ? (
+                            <Badge className="bg-accent text-accent-foreground">Yes</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">No</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <Badge className={statusColor(o.status)}>{o.status}</Badge>
+                        </td>
+                        <td className="p-3">
+                          {o.commissions_processed ? (
+                            <div className="flex items-center gap-1.5 text-xs text-success font-medium">
+                              <Coins className="w-3.5 h-3.5" /> Distributed
+                            </div>
+                          ) : o.status === "cancelled" ? (
+                            <span className="text-xs text-muted-foreground">N/A</span>
+                          ) : (
+                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/10" disabled={processingId === o.id} onClick={() => processCommissions(o.id)}>
+                              {processingId === o.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
+                              {processingId === o.id ? "Processing…" : "Process"}
+                            </Button>
+                          )}
+                        </td>
+                        <td className="p-3 text-muted-foreground text-xs">{new Date(o.created_at).toLocaleDateString()}</td>
+                        <td className="p-3">
+                          <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                            <SelectTrigger className="w-[130px] h-8 bg-background border-border text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border">
+                              {statusOptions.map((s) => (
+                                <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="p-3">
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                            onClick={() => navigate(`/admin/orders/${o.id}`)}
+                          >
+                            <Eye className="w-3.5 h-3.5" /> View Order
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
 
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Show</span>
-              {[25, 50, 100].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => { setPageSize(size); setCurrentPage(1); }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-                    pageSize === size ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  )}
-                >
-                  {size}
-                </button>
-              ))}
-              <span>per page</span>
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Show</span>
+                {[25, 50, 100].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => { setPageSize(size); setCurrentPage(1); }}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                      pageSize === size ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
+                <span>per page</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {filteredOrders.length > 0 ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredOrders.length)} of ${filteredOrders.length}` : "0 orders"}
+                </span>
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs font-medium text-foreground">{currentPage} / {totalPages || 1}</span>
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">
-                {filteredOrders.length > 0 ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredOrders.length)} of ${filteredOrders.length}` : "0 orders"}
-              </span>
-              <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-xs font-medium text-foreground">{currentPage} / {totalPages || 1}</span>
-              <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Cancel Confirmation Dialog */}
         <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
