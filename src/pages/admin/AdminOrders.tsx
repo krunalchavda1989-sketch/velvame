@@ -327,12 +327,17 @@ const AdminOrders = () => {
     <AdminLayout>
       <div className="p-6 lg:p-8 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Order Tracking</h1>
             <p className="text-sm text-muted-foreground mt-1">Commissions are auto-processed when an order is confirmed.</p>
           </div>
-          <Badge variant="outline" className="text-muted-foreground">{filteredOrders.length} orders</Badge>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="h-9 text-xs gap-1.5" onClick={exportOrders}>
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
+            <Badge variant="outline" className="text-muted-foreground">{filteredOrders.length} orders</Badge>
+          </div>
         </div>
 
         {/* Colorful Stat Cards */}
