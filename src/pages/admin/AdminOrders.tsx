@@ -166,8 +166,17 @@ const AdminOrders = () => {
   // Status counts (from filtered-by-date orders, not status-filtered)
   const counts = useMemo(() => {
     let base = orders;
-    const dateStart = getDateStart(datePreset);
-    if (dateStart) base = base.filter((o) => new Date(o.created_at) >= dateStart);
+    if (datePreset === "custom") {
+      if (customFrom) base = base.filter((o) => new Date(o.created_at) >= startOfDay(customFrom));
+      if (customTo) {
+        const endOfTo = new Date(customTo);
+        endOfTo.setHours(23, 59, 59, 999);
+        base = base.filter((o) => new Date(o.created_at) <= endOfTo);
+      }
+    } else {
+      const dateStart = getDateStart(datePreset);
+      if (dateStart) base = base.filter((o) => new Date(o.created_at) >= dateStart);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       base = base.filter((o) =>
