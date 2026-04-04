@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.deduct_wallet_balance(uuid, numeric);

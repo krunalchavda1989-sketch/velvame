@@ -2991,12 +2991,10 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: Json
       }
-      deduct_wallet_balance:
-        | { Args: { _amount: number; _user_id: string }; Returns: Json }
-        | {
-            Args: { _amount: number; _order_id?: string; _user_id: string }
-            Returns: Json
-          }
+      deduct_wallet_balance: {
+        Args: { _amount: number; _order_id?: string; _user_id: string }
+        Returns: Json
+      }
       get_active_downline_count: { Args: { _user_id: string }; Returns: number }
       get_admin_genealogy_tree: {
         Args: { _max_depth?: number; _root_profile_id?: string }
