@@ -542,7 +542,39 @@ const AdminOrders = () => {
               </table>
             </div>
           </div>
-        )}
+
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Show</span>
+              {[25, 50, 100].map((size) => (
+                <button
+                  key={size}
+                  onClick={() => { setPageSize(size); setCurrentPage(1); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                    pageSize === size ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  )}
+                >
+                  {size}
+                </button>
+              ))}
+              <span>per page</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {filteredOrders.length > 0 ? `${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredOrders.length)} of ${filteredOrders.length}` : "0 orders"}
+              </span>
+              <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs font-medium text-foreground">{currentPage} / {totalPages || 1}</span>
+              <Button size="icon" variant="outline" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Cancel Confirmation Dialog */}
         <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
