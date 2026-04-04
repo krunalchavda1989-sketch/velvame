@@ -78,57 +78,17 @@ const AdminOrders = () => {
 
   const handleCancelOrder = async (orderId: string) => {
     try {
-      // Get order details
-      const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).single();
-      if (!order) throw new Error("Order not found");
-
-      // Refund wallet balance if wallet was used
-      const paymentMethod = order.payment_method || "";
-      if (paymentMethod === "wallet" || paymentMethod === "wallet+razorpay") {
-        let walletRefund = 0;
-
-        if (paymentMethod === "wallet") {
-          walletRefund = Number(order.total_amount);
-        } else {
-          // wallet+razorpay: refund = total_amount - razorpay amount
-          const { data: payment } = await supabase
-            .from("payments")
-            .select("amount")
-            .eq("order_ref_id", orderId)
-            .eq("status", "captured")
-            .maybeSingle();
-          walletRefund = payment
-            ? Number(order.total_amount) - Number(payment.amount)
-            : Number(order.total_amount);
-        }
-
-        if (walletRefund > 0) {
-          const { data: wallet } = await supabase
-            .from("wallets")
-            .select("balance")
-            .eq("user_id", order.user_id)
-            .single();
-          if (wallet) {
-            await supabase
-              .from("wallets")
-              .update({ balance: Number(wallet.balance) + walletRefund })
-              .eq("user_id", order.user_id);
-            toast.success(`₹${walletRefund} refunded to wallet`);
-          }
-        }
-      }
-
-      // Mark associated payments as failed
-      await supabase
-        .from("payments")
-        .update({ status: "failed" })
-        .eq("order_ref_id", orderId);
-
-      // Update order status
-      const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+      const { data: result, error } = await supabase.rpc("admin_cancel_order_and_refund" as any, {
+        _order_id: orderId,
+      });
       if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || "Cancel failed");
 
-      toast.success("Order cancelled successfully");
+      if (result.refunded > 0) {
+        toast.success(`Order cancelled. ₹${result.refunded} refunded to wallet.`);
+      } else {
+        toast.success(`Order cancelled. ${result.message || "No wallet refund needed."}`);
+      }
     } catch (err: any) {
       toast.error(`Cancel failed: ${err.message}`);
     } finally {
