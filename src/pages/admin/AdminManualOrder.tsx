@@ -307,7 +307,10 @@ const AdminManualOrder = () => {
           status: isConfirmed ? "confirmed" : "pending",
           shipping_address: shippingAddr as any,
           wallet_amount_used: walletAmountToUse,
-        })
+          price_type_used: priceType,
+          is_first_order: isUserFirstOrder,
+          is_repurchase: !isUserFirstOrder,
+        } as any)
         .select()
         .single();
 
