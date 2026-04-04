@@ -70,6 +70,8 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const navigate = useNavigate();
 
   const resetFilters = () => {
@@ -78,9 +80,35 @@ const AdminOrders = () => {
     setStatusFilter("all");
     setCustomFrom(undefined);
     setCustomTo(undefined);
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = searchQuery.trim() !== "" || datePreset !== "all" || statusFilter !== "all";
+
+  const exportOrders = () => {
+    if (filteredOrders.length === 0) { toast.info("No orders to export."); return; }
+    const headers = ["Order #", "Type", "User", "Referral Code", "Amount", "Repurchase", "Status", "Payment Method", "Date"];
+    const rows = filteredOrders.map((o: any) => [
+      o.order_number || o.id.slice(0, 8),
+      o.order_source === "manual" ? "Manual" : "User",
+      o.profile?.full_name || "—",
+      o.profile?.referral_code || "—",
+      o.total_amount,
+      o.is_repurchase ? "Yes" : "No",
+      o.status,
+      o.payment_method || "—",
+      new Date(o.created_at).toLocaleDateString(),
+    ]);
+    const csvContent = [headers, ...rows].map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orders_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Orders exported successfully!");
+  };
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
