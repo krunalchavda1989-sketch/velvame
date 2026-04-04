@@ -296,8 +296,11 @@ const Checkout = () => {
         const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet_balance" as any, {
           _user_id: user!.id,
           _amount: walletDeduction,
+          _order_id: order.id,
         });
         if (deductError || !deductResult?.success) {
+          // Wallet deduction failed - cancel the order
+          await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
           throw new Error(deductResult?.error || deductError?.message || "Wallet deduction failed");
         }
       }
