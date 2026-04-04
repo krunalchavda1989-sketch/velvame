@@ -481,6 +481,30 @@ const AdminManualOrder = () => {
               </div>
             )}
 
+            {/* Pricing Type Indicator */}
+            {selectedUserId && !walletLoading && (
+              <div className="p-3 rounded-lg bg-accent/30 border border-accent">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-accent-foreground" />
+                    <span className="text-sm font-medium text-accent-foreground">
+                      Price Type: <span className="font-bold">{priceType === "distributor" ? "Distributor Price" : "Retail Price"}</span>
+                    </span>
+                  </div>
+                  <Badge variant={priceType === "distributor" ? "default" : "secondary"} className="text-xs">
+                    {isUserFirstOrder ? "1st Order" : "Repeat Order"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isUserFirstOrder
+                    ? "First order — Retail pricing applied"
+                    : isUserSubscriber
+                      ? "Returning subscriber — Distributor pricing applied"
+                      : "Non-subscriber — Retail pricing applied"}
+                </p>
+              </div>
+            )}
+
             {/* Wallet Balance Display */}
             {selectedUserId && (
               <div className="p-3 rounded-lg bg-secondary/50 border border-border">
