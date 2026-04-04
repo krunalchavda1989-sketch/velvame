@@ -531,6 +531,14 @@ const AdminManualOrder = () => {
                   <span className="text-sm text-muted-foreground mr-2">Subtotal:</span>
                   <span className="font-medium text-foreground">₹{subtotalAmount.toFixed(2)}</span>
                 </div>
+                {adminDiscount > 0 && (
+                  <div className="flex justify-end">
+                    <span className="text-sm text-accent-foreground mr-2">
+                      Admin Discount ({discountType === "percentage" ? `${discountValue}%` : `₹${discountValue}`}):
+                    </span>
+                    <span className="font-medium text-accent-foreground">-₹{adminDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {appliedCoupon && couponDiscount > 0 && (
                   <div className="flex justify-end">
                     <span className="text-sm text-green-600 mr-2">Coupon ({appliedCoupon.code}):</span>
@@ -541,6 +549,56 @@ const AdminManualOrder = () => {
                   <span className="text-sm text-muted-foreground mr-2">Total:</span>
                   <span className="font-bold text-primary">₹{totalAmount.toFixed(2)}</span>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Admin Discount */}
+          <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+            <div className="flex items-center gap-2">
+              <Percent className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Admin Discount</h2>
+            </div>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">Discount Type</Label>
+                <Select value={discountType} onValueChange={(v) => setDiscountType(v as "percentage" | "amount")}>
+                  <SelectTrigger className="bg-secondary border-border mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="percentage">Percentage (%)</SelectItem>
+                    <SelectItem value="amount">Fixed Amount (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Label className="text-xs text-muted-foreground">
+                  {discountType === "percentage" ? "Percentage" : "Amount (₹)"}
+                </Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={discountType === "percentage" ? 100 : undefined}
+                  step={discountType === "percentage" ? 1 : 0.01}
+                  value={discountValue || ""}
+                  placeholder="0"
+                  onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                  className="mt-1 bg-secondary border-border"
+                />
+              </div>
+              {discountValue > 0 && (
+                <Button variant="ghost" size="icon" className="text-destructive h-9 w-9" onClick={() => setDiscountValue(0)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {adminDiscount > 0 && (
+              <div className="p-2.5 rounded-lg bg-accent/50 border border-accent">
+                <p className="text-sm font-medium text-accent-foreground">
+                  Discount: ₹{adminDiscount.toFixed(2)} off
+                  {discountType === "percentage" && ` (${discountValue}% of ₹${subtotalAmount.toFixed(2)})`}
+                </p>
               </div>
             )}
           </div>
