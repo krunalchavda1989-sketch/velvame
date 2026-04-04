@@ -224,8 +224,8 @@ const AdminOrders = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/50">
-                     <th className="text-left p-3 text-muted-foreground font-medium"></th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Order #</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium">Type</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Products</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">User</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Amount</th>
@@ -234,6 +234,7 @@ const AdminOrders = () => {
                     <th className="text-left p-3 text-muted-foreground font-medium">Commissions</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Date</th>
                     <th className="text-left p-3 text-muted-foreground font-medium">Update</th>
+                    <th className="text-left p-3 text-muted-foreground font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

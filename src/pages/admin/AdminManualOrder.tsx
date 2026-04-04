@@ -311,6 +311,7 @@ const AdminManualOrder = () => {
           price_type_used: priceType,
           is_first_order: isUserFirstOrder,
           is_repurchase: !isUserFirstOrder,
+          order_source: "manual",
         } as any)
         .select()
         .single();
