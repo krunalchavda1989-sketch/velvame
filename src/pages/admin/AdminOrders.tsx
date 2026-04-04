@@ -131,9 +131,18 @@ const AdminOrders = () => {
     let result = orders;
 
     // Date filter
-    const dateStart = getDateStart(datePreset);
-    if (dateStart) {
-      result = result.filter((o) => new Date(o.created_at) >= dateStart);
+    if (datePreset === "custom") {
+      if (customFrom) result = result.filter((o) => new Date(o.created_at) >= startOfDay(customFrom));
+      if (customTo) {
+        const endOfTo = new Date(customTo);
+        endOfTo.setHours(23, 59, 59, 999);
+        result = result.filter((o) => new Date(o.created_at) <= endOfTo);
+      }
+    } else {
+      const dateStart = getDateStart(datePreset);
+      if (dateStart) {
+        result = result.filter((o) => new Date(o.created_at) >= dateStart);
+      }
     }
 
     // Status filter
