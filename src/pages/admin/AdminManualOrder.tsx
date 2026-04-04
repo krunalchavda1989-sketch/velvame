@@ -871,6 +871,12 @@ const AdminManualOrder = () => {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="text-foreground">₹{subtotalAmount.toFixed(2)}</span>
                   </div>
+                  {adminDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-accent-foreground">Admin Discount</span>
+                      <span className="text-accent-foreground">-₹{adminDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   {appliedCoupon && couponDiscount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-green-600">Coupon ({appliedCoupon.code})</span>
