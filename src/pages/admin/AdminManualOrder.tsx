@@ -276,6 +276,7 @@ const AdminManualOrder = () => {
         const { data: deductResult, error: deductError } = await supabase.rpc("deduct_wallet_balance", {
           _user_id: selectedUserId,
           _amount: walletAmountToUse,
+          _order_id: order.id,
         });
 
         if (deductError) throw deductError;
@@ -283,15 +284,6 @@ const AdminManualOrder = () => {
         if (!result?.success) {
           throw new Error(result?.error || "Failed to deduct wallet balance");
         }
-
-        await supabase
-          .from("wallet_transactions")
-          .update({ order_id: order.id })
-          .eq("user_id", selectedUserId)
-          .eq("type", "debit")
-          .is("order_id", null)
-          .order("created_at", { ascending: false })
-          .limit(2);
 
         const { data: updatedWallet } = await supabase
           .from("wallets")
