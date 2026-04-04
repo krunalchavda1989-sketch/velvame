@@ -108,10 +108,21 @@ const AdminOrders = () => {
     }
   };
 
+  const confirmCancelOrder = (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+    setCancelTarget({
+      id: orderId,
+      orderNumber: order.order_number || orderId.slice(0, 8),
+      userName: order.profile?.full_name || "Unknown",
+      walletUsed: order.wallet_amount_used || 0,
+    });
+    setCancelDialogOpen(true);
+  };
+
   const updateStatus = async (id: string, status: string) => {
     if (status === "cancelled") {
-      await handleCancelOrder(id);
-      sendOrderEmail(id, "order_cancelled");
+      confirmCancelOrder(id);
       return;
     }
 
