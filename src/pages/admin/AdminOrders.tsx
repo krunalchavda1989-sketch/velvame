@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   Coins, RefreshCw, Eye, ShoppingBag, AlertTriangle, Search,
   Package, XCircle, Truck, PackageCheck, Clock, CheckCircle, Archive, CalendarDays,
+  CalendarIcon, RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { startOfDay, startOfWeek, startOfMonth, startOfQuarter, startOfYear, subMonths } from "date-fns";
+import { startOfDay, startOfWeek, startOfMonth, startOfQuarter, startOfYear, subMonths, format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const statusOptions = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 
@@ -29,6 +33,7 @@ const datePresets = [
   { label: "Quarter", value: "quarter" },
   { label: "Half Year", value: "half_year" },
   { label: "Year to Date", value: "ytd" },
+  { label: "Custom", value: "custom" },
 ];
 
 const getDateStart = (preset: string): Date | null => {
@@ -63,7 +68,19 @@ const AdminOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [datePreset, setDatePreset] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
   const navigate = useNavigate();
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setDatePreset("all");
+    setStatusFilter("all");
+    setCustomFrom(undefined);
+    setCustomTo(undefined);
+  };
+
+  const hasActiveFilters = searchQuery.trim() !== "" || datePreset !== "all" || statusFilter !== "all";
 
   const fetchOrders = async () => {
     const { data: ordersData } = await supabase
@@ -114,9 +131,18 @@ const AdminOrders = () => {
     let result = orders;
 
     // Date filter
-    const dateStart = getDateStart(datePreset);
-    if (dateStart) {
-      result = result.filter((o) => new Date(o.created_at) >= dateStart);
+    if (datePreset === "custom") {
+      if (customFrom) result = result.filter((o) => new Date(o.created_at) >= startOfDay(customFrom));
+      if (customTo) {
+        const endOfTo = new Date(customTo);
+        endOfTo.setHours(23, 59, 59, 999);
+        result = result.filter((o) => new Date(o.created_at) <= endOfTo);
+      }
+    } else {
+      const dateStart = getDateStart(datePreset);
+      if (dateStart) {
+        result = result.filter((o) => new Date(o.created_at) >= dateStart);
+      }
     }
 
     // Status filter
@@ -135,13 +161,22 @@ const AdminOrders = () => {
     }
 
     return result;
-  }, [orders, datePreset, statusFilter, searchQuery]);
+  }, [orders, datePreset, statusFilter, searchQuery, customFrom, customTo]);
 
   // Status counts (from filtered-by-date orders, not status-filtered)
   const counts = useMemo(() => {
     let base = orders;
-    const dateStart = getDateStart(datePreset);
-    if (dateStart) base = base.filter((o) => new Date(o.created_at) >= dateStart);
+    if (datePreset === "custom") {
+      if (customFrom) base = base.filter((o) => new Date(o.created_at) >= startOfDay(customFrom));
+      if (customTo) {
+        const endOfTo = new Date(customTo);
+        endOfTo.setHours(23, 59, 59, 999);
+        base = base.filter((o) => new Date(o.created_at) <= endOfTo);
+      }
+    } else {
+      const dateStart = getDateStart(datePreset);
+      if (dateStart) base = base.filter((o) => new Date(o.created_at) >= dateStart);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       base = base.filter((o) =>
@@ -159,7 +194,7 @@ const AdminOrders = () => {
       delivered: base.filter((o) => o.status === "delivered").length,
       cancelled: base.filter((o) => o.status === "cancelled").length,
     };
-  }, [orders, datePreset, searchQuery]);
+  }, [orders, datePreset, searchQuery, customFrom, customTo]);
 
   const handleCancelOrder = async (orderId: string) => {
     try {
@@ -291,17 +326,25 @@ const AdminOrders = () => {
         </div>
 
         {/* Search & Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, order number, or referral code..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, order number, or referral code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            {hasActiveFilters && (
+              <Button size="sm" variant="destructive" className="h-9 text-xs gap-1.5" onClick={resetFilters}>
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {datePresets.map((dp) => (
               <Button
                 key={dp.value}
@@ -310,10 +353,38 @@ const AdminOrders = () => {
                 className={`h-9 text-xs ${datePreset === dp.value ? "" : "border-border text-muted-foreground"}`}
                 onClick={() => setDatePreset(dp.value)}
               >
-                {dp.value !== "all" && <CalendarDays className="h-3 w-3 mr-1" />}
+                {dp.value !== "all" && dp.value !== "custom" && <CalendarDays className="h-3 w-3 mr-1" />}
+                {dp.value === "custom" && <CalendarIcon className="h-3 w-3 mr-1" />}
                 {dp.label}
               </Button>
             ))}
+            {datePreset === "custom" && (
+              <div className="flex items-center gap-2 ml-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("h-9 text-xs gap-1.5", !customFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {customFrom ? format(customFrom, "dd MMM yyyy") : "From"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground text-xs">to</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("h-9 text-xs gap-1.5", !customTo && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {customTo ? format(customTo, "dd MMM yyyy") : "To"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
         </div>
 
