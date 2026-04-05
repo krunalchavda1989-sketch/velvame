@@ -73,6 +73,7 @@ const AdminSettings = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "payment": return <PaymentTab />;
+      case "withdrawal": return <WithdrawalToggleTab />;
       case "localization": return <LocalizationTab />;
       case "smtp": return <SmtpTab />;
       case "sms": return <SmsTab />;
