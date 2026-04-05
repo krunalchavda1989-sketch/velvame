@@ -45,6 +45,7 @@ const CURRENCIES = [
 
 const SETTINGS_TABS = [
   { key: "payment", label: "Payment", icon: Key },
+  { key: "withdrawal", label: "Withdrawal", icon: Send },
   { key: "localization", label: "Localization", icon: Globe },
   { key: "smtp", label: "SMTP", icon: Mail },
   { key: "sms", label: "SMS", icon: MessageSquare },
