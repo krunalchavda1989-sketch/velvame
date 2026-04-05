@@ -56,6 +56,7 @@ const WalletPage = () => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [withdrawalEnabled, setWithdrawalEnabled] = useState(true);
 
   // Withdrawal form state
   const [dialogOpen, setDialogOpen] = useState(false);
