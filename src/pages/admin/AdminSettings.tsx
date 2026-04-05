@@ -45,6 +45,7 @@ const CURRENCIES = [
 
 const SETTINGS_TABS = [
   { key: "payment", label: "Payment", icon: Key },
+  { key: "withdrawal", label: "Withdrawal", icon: Send },
   { key: "localization", label: "Localization", icon: Globe },
   { key: "smtp", label: "SMTP", icon: Mail },
   { key: "sms", label: "SMS", icon: MessageSquare },
@@ -72,6 +73,7 @@ const AdminSettings = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "payment": return <PaymentTab />;
+      case "withdrawal": return <WithdrawalToggleTab />;
       case "localization": return <LocalizationTab />;
       case "smtp": return <SmtpTab />;
       case "sms": return <SmsTab />;
@@ -3423,6 +3425,84 @@ const FeatureLogTab = () => {
             {filtered.length === 0 && (
               <p className="text-sm text-muted-foreground py-4">No features match your search.</p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+/* ───────── Withdrawal Toggle Tab ───────── */
+const WithdrawalToggleTab = () => {
+  const [enabled, setEnabled] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("feature_toggles")
+        .select("is_enabled")
+        .eq("feature_key", "wallet_withdrawal")
+        .maybeSingle();
+      if (data) setEnabled(data.is_enabled);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const handleToggle = async (val: boolean) => {
+    setEnabled(val);
+    setSaving(true);
+    const { error } = await supabase
+      .from("feature_toggles")
+      .update({ is_enabled: val, updated_at: new Date().toISOString() })
+      .eq("feature_key", "wallet_withdrawal");
+    if (error) {
+      toast.error("Failed to update setting");
+      setEnabled(!val);
+    } else {
+      toast.success(val ? "Withdrawal button enabled for users" : "Withdrawal button disabled for users");
+    }
+    setSaving(false);
+  };
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Send className="h-5 w-5 text-primary" />
+            Wallet Withdrawal Settings
+          </CardTitle>
+          <CardDescription>Control whether users can see and use the withdrawal button on their wallet page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/30">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Withdrawal Button</p>
+                <p className="text-xs text-muted-foreground">
+                  {enabled ? "Users can see and request withdrawals" : "Withdrawal button is hidden from users"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className={enabled ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-red-500/10 text-red-600 border-red-500/20"}>
+                {enabled ? "Enabled" : "Disabled"}
+              </Badge>
+              <Switch checked={enabled} onCheckedChange={handleToggle} disabled={saving} />
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <span>When disabled, users will not see the withdrawal button on their wallet page. Existing pending withdrawal requests will not be affected.</span>
           </div>
         </CardContent>
       </Card>
