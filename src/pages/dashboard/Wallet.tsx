@@ -181,61 +181,63 @@ const WalletPage = () => {
             <p className="text-sm text-muted-foreground mt-1">Track your balance, earnings and commissions</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setWithdrawError(""); setWithdrawAmount(""); } }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2" disabled={!wallet || commissionBalance <= 0}>
-                <Send className="h-4 w-4" /> Withdraw
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Request Withdrawal</DialogTitle>
-                <DialogDescription>
-                  Commission Balance available: {formatCurrency(commissionBalance)}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ({currencySymbol})</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    min={1}
-                    max={commissionBalance}
-                  />
-                  {withdrawError && (
-                    <div className="flex items-start gap-2 text-xs text-red-600 bg-red-500/10 p-3 rounded-lg">
-                      <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                      <span>{withdrawError}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="upi">UPI ID</Label>
-                  <Input
-                    id="upi"
-                    type="text"
-                    placeholder="yourname@upi"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-start gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>Only your Commission Balance can be withdrawn. Subscription Balance can only be used for placing orders. Withdrawals are reviewed within 24-48 hours.</span>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleWithdraw} disabled={submitting || !!withdrawError}>
-                  {submitting ? "Submitting…" : "Submit Request"}
+          {withdrawalEnabled && (
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setWithdrawError(""); setWithdrawAmount(""); } }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2" disabled={!wallet || commissionBalance <= 0}>
+                  <Send className="h-4 w-4" /> Withdraw
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Request Withdrawal</DialogTitle>
+                  <DialogDescription>
+                    Commission Balance available: {formatCurrency(commissionBalance)}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount ({currencySymbol})</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="Enter amount"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      min={1}
+                      max={commissionBalance}
+                    />
+                    {withdrawError && (
+                      <div className="flex items-start gap-2 text-xs text-red-600 bg-red-500/10 p-3 rounded-lg">
+                        <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <span>{withdrawError}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="upi">UPI ID</Label>
+                    <Input
+                      id="upi"
+                      type="text"
+                      placeholder="yourname@upi"
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-secondary/50 p-3 rounded-lg">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <span>Only your Commission Balance can be withdrawn. Subscription Balance can only be used for placing orders. Withdrawals are reviewed within 24-48 hours.</span>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleWithdraw} disabled={submitting || !!withdrawError}>
+                    {submitting ? "Submitting…" : "Submit Request"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {loading ? (
