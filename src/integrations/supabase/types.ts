@@ -913,6 +913,30 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_toggles: {
+        Row: {
+          feature_key: string
+          id: string
+          is_enabled: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          feature_key: string
+          id?: string
+          is_enabled?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Update: {
+          feature_key?: string
+          id?: string
+          is_enabled?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       featured_section_products: {
         Row: {
           created_at: string
