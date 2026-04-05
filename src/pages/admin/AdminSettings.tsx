@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash, Menu, X, MessageSquare, Send, Phone, ShoppingCart, Image, Upload, ClipboardList } from "lucide-react";
+import { Settings, Key, CheckCircle, Loader2, Shield, ExternalLink, Globe, DollarSign, Receipt, Mail, Save, TestTube, RefreshCw, ToggleLeft, CreditCard, Smartphone, Zap, Truck, XCircle, AlertTriangle, ChevronLeft, ChevronRight, Download, Search, MonitorSmartphone, ShieldCheck, Wallet, Building2, Package, Hash, Menu, X, MessageSquare, Send, Phone, ShoppingCart, Image, Upload, ClipboardList, Power } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
