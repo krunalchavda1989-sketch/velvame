@@ -70,14 +70,16 @@ const WalletPage = () => {
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
-    const [walletRes, commissionsRes, withdrawalsRes] = await Promise.all([
+    const [walletRes, commissionsRes, withdrawalsRes, toggleRes] = await Promise.all([
       supabase.from("wallets").select("balance, total_earned, total_withdrawn, subscription_balance, commission_balance").eq("user_id", user.id).single(),
       supabase.from("commissions").select("id, amount, rate, level, commission_type, status, created_at").eq("beneficiary_id", user.id).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawal_requests").select("id, amount, status, upi_id, admin_note, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+      supabase.from("feature_toggles").select("is_enabled").eq("feature_key", "wallet_withdrawal").maybeSingle(),
     ]);
     setWallet(walletRes.data as any);
     setCommissions((commissionsRes.data as Commission[]) || []);
     setWithdrawals((withdrawalsRes.data as WithdrawalRequest[]) || []);
+    if (toggleRes.data) setWithdrawalEnabled(toggleRes.data.is_enabled);
     setLoading(false);
   };
 
