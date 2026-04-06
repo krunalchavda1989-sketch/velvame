@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export type DatePreset = "today" | "week" | "month" | "quarter" | "half_year" | "year" | "custom";
+export type DatePreset = "all" | "today" | "week" | "month" | "quarter" | "half_year" | "year" | "custom";
 
 interface DateRangeFilterProps {
   from: Date;
@@ -15,6 +15,7 @@ interface DateRangeFilterProps {
 }
 
 const PRESETS: { key: DatePreset; label: string }[] = [
+  { key: "all", label: "All" },
   { key: "today", label: "Today" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
@@ -27,6 +28,7 @@ const PRESETS: { key: DatePreset; label: string }[] = [
 const getPresetRange = (preset: DatePreset): [Date, Date] => {
   const now = new Date();
   switch (preset) {
+    case "all": return [new Date(2000, 0, 1), now];
     case "today": return [now, now];
     case "week": return [startOfWeek(now, { weekStartsOn: 1 }), now];
     case "month": return [startOfMonth(now), now];
