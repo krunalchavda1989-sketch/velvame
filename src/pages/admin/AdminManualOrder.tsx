@@ -373,6 +373,23 @@ const AdminManualOrder = () => {
         });
       }
 
+      // Save manual address to user_addresses if entered manually
+      if (showManualAddress && manualAddress.name && manualAddress.line1 && saveNewAddress) {
+        const isFirst = savedAddresses.length === 0;
+        await supabase.from("user_addresses").insert({
+          user_id: selectedUserId,
+          label: "Other",
+          name: manualAddress.name,
+          line1: manualAddress.line1,
+          line2: manualAddress.line2,
+          city: manualAddress.city,
+          state: manualAddress.state,
+          pincode: manualAddress.pincode,
+          phone: manualAddress.phone,
+          is_default: isFirst,
+        });
+      }
+
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
