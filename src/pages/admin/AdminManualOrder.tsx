@@ -427,7 +427,7 @@ const AdminManualOrder = () => {
               {selectedUserId && (
                 <button
                   type="button"
-                  onClick={() => { setSelectedUserId(""); setUserSearchQuery(""); setPaymentMethod("cod"); setUseWallet(false); setPaymentNote(""); }}
+                  onClick={() => { setSelectedUserId(""); setUserSearchQuery(""); setPaymentMethod("cod"); setUseWallet(true); setPaymentNote(""); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
