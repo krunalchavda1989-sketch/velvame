@@ -864,6 +864,12 @@ const AdminManualOrder = () => {
                       <Input value={manualAddress.phone} onChange={(e) => setManualAddress({ ...manualAddress, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} className="bg-secondary border-border" />
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch checked={saveNewAddress} onCheckedChange={setSaveNewAddress} />
+                    <Label className="text-sm text-muted-foreground cursor-pointer" onClick={() => setSaveNewAddress(!saveNewAddress)}>
+                      Save this address to user's profile
+                    </Label>
+                  </div>
                 </div>
               )}
             </div>
