@@ -15,6 +15,7 @@ interface DateRangeFilterProps {
 }
 
 const PRESETS: { key: DatePreset; label: string }[] = [
+  { key: "all", label: "All" },
   { key: "today", label: "Today" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
