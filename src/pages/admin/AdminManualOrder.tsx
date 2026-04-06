@@ -451,7 +451,7 @@ const AdminManualOrder = () => {
                         setSelectedUserId(u.user_id);
                         setUserSearchQuery(`${u.full_name || "Unnamed"} (${u.referral_code})`);
                         setUserDropdownOpen(false);
-                        setPaymentMethod("razorpay");
+                        setPaymentMethod("cod");
                         setUseWallet(false);
                         setPaymentNote("");
                       }}
