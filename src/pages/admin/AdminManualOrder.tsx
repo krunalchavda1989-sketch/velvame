@@ -63,6 +63,7 @@ const AdminManualOrder = () => {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showManualAddress, setShowManualAddress] = useState(false);
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
   const [manualAddress, setManualAddress] = useState({
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
