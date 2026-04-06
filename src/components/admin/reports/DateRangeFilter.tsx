@@ -28,6 +28,7 @@ const PRESETS: { key: DatePreset; label: string }[] = [
 const getPresetRange = (preset: DatePreset): [Date, Date] => {
   const now = new Date();
   switch (preset) {
+    case "all": return [new Date(2000, 0, 1), now];
     case "today": return [now, now];
     case "week": return [startOfWeek(now, { weekStartsOn: 1 }), now];
     case "month": return [startOfMonth(now), now];
