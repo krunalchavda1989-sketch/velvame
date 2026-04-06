@@ -920,20 +920,31 @@ const AdminManualOrder = () => {
                   </div>
                 ) : (
                   <>
-                    <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPaymentNote(""); }}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        <SelectItem value="cod">Cash on Delivery</SelectItem>
-                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="manual">Manual / Cash</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "cod", label: "Cash on Delivery", icon: <Banknote className="h-5 w-5" /> },
+                        { value: "bank_transfer", label: "Bank Transfer", icon: <Building2 className="h-5 w-5" /> },
+                        { value: "manual", label: "Manual / Cash", icon: <HandCoins className="h-5 w-5" /> },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setPaymentMethod(opt.value); }}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
+                            paymentMethod === opt.value
+                              ? "border-primary bg-primary/10 text-primary shadow-sm"
+                              : "border-border bg-secondary/50 text-muted-foreground hover:border-muted-foreground/40"
+                          }`}
+                        >
+                          {opt.icon}
+                          <span className="text-xs font-medium leading-tight">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
 
                     <div className="space-y-2">
                       <Label className="text-sm text-muted-foreground">
-                        Payment Note <span className="text-xs">(optional)</span>
+                        Payment Note <span className="text-destructive">*</span>
                       </Label>
                       <Textarea
                         placeholder={
@@ -945,7 +956,7 @@ const AdminManualOrder = () => {
                         }
                         value={paymentNote}
                         onChange={(e) => setPaymentNote(e.target.value)}
-                        className="bg-secondary border-border resize-none"
+                        className={`bg-secondary border-border resize-none ${!paymentNote.trim() ? "border-destructive/50" : ""}`}
                         rows={2}
                       />
                     </div>
