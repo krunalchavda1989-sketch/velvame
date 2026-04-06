@@ -202,6 +202,26 @@ const AdminCommissionLevels = () => {
             </TabsContent>
 
             <TabsContent value="repurchase">
+              <Card className="mb-4 border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4 text-primary" />
+                    How Repurchase Income Works
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                  <p>Repurchase Income is earned when a member places any order <strong className="text-foreground">after their 1st order</strong> (i.e., all repeat/subsequent orders). The commission is distributed to upline members across configured repurchase levels.</p>
+                  <ol className="list-decimal list-inside space-y-1.5 ml-1">
+                    <li>When a user places a <strong className="text-foreground">2nd or later order</strong>, the system identifies it as a repurchase and walks up the referral chain.</li>
+                    <li>At each level, the upline member must have the <strong className="text-foreground">minimum direct referrals</strong> configured for that repurchase level to qualify.</li>
+                    <li><strong className="text-foreground">Monthly purchase requirement:</strong> Both the purchasing user and each upline member must have at least the <strong className="text-foreground">minimum monthly purchase amount</strong> (set below) in orders during the current month.</li>
+                    <li>If an upline does <strong className="text-foreground">not qualify</strong> (insufficient referrals or monthly purchases), their level is <strong className="text-foreground">skipped</strong>.</li>
+                    <li>The commission is <strong className="text-foreground">credited directly to the wallet</strong> of each eligible upline member.</li>
+                  </ol>
+                  <p className="text-xs pt-1 italic">Example: If Repurchase Level 1 rate is 5% and order is ₹2,000, the direct sponsor earns ₹100 (if they meet both referral and monthly purchase requirements).</p>
+                </CardContent>
+              </Card>
+
               <Card className="mb-4 border-primary/20">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -209,7 +229,7 @@ const AdminCommissionLevels = () => {
                     Repurchase Qualification
                   </CardTitle>
                    <CardDescription>
-                    Both the purchasing user and each downline member must have at least this amount in purchases during the current month to qualify for repurchase commissions.
+                    Both the purchasing user and each upline member must have at least this amount in purchases during the current month to qualify for repurchase commissions.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
