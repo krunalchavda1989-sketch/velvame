@@ -178,7 +178,28 @@ const AdminCommissionLevels = () => {
               <TabsTrigger value="repurchase">Repurchase Income ({repurchaseItems.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="level">{renderTable(levelItems, "level")}</TabsContent>
+            <TabsContent value="level">
+              <Card className="mb-4 border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    How Level Income Works
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                  <p>Level Income is earned when a <strong className="text-foreground">new member joins</strong> and places their <strong className="text-foreground">first order</strong>. The commission is calculated on the order amount and distributed to upline members across multiple levels.</p>
+                  <ol className="list-decimal list-inside space-y-1.5 ml-1">
+                    <li>When a user places their <strong className="text-foreground">1st order</strong>, the system walks up the referral chain from the buyer's direct sponsor.</li>
+                    <li>At each level, the upline member must have the <strong className="text-foreground">minimum direct referrals</strong> configured for that level to qualify.</li>
+                    <li>If qualified, the upline earns a <strong className="text-foreground">percentage of the order amount</strong> as per the rate set for that level.</li>
+                    <li>If an upline does <strong className="text-foreground">not qualify</strong> (insufficient referrals), their level is <strong className="text-foreground">skipped</strong> and the system moves to the next upline.</li>
+                    <li>The commission is <strong className="text-foreground">credited directly to the wallet</strong> of each eligible upline member.</li>
+                  </ol>
+                  <p className="text-xs pt-1 italic">Example: If Level 1 rate is 10% and order is ₹1,000, the direct sponsor earns ₹100 (if they meet the minimum referral requirement).</p>
+                </CardContent>
+              </Card>
+              {renderTable(levelItems, "level")}
+            </TabsContent>
 
             <TabsContent value="repurchase">
               <Card className="mb-4 border-primary/20">
