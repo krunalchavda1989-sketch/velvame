@@ -375,7 +375,7 @@ const AdminManualOrder = () => {
       setSelectedUserId("");
       setOrderItems([]);
       setPaymentMethod("cod");
-      setUseWallet(false);
+      setUseWallet(true);
       setPaymentNote("");
       setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
       removeCoupon();
