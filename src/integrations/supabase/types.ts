@@ -653,6 +653,27 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_settings: {
+        Row: {
+          created_at: string
+          id: string
+          min_monthly_purchase: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_monthly_purchase?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_monthly_purchase?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       commissions: {
         Row: {
           amount: number
