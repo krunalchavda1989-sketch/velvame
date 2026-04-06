@@ -295,8 +295,12 @@ const AdminManualOrder = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
-      const effectivePaymentMethod = remainingAmount <= 0 ? "wallet" : paymentMethod;
-      const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
+      const effectivePaymentMethod = walletAmountToUse > 0 && remainingAmount <= 0 
+        ? "wallet" 
+        : remainingAmount <= 0 && walletAmountToUse === 0 
+          ? (paymentMethod || "free") 
+          : paymentMethod;
+      const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "free" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
 
       const { data: order, error: orderError } = await supabase
