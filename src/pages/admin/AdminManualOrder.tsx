@@ -284,6 +284,12 @@ const AdminManualOrder = () => {
       return;
     }
 
+    // Payment note is compulsory when payment method is shown
+    if (remainingAmount > 0 && !paymentNote.trim()) {
+      toast.error("Payment note is required");
+      return;
+    }
+
     // If wallet covers everything, no payment method needed; otherwise require one
     if (remainingAmount > 0 && !paymentMethod) {
       toast.error("Please select a payment method for the remaining amount");
