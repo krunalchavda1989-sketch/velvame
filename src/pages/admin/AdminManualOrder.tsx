@@ -452,7 +452,7 @@ const AdminManualOrder = () => {
                         setUserSearchQuery(`${u.full_name || "Unnamed"} (${u.referral_code})`);
                         setUserDropdownOpen(false);
                         setPaymentMethod("cod");
-                        setUseWallet(false);
+                        setUseWallet(true);
                         setPaymentNote("");
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary/80 transition-colors flex items-center justify-between"
