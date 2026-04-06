@@ -41,7 +41,7 @@ const AdminManualOrder = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
-  const [useWallet, setUseWallet] = useState(false);
+  const [useWallet, setUseWallet] = useState(true);
   const [paymentNote, setPaymentNote] = useState("");
 
   // First order & pricing state
