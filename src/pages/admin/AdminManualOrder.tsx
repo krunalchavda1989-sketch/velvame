@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search } from "lucide-react";
+import { Plus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -41,7 +41,7 @@ const AdminManualOrder = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [userWallet, setUserWallet] = useState<WalletData | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
-  const [useWallet, setUseWallet] = useState(false);
+  const [useWallet, setUseWallet] = useState(true);
   const [paymentNote, setPaymentNote] = useState("");
 
   // First order & pricing state
@@ -63,6 +63,7 @@ const AdminManualOrder = () => {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showManualAddress, setShowManualAddress] = useState(false);
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
   const [manualAddress, setManualAddress] = useState({
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
@@ -284,6 +285,12 @@ const AdminManualOrder = () => {
       return;
     }
 
+    // Payment note is compulsory when payment method is shown
+    if (remainingAmount > 0 && !paymentNote.trim()) {
+      toast.error("Payment note is required");
+      return;
+    }
+
     // If wallet covers everything, no payment method needed; otherwise require one
     if (remainingAmount > 0 && !paymentMethod) {
       toast.error("Please select a payment method for the remaining amount");
@@ -366,6 +373,23 @@ const AdminManualOrder = () => {
         });
       }
 
+      // Save manual address to user_addresses if entered manually
+      if (showManualAddress && manualAddress.name && manualAddress.line1 && saveNewAddress) {
+        const isFirst = savedAddresses.length === 0;
+        await supabase.from("user_addresses").insert({
+          user_id: selectedUserId,
+          label: "Other",
+          name: manualAddress.name,
+          line1: manualAddress.line1,
+          line2: manualAddress.line2,
+          city: manualAddress.city,
+          state: manualAddress.state,
+          pincode: manualAddress.pincode,
+          phone: manualAddress.phone,
+          is_default: isFirst,
+        });
+      }
+
       if (appliedCoupon) {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
@@ -375,7 +399,7 @@ const AdminManualOrder = () => {
       setSelectedUserId("");
       setOrderItems([]);
       setPaymentMethod("cod");
-      setUseWallet(false);
+      setUseWallet(true);
       setPaymentNote("");
       setManualAddress({ name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "" });
       removeCoupon();
@@ -427,7 +451,7 @@ const AdminManualOrder = () => {
               {selectedUserId && (
                 <button
                   type="button"
-                  onClick={() => { setSelectedUserId(""); setUserSearchQuery(""); setPaymentMethod("cod"); setUseWallet(false); setPaymentNote(""); }}
+                  onClick={() => { setSelectedUserId(""); setUserSearchQuery(""); setPaymentMethod("cod"); setUseWallet(true); setPaymentNote(""); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -452,7 +476,7 @@ const AdminManualOrder = () => {
                         setUserSearchQuery(`${u.full_name || "Unnamed"} (${u.referral_code})`);
                         setUserDropdownOpen(false);
                         setPaymentMethod("cod");
-                        setUseWallet(false);
+                        setUseWallet(true);
                         setPaymentNote("");
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary/80 transition-colors flex items-center justify-between"
@@ -840,6 +864,12 @@ const AdminManualOrder = () => {
                       <Input value={manualAddress.phone} onChange={(e) => setManualAddress({ ...manualAddress, phone: e.target.value.replace(/\D/g, "").slice(0, 15) })} className="bg-secondary border-border" />
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch checked={saveNewAddress} onCheckedChange={setSaveNewAddress} />
+                    <Label className="text-sm text-muted-foreground cursor-pointer" onClick={() => setSaveNewAddress(!saveNewAddress)}>
+                      Save this address to user's profile
+                    </Label>
+                  </div>
                 </div>
               )}
             </div>
@@ -913,20 +943,31 @@ const AdminManualOrder = () => {
                   </div>
                 ) : (
                   <>
-                    <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPaymentNote(""); }}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        <SelectItem value="cod">Cash on Delivery</SelectItem>
-                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="manual">Manual / Cash</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "cod", label: "Cash on Delivery", icon: <Banknote className="h-5 w-5" /> },
+                        { value: "bank_transfer", label: "Bank Transfer", icon: <Building2 className="h-5 w-5" /> },
+                        { value: "manual", label: "Manual / Cash", icon: <HandCoins className="h-5 w-5" /> },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setPaymentMethod(opt.value); }}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
+                            paymentMethod === opt.value
+                              ? "border-primary bg-primary/10 text-primary shadow-sm"
+                              : "border-border bg-secondary/50 text-muted-foreground hover:border-muted-foreground/40"
+                          }`}
+                        >
+                          {opt.icon}
+                          <span className="text-xs font-medium leading-tight">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
 
                     <div className="space-y-2">
                       <Label className="text-sm text-muted-foreground">
-                        Payment Note <span className="text-xs">(optional)</span>
+                        Payment Note <span className="text-destructive">*</span>
                       </Label>
                       <Textarea
                         placeholder={
@@ -938,7 +979,7 @@ const AdminManualOrder = () => {
                         }
                         value={paymentNote}
                         onChange={(e) => setPaymentNote(e.target.value)}
-                        className="bg-secondary border-border resize-none"
+                        className={`bg-secondary border-border resize-none ${!paymentNote.trim() ? "border-destructive/50" : ""}`}
                         rows={2}
                       />
                     </div>
