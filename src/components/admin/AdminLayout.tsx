@@ -120,6 +120,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     navigate("/admin/login");
   };
 
+  const { showWarning, countdown, keepAlive, logout: sessionLogout } = useSessionTimeout(handleLogout);
+
   const isChildActive = (item: MenuItem) =>
     item.children?.some((c) => location.pathname === c.href) || false;
 
