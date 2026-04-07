@@ -304,6 +304,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       <main className={`flex-1 transition-all duration-300 pt-14 md:pt-0 ${collapsed ? "md:ml-16" : "md:ml-60"}`}>
         {children}
       </main>
+      <SessionTimeoutDialog open={showWarning} countdown={countdown} onKeepAlive={keepAlive} onLogout={sessionLogout} />
     </div>
   );
 };

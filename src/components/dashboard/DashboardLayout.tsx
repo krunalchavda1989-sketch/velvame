@@ -206,6 +206,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         
         {children}
       </main>
+      <SessionTimeoutDialog open={showWarning} countdown={countdown} onKeepAlive={keepAlive} onLogout={sessionLogout} />
     </div>
   );
 };
