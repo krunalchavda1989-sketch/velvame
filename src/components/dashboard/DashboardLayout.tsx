@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import SessionTimeoutDialog from "@/components/SessionTimeoutDialog";
 
 
 const menuItems = [
@@ -56,6 +58,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
     navigate("/login");
   };
+
+  const { showWarning, countdown, keepAlive, logout: sessionLogout } = useSessionTimeout(handleLogout);
 
   const ICON_COLORS = [
     "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
@@ -202,6 +206,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         
         {children}
       </main>
+      <SessionTimeoutDialog open={showWarning} countdown={countdown} onKeepAlive={keepAlive} onLogout={sessionLogout} />
     </div>
   );
 };

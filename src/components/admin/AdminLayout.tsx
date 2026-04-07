@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import SessionTimeoutDialog from "@/components/SessionTimeoutDialog";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
@@ -117,6 +119,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
     navigate("/admin/login");
   };
+
+  const { showWarning, countdown, keepAlive, logout: sessionLogout } = useSessionTimeout(handleLogout);
 
   const isChildActive = (item: MenuItem) =>
     item.children?.some((c) => location.pathname === c.href) || false;
@@ -300,6 +304,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       <main className={`flex-1 transition-all duration-300 pt-14 md:pt-0 ${collapsed ? "md:ml-16" : "md:ml-60"}`}>
         {children}
       </main>
+      <SessionTimeoutDialog open={showWarning} countdown={countdown} onKeepAlive={keepAlive} onLogout={sessionLogout} />
     </div>
   );
 };
