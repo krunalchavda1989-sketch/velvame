@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import SessionTimeoutDialog from "@/components/SessionTimeoutDialog";
 
 
 const menuItems = [
