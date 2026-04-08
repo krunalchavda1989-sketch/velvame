@@ -5,11 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-// Commission rates
-const LEVEL_RATES = [0.05, 0.045, 0.04, 0.035, 0.03, 0.025, 0.02, 0.015, 0.01];
-const REPURCHASE_RATES = [0.03, 0.02, 0.01];
-const QUALIFICATION_REQUIRED = [1, 3, 3, 3, 3, 6, 6, 6, 6];
-
+// Dynamic commission processing — reads rates from DB at runtime
 async function processCommissions(serviceClient: any, orderId: string) {
   // Idempotency check
   const { data: existing } = await serviceClient
@@ -34,9 +30,57 @@ async function processCommissions(serviceClient: any, orderId: string) {
   if (!buyerProfile?.referred_by) return;
 
   const isRepurchase = order.is_repurchase;
-  const maxLevels = isRepurchase ? 3 : 9;
-  const rates = isRepurchase ? REPURCHASE_RATES : LEVEL_RATES;
   const commissionType = isRepurchase ? "repurchase" : "level";
+
+  // Fetch dynamic commission levels from DB
+  const { data: dbLevels } = await serviceClient
+    .from("commission_levels")
+    .select("level, rate, min_referrals, is_active, commission_type")
+    .eq("commission_type", commissionType)
+    .eq("is_active", true)
+    .order("level", { ascending: true });
+
+  if (!dbLevels || dbLevels.length === 0) return;
+
+  const levelConfigs = dbLevels.map((l: any) => ({
+    rate: Number(l.rate) / 100,
+    min_referrals: Number(l.min_referrals),
+  }));
+  const maxLevels = levelConfigs.length;
+
+  // Fetch min monthly purchase for repurchase
+  let minMonthlyPurchase = 1000;
+  if (isRepurchase) {
+    const { data: commSettings } = await serviceClient
+      .from("commission_settings")
+      .select("min_monthly_purchase")
+      .limit(1)
+      .single();
+    if (commSettings?.min_monthly_purchase != null) {
+      minMonthlyPurchase = Number(commSettings.min_monthly_purchase);
+    }
+  }
+
+  // Helper: monthly purchase total
+  const getMonthlyPurchase = async (userId: string): Promise<number> => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+    const { data } = await serviceClient
+      .from("orders")
+      .select("total_amount")
+      .eq("user_id", userId)
+      .gte("created_at", monthStart)
+      .lt("created_at", monthEnd)
+      .in("status", ["confirmed", "delivered", "shipped", "pending"]);
+    return (data || []).reduce((sum: number, o: any) => sum + Number(o.total_amount), 0);
+  };
+
+  // Buyer monthly purchase check for repurchase
+  if (isRepurchase && minMonthlyPurchase > 0) {
+    const buyerMonthlyTotal = await getMonthlyPurchase(order.user_id);
+    if (buyerMonthlyTotal < minMonthlyPurchase) return;
+  }
 
   const commissionsToInsert: Record<string, unknown>[] = [];
   const walletUpdates: { user_id: string; amount: number }[] = [];
@@ -51,8 +95,17 @@ async function processCommissions(serviceClient: any, orderId: string) {
       .single();
     if (!upline) break;
 
-    if (upline.direct_referral_count >= QUALIFICATION_REQUIRED[level - 1]) {
-      const rate = rates[level - 1];
+    const config = levelConfigs[level - 1];
+    const isQualified = upline.direct_referral_count >= config.min_referrals;
+
+    let beneficiaryPurchaseOk = true;
+    if (isRepurchase && isQualified && minMonthlyPurchase > 0) {
+      const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
+      beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
+    }
+
+    if (isQualified && beneficiaryPurchaseOk) {
+      const rate = config.rate;
       const amount = Math.round(order.total_amount * rate * 100) / 100;
       commissionsToInsert.push({
         order_id: order.id, beneficiary_id: upline.user_id,
@@ -73,11 +126,21 @@ async function processCommissions(serviceClient: any, orderId: string) {
         .eq("user_id", user_id)
         .single();
       if (wallet) {
+        const newBalance = Number(wallet.balance) + amount;
         await serviceClient.from("wallets").update({
-          balance: Number(wallet.balance) + amount,
+          balance: newBalance,
           total_earned: Number(wallet.total_earned) + amount,
           commission_balance: Number(wallet.commission_balance) + amount,
         }).eq("user_id", user_id);
+
+        await serviceClient.from("wallet_transactions").insert({
+          user_id,
+          type: "credit",
+          amount,
+          description: `${isRepurchase ? "Repurchase" : "Level"} Commission Earned`,
+          closing_balance: newBalance,
+          balance_type: "commission",
+        });
       }
     }
   }
