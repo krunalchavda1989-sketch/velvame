@@ -263,19 +263,29 @@ Deno.serve(async (req: Request) => {
     const action = body.action || "process_single";
 
     // ── ACTION: backfill_all ──
-    // Reprocesses ALL confirmed/delivered/shipped orders that have
-    // fewer commissions than expected (or zero).
+    // Processes orders in batches to avoid timeouts.
+    // Accepts optional offset parameter for pagination.
     if (action === "backfill_all") {
-      // Get all qualifying orders
+      const batchSize = body.batch_size || 10;
+      const offset = body.offset || 0;
+
+      // Get qualifying orders (paginated)
       const { data: allOrders, error: ordersErr } = await supabase
         .from("orders")
         .select("id, order_number, user_id, total_amount, is_repurchase, status")
         .in("status", ["confirmed", "delivered", "shipped"])
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .range(offset, offset + batchSize - 1);
 
       if (ordersErr) throw ordersErr;
 
-      // Get current commission level count for level and repurchase
+      // Get total count for progress
+      const { count: totalCount } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["confirmed", "delivered", "shipped"]);
+
+      // Get current commission level counts
       const { data: levelLevels } = await supabase
         .from("commission_levels")
         .select("id")
@@ -295,7 +305,6 @@ Deno.serve(async (req: Request) => {
       let skipped = 0;
 
       for (const order of allOrders || []) {
-        // Check if buyer has a referrer
         const { data: buyerProfile } = await supabase
           .from("profiles")
           .select("referred_by")
@@ -307,7 +316,6 @@ Deno.serve(async (req: Request) => {
           continue;
         }
 
-        // Count existing commissions for this order
         const { count: existingCount } = await supabase
           .from("commissions")
           .select("id", { count: "exact", head: true })
@@ -317,13 +325,11 @@ Deno.serve(async (req: Request) => {
           ? expectedRepurchaseCount
           : expectedLevelCount;
 
-        // If already has max or more commissions, skip
         if ((existingCount || 0) >= expectedMax) {
           skipped++;
           continue;
         }
 
-        // Reprocess this order with force mode
         try {
           const result = await processOrderCommissions(supabase, order.id, {
             force: true,
@@ -350,13 +356,20 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      const hasMore = (allOrders?.length || 0) === batchSize;
+      const nextOffset = hasMore ? offset + batchSize : null;
+
       return new Response(
         JSON.stringify({
           success: true,
           action: "backfill_all",
-          total_orders: allOrders?.length || 0,
+          total_orders: totalCount || 0,
+          batch_offset: offset,
+          batch_size: batchSize,
           processed,
           skipped,
+          has_more: hasMore,
+          next_offset: nextOffset,
           details: results,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
