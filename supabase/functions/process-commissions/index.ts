@@ -40,28 +40,27 @@ async function processOrderCommissions(
           .single();
 
         if (wallet) {
+          const newBal = Math.max(0, Number(wallet.balance) - Number(comm.amount));
           await supabase
             .from("wallets")
             .update({
-              balance: Math.max(0, Number(wallet.balance) - Number(comm.amount)),
+              balance: newBal,
               total_earned: Math.max(0, Number(wallet.total_earned) - Number(comm.amount)),
               commission_balance: Math.max(0, Number(wallet.commission_balance) - Number(comm.amount)),
             })
             .eq("user_id", comm.beneficiary_id);
+
+          // Log the reversal
+          await supabase.from("wallet_transactions").insert({
+            user_id: comm.beneficiary_id,
+            type: "debit",
+            amount: Number(comm.amount),
+            description: "Commission Reversal (System Reprocess)",
+            closing_balance: newBal,
+            balance_type: "commission",
+          });
         }
       }
-
-      // Delete old commission wallet transactions for this order
-      await supabase
-        .from("wallet_transactions")
-        .delete()
-        .eq("type", "credit")
-        .like("description", "%Commission Earned")
-        .in(
-          "user_id",
-          existingComm.map((c: any) => c.beneficiary_id)
-        )
-        .or(`description.eq.Level Commission Earned,description.eq.Repurchase Commission Earned`);
 
       // Delete old commissions
       await supabase.from("commissions").delete().eq("order_id", orderId);
