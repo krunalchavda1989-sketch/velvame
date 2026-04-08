@@ -82,6 +82,28 @@ const AdminCommissions = () => {
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillDialog, setBackfillDialog] = useState(false);
+
+  const handleBackfillAll = async () => {
+    setBackfillRunning(true);
+    setBackfillDialog(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-commissions", {
+        body: { action: "backfill_all" },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Backfill complete: ${data.processed} orders reprocessed, ${data.skipped} skipped`);
+        fetchData();
+      } else {
+        toast.error(data?.error || "Backfill failed");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Backfill failed");
+    }
+    setBackfillRunning(false);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
