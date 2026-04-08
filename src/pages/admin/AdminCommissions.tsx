@@ -88,17 +88,24 @@ const AdminCommissions = () => {
   const handleBackfillAll = async () => {
     setBackfillRunning(true);
     setBackfillDialog(false);
+    let offset = 0;
+    let totalProcessed = 0;
+    let totalSkipped = 0;
     try {
-      const { data, error } = await supabase.functions.invoke("process-commissions", {
-        body: { action: "backfill_all" },
-      });
-      if (error) throw error;
-      if (data?.success) {
-        toast.success(`Backfill complete: ${data.processed} orders reprocessed, ${data.skipped} skipped`);
-        fetchData();
-      } else {
-        toast.error(data?.error || "Backfill failed");
+      while (true) {
+        const { data, error } = await supabase.functions.invoke("process-commissions", {
+          body: { action: "backfill_all", batch_size: 10, offset },
+        });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Backfill failed");
+        totalProcessed += data.processed || 0;
+        totalSkipped += data.skipped || 0;
+        toast.info(`Processing... ${offset + (data.processed || 0) + (data.skipped || 0)} / ${data.total_orders} orders`);
+        if (!data.has_more) break;
+        offset = data.next_offset;
       }
+      toast.success(`Backfill complete: ${totalProcessed} orders reprocessed, ${totalSkipped} skipped`);
+      fetchData();
     } catch (err: any) {
       toast.error(err.message || "Backfill failed");
     }
