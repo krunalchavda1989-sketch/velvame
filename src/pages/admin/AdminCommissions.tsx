@@ -382,6 +382,24 @@ const AdminCommissions = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Backfill Confirmation Dialog */}
+        <AlertDialog open={backfillDialog} onOpenChange={setBackfillDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reprocess All Commissions</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will find all orders with under-distributed commissions, reverse the old entries, and reprocess them with the current commission level settings. This may take a moment. Continue?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleBackfillAll}>
+                Yes, Reprocess All
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
