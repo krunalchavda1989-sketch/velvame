@@ -82,6 +82,35 @@ const AdminCommissions = () => {
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [backfillRunning, setBackfillRunning] = useState(false);
+  const [backfillDialog, setBackfillDialog] = useState(false);
+
+  const handleBackfillAll = async () => {
+    setBackfillRunning(true);
+    setBackfillDialog(false);
+    let offset = 0;
+    let totalProcessed = 0;
+    let totalSkipped = 0;
+    try {
+      while (true) {
+        const { data, error } = await supabase.functions.invoke("process-commissions", {
+          body: { action: "backfill_all", batch_size: 10, offset },
+        });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Backfill failed");
+        totalProcessed += data.processed || 0;
+        totalSkipped += data.skipped || 0;
+        toast.info(`Processing... ${offset + (data.processed || 0) + (data.skipped || 0)} / ${data.total_orders} orders`);
+        if (!data.has_more) break;
+        offset = data.next_offset;
+      }
+      toast.success(`Backfill complete: ${totalProcessed} orders reprocessed, ${totalSkipped} skipped`);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Backfill failed");
+    }
+    setBackfillRunning(false);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -171,9 +200,15 @@ const AdminCommissions = () => {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">Detailed breakdown of all commission types</p>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setBackfillDialog(true)} disabled={backfillRunning}>
+              {backfillRunning ? <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> : <Layers className="h-4 w-4 mr-1.5" />}
+              {backfillRunning ? "Processing..." : "Reprocess All Commissions"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            </Button>
+          </div>
         </div>
 
         <DateRangeFilter from={from} to={to} onRangeChange={(f, t) => { setFrom(f); setTo(t); }} />
@@ -350,6 +385,24 @@ const AdminCommissions = () => {
               <AlertDialogCancel disabled={bulkUpdating}>Cancel</AlertDialogCancel>
               <AlertDialogAction disabled={bulkUpdating} onClick={bulkApproveCommissions}>
                 {bulkUpdating ? "Updating..." : "Mark as Paid"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Backfill Confirmation Dialog */}
+        <AlertDialog open={backfillDialog} onOpenChange={setBackfillDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reprocess All Commissions</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will find all orders with under-distributed commissions, reverse the old entries, and reprocess them with the current commission level settings. This may take a moment. Continue?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleBackfillAll}>
+                Yes, Reprocess All
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
