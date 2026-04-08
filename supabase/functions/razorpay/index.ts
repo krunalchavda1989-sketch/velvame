@@ -492,6 +492,7 @@ Deno.serve(async (req) => {
     }
 
 
+    if (action === "check_auto_membership") {
       const { order_id } = body;
       if (!order_id) {
         return new Response(JSON.stringify({ error: "Missing order_id" }), {
