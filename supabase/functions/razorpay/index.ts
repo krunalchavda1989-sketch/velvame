@@ -452,7 +452,46 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (action === "check_auto_membership") {
+    if (action === "auto_process_commissions") {
+      const { order_id } = body;
+      if (!order_id) {
+        return new Response(JSON.stringify({ error: "Missing order_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const svcClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      // Verify the order belongs to the calling user
+      const { data: orderCheck } = await svcClient
+        .from("orders")
+        .select("id, user_id")
+        .eq("id", order_id)
+        .single();
+      if (!orderCheck || orderCheck.user_id !== userId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        await processCommissions(svcClient, order_id);
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (err) {
+        console.error("Auto commission processing error:", err);
+        return new Response(JSON.stringify({ success: false }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+
       const { order_id } = body;
       if (!order_id) {
         return new Response(JSON.stringify({ error: "Missing order_id" }), {

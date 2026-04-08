@@ -308,8 +308,9 @@ const Checkout = () => {
       // Full wallet payment
       if (isFullWalletPayment) {
         await supabase.from("orders").update({ status: "confirmed", payment_method: "wallet" }).eq("id", order.id);
-        // Check auto-membership activation (non-blocking)
+        // Auto-process membership & commissions (non-blocking)
         supabase.functions.invoke("razorpay", { body: { action: "check_auto_membership", order_id: order.id } }).catch(() => {});
+        supabase.functions.invoke("razorpay", { body: { action: "auto_process_commissions", order_id: order.id } }).catch(() => {});
         toast.success("Order placed successfully!");
         if (isBuyNow) clearBuyNow(); else clearCart();
         sendOrderEmail(order.id, "order_success");
