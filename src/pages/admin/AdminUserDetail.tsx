@@ -753,7 +753,7 @@ const AdminUserDetail = () => {
                           <tr key={c.id} className="hover:bg-secondary/30">
                             <td className="p-2 capitalize text-foreground">{c.commission_type}</td>
                             <td className="p-2 text-muted-foreground">L{c.level}</td>
-                            <td className="p-2 text-muted-foreground">{c.rate < 1 ? parseFloat((c.rate * 100).toFixed(2)) : c.rate}%</td>
+                            <td className="p-2 text-muted-foreground">{parseFloat((Number(c.rate) * 100).toFixed(2))}%</td>
                             <td className="p-2 font-semibold text-foreground">₹{c.amount}</td>
                             <td className="p-2">
                               <Badge variant="outline" className="text-xs capitalize">{c.status}</Badge>
