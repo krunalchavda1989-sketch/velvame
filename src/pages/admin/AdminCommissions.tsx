@@ -545,8 +545,9 @@ const AdminCommissions = () => {
   );
 };
 
-/* ─── Format rate: stored as decimal (0.05) → display as 5% ─── */
+/* ─── Format rate: display_rate is already a whole-number % (e.g. 4.5 = 4.5%) ─── */
 const formatRate = (rate: number) => {
+  // If it's a decimal (stored in DB as 0.045), convert; otherwise it's already a %
   const pct = rate < 1 ? rate * 100 : rate;
   return `${parseFloat(pct.toFixed(2))}%`;
 };
