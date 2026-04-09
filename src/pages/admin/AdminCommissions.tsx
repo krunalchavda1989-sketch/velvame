@@ -79,6 +79,7 @@ const AdminCommissions = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
@@ -181,10 +182,16 @@ const AdminCommissions = () => {
       .slice(0, 10);
   }, [commissions, profileMap]);
 
+  const availableLevels = useMemo(() => {
+    const levels = new Set<number>();
+    commissions.forEach((c) => levels.add(c.level));
+    return Array.from(levels).sort((a, b) => a - b);
+  }, [commissions]);
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
-      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter);
+      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter) && (levelFilter === "all" || c.level === Number(levelFilter));
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
@@ -328,6 +335,15 @@ const AdminCommissions = () => {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={levelFilter} onValueChange={setLevelFilter}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Level" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Levels</SelectItem>
+              {availableLevels.map((l) => (
+                <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
