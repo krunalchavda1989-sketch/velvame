@@ -701,7 +701,7 @@ const CommissionTable = ({
                       <TableCell><Badge variant="outline" className="capitalize text-[10px]">{c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}</Badge></TableCell>
                     )}
                     <TableCell><Badge variant="secondary" className="text-[10px]">L{c.level}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{formatRate(Number(c.rate))}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatRate(Number(c.display_rate ?? c.rate))}</TableCell>
                     <TableCell className="font-semibold text-primary">₹{Number(c.amount).toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{getName(c.source_user_id)}</TableCell>
                     <TableCell>
