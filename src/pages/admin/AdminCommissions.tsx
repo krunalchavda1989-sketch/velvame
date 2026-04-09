@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +20,14 @@ import {
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
   Layers, RefreshCw, Repeat, BarChart3, Trophy, SlidersHorizontal, X,
+  ChevronsUpDown, Check,
 } from "lucide-react";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { format, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
@@ -79,7 +86,9 @@ const AdminCommissions = () => {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [profileMap, setProfileMap] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -248,27 +257,41 @@ const AdminCommissions = () => {
     return Array.from(levels).sort((a, b) => a - b);
   }, [commissions]);
 
-  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", search.length > 0].filter(Boolean).length;
+  // Build unique user list from commissions for the dropdown
+  const userList = useMemo(() => {
+    const userIds = new Set<string>();
+    commissions.forEach((c) => {
+      userIds.add(c.beneficiary_id);
+      userIds.add(c.source_user_id);
+    });
+    return Array.from(userIds)
+      .map((id) => {
+        const profile = profileMap.get(id);
+        return {
+          id,
+          name: profile?.full_name || "Unknown",
+          code: profile?.referral_code || "",
+        };
+      })
+      .filter((u) => u.name !== "Unknown" || u.code)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [commissions, profileMap]);
+
+  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", selectedUserId !== "all"].filter(Boolean).length;
 
   const clearAllFilters = () => {
-    setSearch(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
+    setSelectedUserId("all"); setUserSearchTerm(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
   };
 
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
-      const name = getName(c[idField])?.toLowerCase() || "";
-      const code = getCode(c[idField])?.toLowerCase() || "";
-      const sourceName = getName(c.source_user_id)?.toLowerCase() || "";
-      const sourceCode = getCode(c.source_user_id)?.toLowerCase() || "";
-      const orderInfo = getOrderInfo(c.order_id);
-      const orderNum = (orderInfo.order_number || "").toLowerCase();
-      const q = search.toLowerCase();
-      const matchesSearch = !search || name.includes(q) || code.includes(q) || sourceName.includes(q) || sourceCode.includes(q) || orderNum.includes(q);
+      const matchesUser = selectedUserId === "all" || c[idField] === selectedUserId || c.source_user_id === selectedUserId;
       const matchesStatus = statusFilter === "all" || c.status === statusFilter;
       const matchesLevel = levelFilter === "all" || c.level === Number(levelFilter);
       const matchesType = typeFilter === "all" || c.commission_type === typeFilter;
+      const orderInfo = getOrderInfo(c.order_id);
       const matchesSource = orderSourceFilter === "all" || (orderInfo.order_source || "") === orderSourceFilter;
-      return matchesSearch && matchesStatus && matchesLevel && matchesType && matchesSource;
+      return matchesUser && matchesStatus && matchesLevel && matchesType && matchesSource;
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
@@ -419,15 +442,59 @@ const AdminCommissions = () => {
               )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, VM code, or order number..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-background"
-                />
-              </div>
+              <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={userSearchOpen} className="flex-1 min-w-[200px] justify-between bg-background font-normal">
+                    <div className="flex items-center gap-2 truncate">
+                      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="truncate">
+                        {selectedUserId === "all"
+                          ? "All Users"
+                          : (() => {
+                              const u = userList.find((u) => u.id === selectedUserId);
+                              return u ? `${u.name}${u.code ? ` (${u.code})` : ""}` : "Select user";
+                            })()}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[320px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search by name or VM code..." value={userSearchTerm} onValueChange={setUserSearchTerm} />
+                    <CommandList>
+                      <CommandEmpty>No user found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="all-users"
+                          onSelect={() => { setSelectedUserId("all"); setUserSearchOpen(false); setUserSearchTerm(""); }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${selectedUserId === "all" ? "opacity-100" : "opacity-0"}`} />
+                          All Users
+                        </CommandItem>
+                        {userList
+                          .filter((u) => {
+                            if (!userSearchTerm) return true;
+                            const q = userSearchTerm.toLowerCase();
+                            return u.name.toLowerCase().includes(q) || u.code.toLowerCase().includes(q);
+                          })
+                          .slice(0, 50)
+                          .map((u) => (
+                            <CommandItem
+                              key={u.id}
+                              value={`${u.name} ${u.code}`}
+                              onSelect={() => { setSelectedUserId(u.id); setUserSearchOpen(false); setUserSearchTerm(""); }}
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${selectedUserId === u.id ? "opacity-100" : "opacity-0"}`} />
+                              <span className="truncate">{u.name}</span>
+                              {u.code && <span className="ml-1 text-xs text-muted-foreground">({u.code})</span>}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
