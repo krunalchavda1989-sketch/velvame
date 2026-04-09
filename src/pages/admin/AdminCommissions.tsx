@@ -442,15 +442,59 @@ const AdminCommissions = () => {
               )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, VM code, or order number..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-background"
-                />
-              </div>
+              <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={userSearchOpen} className="flex-1 min-w-[200px] justify-between bg-background font-normal">
+                    <div className="flex items-center gap-2 truncate">
+                      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="truncate">
+                        {selectedUserId === "all"
+                          ? "All Users"
+                          : (() => {
+                              const u = userList.find((u) => u.id === selectedUserId);
+                              return u ? `${u.name}${u.code ? ` (${u.code})` : ""}` : "Select user";
+                            })()}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[320px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search by name or VM code..." value={userSearchTerm} onValueChange={setUserSearchTerm} />
+                    <CommandList>
+                      <CommandEmpty>No user found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="all-users"
+                          onSelect={() => { setSelectedUserId("all"); setUserSearchOpen(false); setUserSearchTerm(""); }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${selectedUserId === "all" ? "opacity-100" : "opacity-0"}`} />
+                          All Users
+                        </CommandItem>
+                        {userList
+                          .filter((u) => {
+                            if (!userSearchTerm) return true;
+                            const q = userSearchTerm.toLowerCase();
+                            return u.name.toLowerCase().includes(q) || u.code.toLowerCase().includes(q);
+                          })
+                          .slice(0, 50)
+                          .map((u) => (
+                            <CommandItem
+                              key={u.id}
+                              value={`${u.name} ${u.code}`}
+                              onSelect={() => { setSelectedUserId(u.id); setUserSearchOpen(false); setUserSearchTerm(""); }}
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${selectedUserId === u.id ? "opacity-100" : "opacity-0"}`} />
+                              <span className="truncate">{u.name}</span>
+                              {u.code && <span className="ml-1 text-xs text-muted-foreground">({u.code})</span>}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
