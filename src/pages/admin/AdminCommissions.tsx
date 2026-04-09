@@ -652,7 +652,7 @@ const CommissionTable = ({
       getName(c.beneficiary_id),
       ...(showType ? [c.commission_type] : []),
       String(c.level),
-      formatRate(Number(c.rate)),
+      formatRate(Number(c.display_rate ?? c.rate)),
       String(Number(c.amount).toFixed(2)),
       c.status,
       format(new Date(c.created_at), "dd MMM yyyy"),
