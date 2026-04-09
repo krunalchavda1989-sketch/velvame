@@ -81,21 +81,21 @@ const PayoutReport = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Helper to fetch ALL rows from a table, paginating past the 1000-row limit
-  const fetchAllRows = async <T,>(
+  const fetchAllRows = async (
     tableName: string,
     selectCols: string,
     orderCol?: string,
-  ): Promise<T[]> => {
+  ): Promise<any[]> => {
     const PAGE = 1000;
-    let allRows: T[] = [];
+    let allRows: any[] = [];
     let from = 0;
     let hasMore = true;
     while (hasMore) {
-      let q = supabase.from(tableName).select(selectCols).range(from, from + PAGE - 1);
+      let q = (supabase.from(tableName) as any).select(selectCols).range(from, from + PAGE - 1);
       if (orderCol) q = q.order(orderCol);
       const { data, error } = await q;
       if (error || !data) break;
-      allRows = allRows.concat(data as T[]);
+      allRows = allRows.concat(data);
       hasMore = data.length === PAGE;
       from += PAGE;
     }
