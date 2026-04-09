@@ -80,6 +80,8 @@ const AdminCommissions = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [orderSourceFilter, setOrderSourceFilter] = useState("all");
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
