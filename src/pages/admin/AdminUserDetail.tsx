@@ -331,6 +331,12 @@ const AdminUserDetail = () => {
   const currentTitleIndex = titleRoadmap.findIndex((t) => t.title_name === profile.title);
   const nextTitle = titleRoadmap[currentTitleIndex + 1];
   const totalCommission = commissions.reduce((sum, c) => sum + Number(c.amount), 0);
+  const formatCommissionRate = (rate: number | string | null | undefined) => {
+    const numericRate = Number(rate ?? 0);
+    const displayRate = numericRate > 0 && numericRate < 1 ? numericRate * 100 : numericRate;
+
+    return `${parseFloat(displayRate.toFixed(2))}%`;
+  };
 
   return (
     <AdminLayout>
@@ -753,7 +759,7 @@ const AdminUserDetail = () => {
                           <tr key={c.id} className="hover:bg-secondary/30">
                             <td className="p-2 capitalize text-foreground">{c.commission_type}</td>
                             <td className="p-2 text-muted-foreground">L{c.level}</td>
-                            <td className="p-2 text-muted-foreground">{parseFloat((Number(c.rate) * 100).toFixed(2))}%</td>
+                            <td className="p-2 text-muted-foreground">{formatCommissionRate(c.rate)}</td>
                             <td className="p-2 font-semibold text-foreground">₹{c.amount}</td>
                             <td className="p-2">
                               <Badge variant="outline" className="text-xs capitalize">{c.status}</Badge>
