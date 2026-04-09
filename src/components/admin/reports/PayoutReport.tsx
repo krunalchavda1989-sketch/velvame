@@ -106,17 +106,14 @@ const PayoutReport = () => {
     setLoading(true);
 
     // Fetch all profiles (paginated)
-    const profiles = await fetchAllRows<any>("profiles", "user_id, full_name, first_name, last_name, phone, referral_code", "full_name");
+    const profiles = await fetchAllRows("profiles", "user_id, full_name, first_name, last_name, phone, referral_code", "full_name");
     if (!profiles.length) { setLoading(false); return; }
 
-    // Fetch ALL commissions (paginated – no .in() filter to avoid truncation)
-    const commissions = await fetchAllRows<any>("commissions", "beneficiary_id, amount");
+    const commissions = await fetchAllRows("commissions", "beneficiary_id, amount");
 
-    // Fetch ALL payouts (paginated)
-    const payouts = await fetchAllRows<any>("payout_transactions", "user_id, amount, payment_date");
+    const payouts = await fetchAllRows("payout_transactions", "user_id, amount, payment_date");
 
-    // Fetch ALL bank details (paginated)
-    const bankDetails = await fetchAllRows<any>("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
+    const bankDetails = await fetchAllRows("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
 
     // Aggregate commissions per user
     const earningsMap = new Map<string, number>();
