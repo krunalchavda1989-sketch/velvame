@@ -3297,106 +3297,95 @@ const AuthPageTab = () => {
 };
 
 /* ───────── Feature Log Tab ───────── */
-const FEATURE_LOG = [
-  { date: "2026-04-02", title: "System Feature Update Log", desc: "Added a timeline page under Settings showing all features built into the system with name, description, and date." },
-  { date: "2026-04-02", title: "Force Bank Details Toggle", desc: "Admin can force users to update bank details before accessing dashboard. Toggle added under KYC / Bank settings tab. Red indicator shown on incomplete profiles." },
-  { date: "2026-04-02", title: "Payout & Withdrawal Report System", desc: "Complete payout report in admin Reports tab with Mark as Paid, partial payments, duplicate ref prevention, per-user payout history, CSV export, and user panel payout history display." },
-  { date: "2026-03-30", title: "Product Reviews & Ratings", desc: "Users can submit reviews on purchased products. Admin can approve/reject reviews. Bulk upload support and verified purchase badges." },
-  { date: "2026-03-29", title: "Inventory Management", desc: "Stock tracking with inventory logs, low stock alerts, add/deduct stock dialogs, and automatic stock deduction on order placement." },
-  { date: "2026-03-28", title: "Marquee / Ticker Sections", desc: "Configurable scrolling marquee sections on the landing page with customizable speed, direction, colors, and fonts." },
-  { date: "2026-03-27", title: "Landing Page Section Manager", desc: "Drag-and-drop reordering of all landing page sections with visibility toggles for each section." },
-  { date: "2026-03-26", title: "How It Works Section", desc: "Configurable step-by-step section on the landing page with icons, descriptions, and display style options." },
-  { date: "2026-03-25", title: "Why Choose Us Section", desc: "Admin-managed feature highlights section with icon, title, and description for the landing page." },
-  { date: "2026-03-24", title: "Category Section Settings", desc: "Customizable shop-by-category section with image styles, hover effects, title alignment, and display count." },
-  { date: "2026-03-23", title: "Featured Product Sections", desc: "Multiple featured sections on the landing page with manual or category-based product selection." },
-  { date: "2026-03-22", title: "Sub-Admin Management", desc: "Master admin can add sub-admin users with controlled access. Sub-admins can be activated/deactivated." },
-  { date: "2026-03-21", title: "Custom Code Injection", desc: "Admin can inject custom CSS and JavaScript with history tracking, enable/disable toggles, and JS injection position control." },
-  { date: "2026-03-20", title: "Banner Management System", desc: "Full banner/slider management with desktop and mobile images, display modes, destination links, and slider settings." },
-  { date: "2026-03-19", title: "Contact Form Builder", desc: "Dynamic contact form with customizable fields, field types, sorting, and submission management in admin." },
-  { date: "2026-03-18", title: "Breadcrumb Customization", desc: "Fully customizable breadcrumb section with background type, gradient, image, colors, font sizes, and per-page visibility." },
-  { date: "2026-03-17", title: "Footer Settings & Menu Builder", desc: "Configurable footer with brand description, multiple menu sections, link management, visit counter, and color customization." },
-  { date: "2026-03-16", title: "Wallet Management", desc: "Admin wallet adjustments with subscription and commission balance separation, credit/debit operations, and transaction history." },
-  { date: "2026-03-15", title: "Announcement Bar", desc: "Configurable announcement bar above navbar with auto-play, transitions, mobile/desktop toggle, and close button." },
-  { date: "2026-03-14", title: "Social Media Links", desc: "Admin-managed social media links displayed in the footer and header of the website." },
-  { date: "2026-03-13", title: "Newsletter System", desc: "Newsletter subscription with customizable signup section, subscriber management, and admin newsletter settings." },
-  { date: "2026-03-12", title: "Bulk SMS System", desc: "Send bulk SMS to all users or filtered groups using SMS provider integration with template management." },
-  { date: "2026-03-11", title: "Admin Reports", desc: "Sales reports, commission reports, and payout reports with date range filters and export functionality." },
-  { date: "2026-03-10", title: "Order Success & Email Notifications", desc: "Order confirmation page with order details and automated email notifications to customers on order placement." },
-  { date: "2026-03-09", title: "Checkout & Cart System", desc: "Full shopping cart with drawer, coupon application, wallet balance usage, shipping address selection, and payment gateway integration." },
-  { date: "2026-03-08", title: "Offers & Coupons", desc: "Monthly offers management and coupon code system with discount types, usage limits, and date-based activation." },
-  { date: "2026-03-07", title: "Product Detail Page & SEO", desc: "Rich product detail page with image gallery, variations, reviews, related products, social sharing, and SEO meta tags." },
-  { date: "2026-03-06", title: "Category Pages", desc: "Dynamic category pages with product listing, filtering, and SEO-friendly URLs." },
-  { date: "2026-03-05", title: "Dynamic CMS Pages", desc: "Admin-created pages with rich text content, SEO meta fields, and dynamic slug-based routing." },
-  { date: "2026-03-04", title: "Admin Order Management", desc: "Order listing with status filters, order detail view, status updates, activity timeline, and invoice printing." },
-  { date: "2026-03-03", title: "Manual Order Creation", desc: "Admin can create orders on behalf of users with product selection, pricing, and payment method options." },
-  { date: "2026-03-02", title: "Commission System", desc: "Multi-level commission calculation on orders with configurable levels, rates, and minimum referral requirements." },
-  { date: "2026-03-01", title: "Title & Awards Roadmap", desc: "User title progression based on active member count with cash and gift rewards at each milestone." },
-  { date: "2026-02-28", title: "Genealogy Tree", desc: "Visual genealogy tree for users and admin with horizontal and vertical views, depth control, and member details." },
-  { date: "2026-02-27", title: "Team Management", desc: "User can view direct and downline team members with search, level filtering, and member status." },
-  { date: "2026-02-26", title: "Earnings Dashboard", desc: "User earnings overview with charts, income by level, transaction log, date filters, and downline search." },
-  { date: "2026-02-25", title: "Wallet System", desc: "User wallet with subscription and commission balance separation, transaction history, and withdrawal requests." },
-  { date: "2026-02-24", title: "Withdrawal Requests", desc: "Users can request withdrawals from commission balance. Admin can approve/reject with notes." },
-  { date: "2026-02-23", title: "KYC Document Verification", desc: "Users upload identity documents for verification. Admin can approve/reject with notes. Auto-notification on status change." },
-  { date: "2026-02-22", title: "User Profile & Addresses", desc: "User profile management with personal details, avatar upload, birth/anniversary dates, and multiple shipping addresses." },
-  { date: "2026-02-21", title: "Bank Details Management", desc: "Users can add bank account details and UPI ID for payout processing. Details shown in admin payout report." },
-  { date: "2026-02-20", title: "Invite Link & Referral System", desc: "Unique referral code per user with shareable invite link and social sharing buttons." },
-  { date: "2026-02-19", title: "Dashboard Overview", desc: "User dashboard with earning summary, team stats, recent orders, notifications, and quick action links." },
-  { date: "2026-02-18", title: "Notification System", desc: "In-app notifications for order updates, KYC status, commission credits, and payout confirmations." },
-  { date: "2026-02-17", title: "Product Management", desc: "Admin product CRUD with retail/distributor pricing, image gallery with drag-and-drop sorting, variations, and tags." },
-  { date: "2026-02-16", title: "Category Management", desc: "Product categories with image, description, SEO fields, and sort ordering." },
-  { date: "2026-02-15", title: "User Management", desc: "Admin user listing with search, filters, user detail view, subscription management, and profile editing." },
-  { date: "2026-02-14", title: "Admin Overview Dashboard", desc: "Admin dashboard with total users, orders, revenue, and commission statistics with visual charts." },
-  { date: "2026-02-13", title: "Brand Settings", desc: "Logo, favicon, brand name, tagline, colors, fonts, and contact information configuration." },
-  { date: "2026-02-12", title: "System Colors", desc: "Customizable color palette for brand color, secondary, accent, button, sidebar, stat cards, and status indicators." },
-  { date: "2026-02-11", title: "Payment Gateway Configuration", desc: "Multi-gateway support: Razorpay, PhonePe, Stripe, Paytm, Instamojo, Bank Transfer, and COD with sandbox mode." },
-  { date: "2026-02-10", title: "Localization Settings", desc: "Multi-language and multi-currency support with tax configuration (GST/VAT)." },
-  { date: "2026-02-09", title: "SMTP Email Configuration", desc: "SMTP settings for transactional emails with test email functionality." },
-  { date: "2026-02-08", title: "SMS Integration", desc: "SMS provider configuration with OTP, order updates, and welcome message toggles." },
-  { date: "2026-02-07", title: "WhatsApp Integration", desc: "WhatsApp Business API configuration for order updates, welcome messages, and support chat." },
-  { date: "2026-02-06", title: "Shipping Configuration", desc: "Shipping methods and rates configuration for order delivery." },
-  { date: "2026-02-05", title: "PWA Settings", desc: "Progressive Web App configuration for installable mobile experience." },
-  { date: "2026-02-04", title: "Membership Settings", desc: "Configurable membership/subscription amount for user activation." },
-  { date: "2026-02-03", title: "Order Number Settings", desc: "Customizable order number prefix, padding, and auto-increment settings." },
-  { date: "2026-02-02", title: "Referral Code Settings", desc: "Customizable referral code prefix, padding, and auto-generation configuration." },
-  { date: "2026-02-01", title: "Default Placement Settings", desc: "Default referral code for users who register without a referral link." },
-  { date: "2026-01-30", title: "Authentication System", desc: "User registration with referral code, email verification, login, forgot/reset password, and admin login." },
-  { date: "2026-01-29", title: "Landing Page", desc: "Public landing page with hero banner, features, MLM structure, testimonials, FAQ, and footer." },
-  { date: "2026-01-28", title: "Shop Page", desc: "Product listing with category filters, search, cart drawer, and product cards with quick add-to-cart." },
-  { date: "2026-01-27", title: "Navigation & Menu Management", desc: "Admin-managed navigation menus with parent-child hierarchy, active toggle, and sort ordering." },
-  { date: "2026-01-26", title: "Hero Stats Section", desc: "Configurable statistics section on the landing page with icons, values, and labels." },
-  { date: "2026-01-25", title: "Testimonials Management", desc: "Admin-managed customer testimonials with rating, name, avatar, and display ordering." },
-  { date: "2026-01-24", title: "Login Page Customization", desc: "Customizable authentication page background image via admin settings." },
-  { date: "2026-01-23", title: "reCAPTCHA Integration", desc: "Google reCAPTCHA configuration for form spam protection." },
-  { date: "2026-01-22", title: "Admin Profile", desc: "Admin profile management with personal details and avatar." },
-  { date: "2026-01-21", title: "Responsive Design", desc: "Full responsive design across all pages for desktop, tablet, and mobile devices." },
-];
-
 const FeatureLogTab = () => {
   const [search, setSearch] = useState("");
+  const [features, setFeatures] = useState<{ id: string; title: string; description: string; feature_date: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
+  const [adding, setAdding] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editDate, setEditDate] = useState("");
+
+  const fetchFeatures = useCallback(async () => {
+    const { data } = await supabase
+      .from("system_feature_log")
+      .select("*")
+      .order("feature_date", { ascending: false });
+    if (data) setFeatures(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchFeatures(); }, [fetchFeatures]);
+
+  const handleAdd = async () => {
+    if (!newTitle.trim()) { toast.error("Title is required"); return; }
+    setAdding(true);
+    const { error } = await supabase.from("system_feature_log").insert({ title: newTitle.trim(), description: newDesc.trim(), feature_date: newDate });
+    if (error) toast.error("Failed to add feature");
+    else { toast.success("Feature added"); setNewTitle(""); setNewDesc(""); setNewDate(new Date().toISOString().slice(0, 10)); setShowAdd(false); fetchFeatures(); }
+    setAdding(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this feature entry?")) return;
+    const { error } = await supabase.from("system_feature_log").delete().eq("id", id);
+    if (error) toast.error("Failed to delete");
+    else { toast.success("Deleted"); fetchFeatures(); }
+  };
+
+  const handleEditSave = async () => {
+    if (!editId || !editTitle.trim()) return;
+    const { error } = await supabase.from("system_feature_log").update({ title: editTitle.trim(), description: editDesc.trim(), feature_date: editDate }).eq("id", editId);
+    if (error) toast.error("Failed to update");
+    else { toast.success("Updated"); setEditId(null); fetchFeatures(); }
+  };
+
   const searchLower = search.toLowerCase();
-  const filtered = FEATURE_LOG.filter(
-    (f) => f.title.toLowerCase().includes(searchLower) || f.desc.toLowerCase().includes(searchLower)
+  const filtered = features.filter(
+    (f) => f.title.toLowerCase().includes(searchLower) || f.description.toLowerCase().includes(searchLower)
   );
+
+  if (loading) return <Card><CardContent className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></CardContent></Card>;
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-primary" />
-            System Feature Update Log
-          </CardTitle>
-          <CardDescription>Timeline of all features built into this system</CardDescription>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-primary" />
+                System Feature Update Log
+              </CardTitle>
+              <CardDescription>Timeline of all features built into this system</CardDescription>
+            </div>
+            <Button size="sm" onClick={() => setShowAdd(!showAdd)} className="gap-1.5">
+              {showAdd ? <X className="h-4 w-4" /> : <ClipboardList className="h-4 w-4" />}
+              {showAdd ? "Cancel" : "Add Feature"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showAdd && (
+            <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">Add New Feature Entry</h4>
+              <Input placeholder="Feature title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="h-9 text-sm" />
+              <Input placeholder="Description" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} className="h-9 text-sm" />
+              <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="h-9 text-sm w-48" />
+              <Button size="sm" onClick={handleAdd} disabled={adding} className="gap-1.5">
+                {adding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Save
+              </Button>
+            </div>
+          )}
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search features..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
+            <Input placeholder="Search features..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
           </div>
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -3404,24 +3393,41 @@ const FeatureLogTab = () => {
             <span>features total</span>
           </div>
 
-          {/* Timeline */}
           <div className="relative ml-4 border-l-2 border-primary/20 pl-6 space-y-6 pb-2">
-            {filtered.map((feature, idx) => (
-              <div key={idx} className="relative">
-                {/* Dot */}
+            {filtered.map((feature) => (
+              <div key={feature.id} className="relative group">
                 <div className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="font-semibold text-sm text-foreground">{feature.title}</h4>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
-                      {new Date(feature.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    </Badge>
+                {editId === feature.id ? (
+                  <div className="space-y-2 p-3 rounded-lg border bg-secondary/30">
+                    <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-8 text-sm" />
+                    <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="h-8 text-sm" />
+                    <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="h-8 text-sm w-48" />
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="default" onClick={handleEditSave} className="h-7 text-xs">Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditId(null)} className="h-7 text-xs">Cancel</Button>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
-                </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-semibold text-sm text-foreground">{feature.title}</h4>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                        {new Date(feature.feature_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                      </Badge>
+                      <div className="hidden group-hover:flex gap-1 ml-auto">
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditId(feature.id); setEditTitle(feature.title); setEditDesc(feature.description); setEditDate(feature.feature_date); }}>
+                          <Settings className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDelete(feature.id)}>
+                          <XCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{feature.description}</p>
+                  </div>
+                )}
               </div>
             ))}
-
             {filtered.length === 0 && (
               <p className="text-sm text-muted-foreground py-4">No features match your search.</p>
             )}
