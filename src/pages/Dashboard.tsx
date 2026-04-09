@@ -175,6 +175,7 @@ const Dashboard = () => {
         </div>
 
         <NotificationBanner />
+        <ProfileCompletionCard />
 
         {/* Referral link */}
         <motion.div
