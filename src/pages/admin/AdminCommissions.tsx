@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
-  Layers, RefreshCw, Repeat, BarChart3, Trophy,
+  Layers, RefreshCw, Repeat, BarChart3, Trophy, SlidersHorizontal, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -80,6 +80,8 @@ const AdminCommissions = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [orderSourceFilter, setOrderSourceFilter] = useState("all");
   const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
   const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
@@ -113,17 +115,23 @@ const AdminCommissions = () => {
     setBackfillRunning(false);
   };
 
+  const [orderMap, setOrderMap] = useState<Map<string, any>>(new Map());
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-    const [commRes, profilesRes] = await Promise.all([
+    const [commRes, profilesRes, ordersRes] = await Promise.all([
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
+      supabase.from("orders").select("id, order_number, order_source"),
     ]);
     const pMap = new Map<string, any>();
     (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
     setProfileMap(pMap);
+    const oMap = new Map<string, any>();
+    (ordersRes.data || []).forEach((o) => oMap.set(o.id, o));
+    setOrderMap(oMap);
     setCommissions(commRes.data || []);
     setSelectedComm(new Set());
     setLoading(false);
@@ -150,6 +158,9 @@ const AdminCommissions = () => {
   const totalRepurchase = repurchaseCommissions.reduce((s, c) => s + Number(c.amount), 0);
   const totalPending = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0);
   const totalPaid = commissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0);
+
+  const getCode = (id: string) => profileMap.get(id)?.referral_code || "";
+  const getOrderInfo = (orderId: string) => orderMap.get(orderId) || {};
 
   const getName = (id: string) => profileMap.get(id)?.full_name || "—";
 
@@ -188,10 +199,27 @@ const AdminCommissions = () => {
     return Array.from(levels).sort((a, b) => a - b);
   }, [commissions]);
 
+  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", search.length > 0].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearch(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
+  };
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
-      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter) && (levelFilter === "all" || c.level === Number(levelFilter));
+      const code = getCode(c[idField])?.toLowerCase() || "";
+      const sourceName = getName(c.source_user_id)?.toLowerCase() || "";
+      const sourceCode = getCode(c.source_user_id)?.toLowerCase() || "";
+      const orderInfo = getOrderInfo(c.order_id);
+      const orderNum = (orderInfo.order_number || "").toLowerCase();
+      const q = search.toLowerCase();
+      const matchesSearch = !search || name.includes(q) || code.includes(q) || sourceName.includes(q) || sourceCode.includes(q) || orderNum.includes(q);
+      const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+      const matchesLevel = levelFilter === "all" || c.level === Number(levelFilter);
+      const matchesType = typeFilter === "all" || c.commission_type === typeFilter;
+      const matchesSource = orderSourceFilter === "all" || (orderInfo.order_source || "") === orderSourceFilter;
+      return matchesSearch && matchesStatus && matchesLevel && matchesType && matchesSource;
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
@@ -324,29 +352,69 @@ const AdminCommissions = () => {
           </Card>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative max-w-xs flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Level" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
-              {availableLevels.map((l) => (
-                <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Highlighted Search & Filter Bar */}
+        <Card className="border-primary/30 bg-primary/5 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Search & Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-primary/15 text-primary border-primary/20">
+                  {activeFilterCount} active
+                </Badge>
+              )}
+              {activeFilterCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground ml-auto" onClick={clearAllFilters}>
+                  <X className="h-3 w-3 mr-1" /> Clear all
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, VM code, or order number..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 bg-background"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Level" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {availableLevels.map((l) => (
+                    <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-40 bg-background"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="level">Level Income</SelectItem>
+                  <SelectItem value="repurchase">Repurchase</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={orderSourceFilter} onValueChange={setOrderSourceFilter}>
+                <SelectTrigger className="w-40 bg-background"><SelectValue placeholder="Order Source" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="user">User Order</SelectItem>
+                  <SelectItem value="manual">Manual Order</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Tabs */}
         {loading ? (
