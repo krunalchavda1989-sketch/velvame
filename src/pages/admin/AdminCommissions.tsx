@@ -88,13 +88,42 @@ const AdminCommissions = () => {
   const [backfillRunning, setBackfillRunning] = useState(false);
   const [backfillDialog, setBackfillDialog] = useState(false);
 
+  const handleFixRates = async () => {
+    setBackfillRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("process-commissions", {
+        body: { action: "fix_rates" },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Fix rates failed");
+      toast.success(`Rate correction complete: ${data.records_fixed} records fixed, ${data.wallet_adjustments} wallets adjusted`);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Fix rates failed");
+    }
+    setBackfillRunning(false);
+  };
+
   const handleBackfillAll = async () => {
     setBackfillRunning(true);
     setBackfillDialog(false);
-    let offset = 0;
-    let totalProcessed = 0;
-    let totalSkipped = 0;
+    // First fix rates, then reprocess
     try {
+      // Step 1: Fix rates
+      toast.info("Step 1/2: Fixing commission rates...");
+      const { data: fixData, error: fixErr } = await supabase.functions.invoke("process-commissions", {
+        body: { action: "fix_rates" },
+      });
+      if (fixErr) throw fixErr;
+      if (fixData?.records_fixed > 0) {
+        toast.success(`Fixed ${fixData.records_fixed} commission records`);
+      }
+
+      // Step 2: Backfill
+      toast.info("Step 2/2: Reprocessing commissions...");
+      let offset = 0;
+      let totalProcessed = 0;
+      let totalSkipped = 0;
       while (true) {
         const { data, error } = await supabase.functions.invoke("process-commissions", {
           body: { action: "backfill_all", batch_size: 10, offset },
@@ -107,7 +136,7 @@ const AdminCommissions = () => {
         if (!data.has_more) break;
         offset = data.next_offset;
       }
-      toast.success(`Backfill complete: ${totalProcessed} orders reprocessed, ${totalSkipped} skipped`);
+      toast.success(`Complete: ${totalProcessed} orders reprocessed, ${totalSkipped} skipped`);
       fetchData();
     } catch (err: any) {
       toast.error(err.message || "Backfill failed");
