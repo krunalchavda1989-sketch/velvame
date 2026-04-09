@@ -571,11 +571,13 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
   onBulkApprove?: () => void; pendingCount: number;
 }) => {
   const levelStats = useMemo(() => {
-    const map = new Map<number, { count: number; total: number; paid: number; pending: number }>();
+    const map = new Map<number, { count: number; total: number; paid: number; pending: number; rate: number }>();
     data.forEach((c) => {
-      const prev = map.get(c.level) || { count: 0, total: 0, paid: 0, pending: 0 };
+      const prev = map.get(c.level) || { count: 0, total: 0, paid: 0, pending: 0, rate: 0 };
       prev.count += 1; prev.total += Number(c.amount);
       if (c.status === "paid") prev.paid += Number(c.amount); else prev.pending += Number(c.amount);
+      // Use display_rate (already a whole-number %) from the first record of this level
+      if (prev.rate === 0 && c.display_rate != null) prev.rate = Number(c.display_rate);
       map.set(c.level, prev);
     });
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
@@ -591,7 +593,7 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
             className={`p-4 rounded-xl bg-gradient-to-br ${LEVEL_CARD_GRADIENTS[i % LEVEL_CARD_GRADIENTS.length]} text-white shadow-lg`}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs opacity-80">Level {level}</span>
-              <Layers className="h-4 w-4 opacity-80" />
+              <span className="text-xs font-semibold bg-white/20 px-1.5 py-0.5 rounded">{formatRate(s.rate)}</span>
             </div>
             <div className="text-lg font-display font-bold">₹{s.total.toLocaleString()}</div>
             <div className="flex gap-2 mt-1 text-[10px]">
