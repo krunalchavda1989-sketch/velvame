@@ -593,7 +593,7 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
             className={`p-4 rounded-xl bg-gradient-to-br ${LEVEL_CARD_GRADIENTS[i % LEVEL_CARD_GRADIENTS.length]} text-white shadow-lg`}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs opacity-80">Level {level}</span>
-              <Layers className="h-4 w-4 opacity-80" />
+              <span className="text-xs font-semibold bg-white/20 px-1.5 py-0.5 rounded">{formatRate(s.rate)}</span>
             </div>
             <div className="text-lg font-display font-bold">₹{s.total.toLocaleString()}</div>
             <div className="flex gap-2 mt-1 text-[10px]">
