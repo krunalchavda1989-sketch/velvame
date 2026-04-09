@@ -98,7 +98,7 @@ function LevelRow({ lvl, isOpen, onToggle, currencySymbol }: {
         <TableCell className="text-right">{lvl.activeMembers}</TableCell>
         <TableCell className="text-right">{currencySymbol}{lvl.totalBusinessVolume.toLocaleString()}</TableCell>
         <TableCell className="text-right font-medium">{currencySymbol}{lvl.incomeEarned.toLocaleString()}</TableCell>
-        <TableCell className="text-right">{lvl.rate}%</TableCell>
+        <TableCell className="text-right">{parseFloat(Number(lvl.rate).toFixed(2))}%</TableCell>
       </TableRow>
       {isOpen && lvl.transactions.map(txn => (
         <TableRow key={txn.commission_id} className="bg-muted/20 text-sm">
