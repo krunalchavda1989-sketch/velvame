@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, Upload, X, Loader2 } from "lucide-react";
+import { Star, X, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,8 @@ interface ProductReviewFormProps {
   onSubmitted: () => void;
 }
 
+const ratingLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
+
 const ProductReviewForm = ({ productId, userId, userName, orderId, onSubmitted }: ProductReviewFormProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -24,6 +26,8 @@ const ProductReviewForm = ({ productId, userId, userName, orderId, onSubmitted }
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const activeRating = hoverRating || rating;
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -83,94 +87,146 @@ const ProductReviewForm = ({ productId, userId, userName, orderId, onSubmitted }
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-      <h3 className="text-lg font-semibold text-foreground">Write a Review</h3>
-
-      {/* Star Rating */}
-      <div>
-        <Label className="text-sm text-muted-foreground mb-2 block">Rating *</Label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <button
-              key={i}
-              onMouseEnter={() => setHoverRating(i)}
-              onMouseLeave={() => setHoverRating(0)}
-              onClick={() => setRating(i)}
-              className="p-0.5"
-            >
-              <Star
-                className={`h-7 w-7 transition-colors ${
-                  i <= (hoverRating || rating)
-                    ? "text-yellow-500 fill-yellow-500"
-                    : "text-muted-foreground/30"
-                }`}
-              />
-            </button>
-          ))}
-        </div>
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Header */}
+      <div className="bg-primary/5 border-b border-border px-6 py-4">
+        <h3 className="text-lg font-display font-bold text-foreground">Write Your Review</h3>
+        <p className="text-sm text-muted-foreground">Share your honest experience with this product</p>
       </div>
 
-      <div>
-        <Label className="text-sm text-muted-foreground">Review Title (optional)</Label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Summarize your experience"
-          maxLength={100}
-          className="mt-1 bg-background border-border"
-        />
-      </div>
-
-      <div>
-        <Label className="text-sm text-muted-foreground">Your Review *</Label>
-        <Textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your thoughts about this product..."
-          maxLength={1000}
-          rows={4}
-          className="mt-1 bg-background border-border resize-none"
-        />
-        <p className="text-xs text-muted-foreground mt-1">{body.length}/1000</p>
-      </div>
-
-      <div>
-        <Label className="text-sm text-muted-foreground">Display Name</Label>
-        <Input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Your name"
-          className="mt-1 bg-background border-border"
-        />
-      </div>
-
-      {/* Image Upload */}
-      <div>
-        <Label className="text-sm text-muted-foreground mb-2 block">Photos (optional, max 3)</Label>
-        <div className="flex gap-2 flex-wrap">
-          {images.map((img, i) => (
-            <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
-              <img src={img} alt="" className="w-full h-full object-cover" />
-              <button
-                onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
+      <div className="p-6 space-y-6">
+        {/* Star Rating */}
+        <div>
+          <Label className="text-sm font-medium text-foreground mb-3 block">
+            Overall Rating <span className="text-destructive">*</span>
+          </Label>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onMouseEnter={() => setHoverRating(i)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => setRating(i)}
+                  className="p-1 rounded-md hover:bg-muted transition-colors"
+                >
+                  <Star
+                    className={`h-8 w-8 transition-all duration-150 ${
+                      i <= activeRating
+                        ? "text-yellow-500 fill-yellow-500 scale-110"
+                        : "text-muted-foreground/25 hover:text-muted-foreground/40"
+                    }`}
+                  />
+                </button>
+              ))}
             </div>
-          ))}
-          {images.length < 3 && (
-            <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center cursor-pointer transition-colors">
-              {uploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-            </label>
-          )}
+            {activeRating > 0 && (
+              <span className="text-sm font-medium text-foreground animate-in fade-in duration-200">
+                {ratingLabels[activeRating]}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Two column layout for title & name */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-sm font-medium text-foreground mb-1.5 block">Review Title</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Summarize your experience"
+              maxLength={100}
+              className="bg-background border-border"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium text-foreground mb-1.5 block">Display Name</Label>
+            <Input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your name"
+              className="bg-background border-border"
+            />
+          </div>
+        </div>
+
+        {/* Review Body */}
+        <div>
+          <Label className="text-sm font-medium text-foreground mb-1.5 block">
+            Your Review <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="What did you like or dislike? How did this product perform for you?"
+            maxLength={1000}
+            rows={4}
+            className="bg-background border-border resize-none"
+          />
+          <div className="flex justify-between mt-1.5">
+            <p className="text-xs text-muted-foreground">Minimum 10 characters recommended</p>
+            <p className="text-xs text-muted-foreground">{body.length}/1000</p>
+          </div>
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <Label className="text-sm font-medium text-foreground mb-2 block">
+            Add Photos <span className="text-muted-foreground font-normal">(optional, max 3)</span>
+          </Label>
+          <div className="flex gap-3 flex-wrap">
+            {images.map((img, i) => (
+              <div key={i} className="relative group w-24 h-24 rounded-xl overflow-hidden border-2 border-border">
+                <img src={img} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button
+                    onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="bg-white/90 rounded-full p-1.5 hover:bg-white transition-colors"
+                  >
+                    <X className="h-4 w-4 text-destructive" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {images.length < 3 && (
+              <label className="w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-1">
+                {uploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Add Photo</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+              </label>
+            )}
+          </div>
+        </div>
+
+        {/* Submit */}
+        <div className="flex items-center gap-3 pt-2">
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || rating === 0}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-8"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Review"
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Your review will be published after approval.
+          </p>
         </div>
       </div>
-
-      <Button onClick={handleSubmit} disabled={submitting} className="w-full">
-        {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</> : "Submit Review"}
-      </Button>
     </div>
   );
 };

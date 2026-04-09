@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Star, ShieldCheck, MessageSquarePlus, LogIn, Package, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import ProductReviewForm from "./ProductReviewForm";
 import ProductReviewDisplay from "./ProductReviewDisplay";
 
@@ -14,14 +18,13 @@ interface ProductReviewSectionProps {
 
 const ProductReviewSection = ({ productId, averageRating, reviewCount, approvedReviews, refetchReviews }: ProductReviewSectionProps) => {
   const { user } = useAuth();
+  const [showForm, setShowForm] = useState(false);
 
-  // Check if user has a delivered order containing this product
   const { data: eligibility } = useQuery({
     queryKey: ["review-eligibility", user?.id, productId],
     queryFn: async () => {
-      if (!user) return { canReview: false, orderId: null, userName: "" };
+      if (!user) return { canReview: false, orderId: null, userName: "", alreadyReviewed: false };
 
-      // Check if user already reviewed
       const { data: existing } = await supabase
         .from("product_reviews")
         .select("id")
@@ -31,7 +34,6 @@ const ProductReviewSection = ({ productId, averageRating, reviewCount, approvedR
 
       if (existing && existing.length > 0) return { canReview: false, alreadyReviewed: true, orderId: null, userName: "" };
 
-      // Check for delivered orders with this product - use two queries to avoid deep type
       const { data: userOrders } = await supabase
         .from("orders")
         .select("id")
@@ -51,7 +53,6 @@ const ProductReviewSection = ({ productId, averageRating, reviewCount, approvedR
       const hasDelivered = orderItems && orderItems.length > 0;
       const orderId = hasDelivered ? (orderItems[0] as any).order_id : null;
 
-      // Get user name
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
@@ -68,30 +69,107 @@ const ProductReviewSection = ({ productId, averageRating, reviewCount, approvedR
     enabled: !!user,
   });
 
-  return (
-    <div className="mt-12 border-t border-border pt-8">
-      <ProductReviewDisplay reviews={approvedReviews} averageRating={averageRating} reviewCount={reviewCount} />
+  const canWrite = eligibility?.canReview && eligibility.orderId;
 
-      {/* Review Form or Message */}
-      <div className="mt-8">
-        {!user ? (
-          <p className="text-sm text-muted-foreground italic">Please log in to leave a review.</p>
-        ) : eligibility?.alreadyReviewed ? (
-          <p className="text-sm text-muted-foreground italic">✅ You have already reviewed this product.</p>
-        ) : eligibility?.canReview && eligibility.orderId ? (
-          <ProductReviewForm
-            productId={productId}
-            userId={user.id}
-            userName={eligibility.userName}
-            orderId={eligibility.orderId}
-            onSubmitted={refetchReviews}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground italic">
-            Only customers who have purchased and received this product can leave a review.
-          </p>
+  return (
+    <div className="mt-16">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Star className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-display font-bold text-foreground">Ratings & Reviews</h2>
+            <p className="text-sm text-muted-foreground">
+              {reviewCount > 0
+                ? `${reviewCount} review${reviewCount !== 1 ? "s" : ""} from verified buyers`
+                : "Be the first to review this product"}
+            </p>
+          </div>
+        </div>
+
+        {/* Write Review CTA */}
+        {canWrite && !showForm && (
+          <Button
+            onClick={() => setShowForm(true)}
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+            Write a Review
+          </Button>
         )}
       </div>
+
+      {/* Review Form (expandable) */}
+      {showForm && canWrite && eligibility && (
+        <div className="mb-10 animate-in slide-in-from-top-2 duration-300">
+          <ProductReviewForm
+            productId={productId}
+            userId={user!.id}
+            userName={eligibility.userName}
+            orderId={eligibility.orderId!}
+            onSubmitted={() => {
+              setShowForm(false);
+              refetchReviews();
+            }}
+          />
+        </div>
+      )}
+
+      {/* Review Display */}
+      <ProductReviewDisplay reviews={approvedReviews} averageRating={averageRating} reviewCount={reviewCount} />
+
+      {/* Status Messages */}
+      {!showForm && (
+        <div className="mt-8">
+          {!user ? (
+            <div className="rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <LogIn className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <p className="font-semibold text-foreground">Want to share your experience?</p>
+                <p className="text-sm text-muted-foreground">Log in to your account to leave a review for this product.</p>
+              </div>
+              <Link to="/login">
+                <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
+                  <LogIn className="h-4 w-4" />
+                  Log In
+                </Button>
+              </Link>
+            </div>
+          ) : eligibility?.alreadyReviewed ? (
+            <div className="rounded-xl border border-success/30 bg-success/5 p-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Thank you for your review!</p>
+                <p className="text-sm text-muted-foreground">You have already submitted a review for this product.</p>
+              </div>
+            </div>
+          ) : !canWrite ? (
+            <div className="rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <p className="font-semibold text-foreground">Verified purchases only</p>
+                <p className="text-sm text-muted-foreground">
+                  Only customers who have purchased and received this product can leave a review. This ensures authentic feedback.
+                </p>
+              </div>
+              <Link to="/shop">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Package className="h-4 w-4" />
+                  Shop Now
+                </Button>
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };
