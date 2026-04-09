@@ -20,7 +20,14 @@ import {
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
   Layers, RefreshCw, Repeat, BarChart3, Trophy, SlidersHorizontal, X,
+  ChevronsUpDown, Check,
 } from "lucide-react";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { format, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, differenceInDays } from "date-fns";
