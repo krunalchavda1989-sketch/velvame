@@ -182,10 +182,16 @@ const AdminCommissions = () => {
       .slice(0, 10);
   }, [commissions, profileMap]);
 
+  const availableLevels = useMemo(() => {
+    const levels = new Set<number>();
+    commissions.forEach((c) => levels.add(c.level));
+    return Array.from(levels).sort((a, b) => a - b);
+  }, [commissions]);
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
-      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter);
+      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter) && (levelFilter === "all" || c.level === Number(levelFilter));
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
