@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NotificationBanner from "@/components/dashboard/NotificationBanner";
+import ProfileCompletionCard from "@/components/dashboard/ProfileCompletionCard";
 import { motion } from "framer-motion";
 import { Wallet, Users, TrendingUp, ShoppingBag, Copy, Check, ArrowRight, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -174,6 +175,7 @@ const Dashboard = () => {
         </div>
 
         <NotificationBanner />
+        <ProfileCompletionCard />
 
         {/* Referral link */}
         <motion.div
