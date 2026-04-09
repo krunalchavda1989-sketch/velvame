@@ -156,7 +156,7 @@ const AdminCommissions = () => {
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
       supabase.from("orders").select("id, order_number, order_source"),
-      supabase.from("commission_levels").select("level, rate, commission_type"),
+      supabase.from("commission_levels").select("level, rate, commission_type").eq("is_active", true).order("commission_type").order("level"),
     ]);
     const pMap = new Map<string, any>();
     (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
