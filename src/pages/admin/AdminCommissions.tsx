@@ -86,7 +86,9 @@ const AdminCommissions = () => {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [profileMap, setProfileMap] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
