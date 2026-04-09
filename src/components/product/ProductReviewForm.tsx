@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, Upload, X, Loader2, Camera } from "lucide-react";
+import { Star, X, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
