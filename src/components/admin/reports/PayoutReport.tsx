@@ -80,48 +80,51 @@ const PayoutReport = () => {
   const [historyData, setHistoryData] = useState<PayoutHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Helper to fetch ALL rows from a table, paginating past the 1000-row limit
+  const fetchAllRows = async (
+    tableName: string,
+    selectCols: string,
+    orderCol?: string,
+  ): Promise<any[]> => {
+    const PAGE = 1000;
+    let allRows: any[] = [];
+    let from = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const q1 = (supabase as any).from(tableName).select(selectCols).range(from, from + PAGE - 1);
+      let q = orderCol ? q1.order(orderCol) : q1;
+      
+      const { data, error } = await q;
+      if (error || !data) break;
+      allRows = allRows.concat(data);
+      hasMore = data.length === PAGE;
+      from += PAGE;
+    }
+    return allRows;
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    // Get all profiles
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, first_name, last_name, phone, referral_code")
-      .order("full_name");
+    // Fetch all profiles (paginated)
+    const profiles = await fetchAllRows("profiles", "user_id, full_name, first_name, last_name, phone, referral_code", "full_name");
+    if (!profiles.length) { setLoading(false); return; }
 
-    if (!profiles) { setLoading(false); return; }
+    const commissions = await fetchAllRows("commissions", "beneficiary_id, amount");
 
-    const userIds = profiles.map(p => p.user_id);
+    const payouts = await fetchAllRows("payout_transactions", "user_id, amount, payment_date");
 
-    // Get all commissions grouped by user
-    const { data: commissions } = await supabase
-      .from("commissions")
-      .select("beneficiary_id, amount")
-      .in("beneficiary_id", userIds);
-
-    // Get all payouts grouped by user
-    const { data: payouts } = await supabase
-      .from("payout_transactions")
-      .select("user_id, amount, payment_date");
-
-    // Get bank details
-    const { data: bankDetails } = await supabase
-      .from("bank_details")
-      .select("user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id")
-      .in("user_id", userIds);
-
-    // Get emails via profiles (we can't access auth.users directly)
-    // We'll use the user_id from profiles
+    const bankDetails = await fetchAllRows("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
 
     // Aggregate commissions per user
     const earningsMap = new Map<string, number>();
-    commissions?.forEach(c => {
+    commissions.forEach(c => {
       earningsMap.set(c.beneficiary_id, (earningsMap.get(c.beneficiary_id) || 0) + Number(c.amount));
     });
 
     // Aggregate payouts per user
     const paidMap = new Map<string, { total: number; lastDate: string | null }>();
-    payouts?.forEach(p => {
+    payouts.forEach(p => {
       const prev = paidMap.get(p.user_id) || { total: 0, lastDate: null };
       prev.total += Number(p.amount);
       if (!prev.lastDate || p.payment_date > prev.lastDate) prev.lastDate = p.payment_date;
@@ -129,7 +132,7 @@ const PayoutReport = () => {
     });
 
     // Bank details map
-    const bankMap = new Map(bankDetails?.map(b => [b.user_id, b]) || []);
+    const bankMap = new Map(bankDetails.map(b => [b.user_id, b]));
 
     const result: PayoutUser[] = profiles.map(p => {
       const earned = earningsMap.get(p.user_id) || 0;
