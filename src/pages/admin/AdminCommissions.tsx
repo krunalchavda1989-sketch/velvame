@@ -352,29 +352,69 @@ const AdminCommissions = () => {
           </Card>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative max-w-xs flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Level" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
-              {availableLevels.map((l) => (
-                <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Highlighted Search & Filter Bar */}
+        <Card className="border-primary/30 bg-primary/5 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Search & Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-primary/15 text-primary border-primary/20">
+                  {activeFilterCount} active
+                </Badge>
+              )}
+              {activeFilterCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground ml-auto" onClick={clearAllFilters}>
+                  <X className="h-3 w-3 mr-1" /> Clear all
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, VM code, or order number..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 bg-background"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger className="w-36 bg-background"><SelectValue placeholder="Level" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {availableLevels.map((l) => (
+                    <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-40 bg-background"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="level">Level Income</SelectItem>
+                  <SelectItem value="repurchase">Repurchase</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={orderSourceFilter} onValueChange={setOrderSourceFilter}>
+                <SelectTrigger className="w-40 bg-background"><SelectValue placeholder="Order Source" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="user">User Order</SelectItem>
+                  <SelectItem value="manual">Manual Order</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Tabs */}
         {loading ? (
