@@ -159,6 +159,9 @@ const AdminCommissions = () => {
   const totalPending = commissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0);
   const totalPaid = commissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0);
 
+  const getCode = (id: string) => profileMap.get(id)?.referral_code || "";
+  const getOrderInfo = (orderId: string) => orderMap.get(orderId) || {};
+
   const getName = (id: string) => profileMap.get(id)?.full_name || "—";
 
   const typeDistribution = useMemo(() => [
