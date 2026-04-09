@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
-  Layers, RefreshCw, Repeat, BarChart3, Trophy,
+  Layers, RefreshCw, Repeat, BarChart3, Trophy, Filter, SlidersHorizontal, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
