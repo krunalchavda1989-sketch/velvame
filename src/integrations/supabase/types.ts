@@ -2617,6 +2617,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_feature_log: {
+        Row: {
+          created_at: string
+          description: string
+          feature_date: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          feature_date?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          feature_date?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
