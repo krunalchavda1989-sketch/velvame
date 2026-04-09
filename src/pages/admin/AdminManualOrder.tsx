@@ -394,6 +394,13 @@ const AdminManualOrder = () => {
         await supabase.rpc("increment_coupon_usage", { _coupon_id: appliedCoupon.id });
       }
 
+      // Auto-process commissions for the new order (non-blocking)
+      if (isConfirmed) {
+        supabase.functions.invoke("process-commissions", {
+          body: { order_id: order.id },
+        }).catch((err) => console.error("Auto commission processing error:", err));
+      }
+
       toast.success(`Order created successfully! ID: ${order.id.slice(0, 8)}…`);
 
       setSelectedUserId("");
