@@ -199,10 +199,27 @@ const AdminCommissions = () => {
     return Array.from(levels).sort((a, b) => a - b);
   }, [commissions]);
 
+  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", search.length > 0].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearch(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
+  };
+
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
       const name = getName(c[idField])?.toLowerCase() || "";
-      return (!search || name.includes(search.toLowerCase())) && (statusFilter === "all" || c.status === statusFilter) && (levelFilter === "all" || c.level === Number(levelFilter));
+      const code = getCode(c[idField])?.toLowerCase() || "";
+      const sourceName = getName(c.source_user_id)?.toLowerCase() || "";
+      const sourceCode = getCode(c.source_user_id)?.toLowerCase() || "";
+      const orderInfo = getOrderInfo(c.order_id);
+      const orderNum = (orderInfo.order_number || "").toLowerCase();
+      const q = search.toLowerCase();
+      const matchesSearch = !search || name.includes(q) || code.includes(q) || sourceName.includes(q) || sourceCode.includes(q) || orderNum.includes(q);
+      const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+      const matchesLevel = levelFilter === "all" || c.level === Number(levelFilter);
+      const matchesType = typeFilter === "all" || c.commission_type === typeFilter;
+      const matchesSource = orderSourceFilter === "all" || (orderInfo.order_source || "") === orderSourceFilter;
+      return matchesSearch && matchesStatus && matchesLevel && matchesType && matchesSource;
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
