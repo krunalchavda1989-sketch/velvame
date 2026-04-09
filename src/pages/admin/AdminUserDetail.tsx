@@ -26,12 +26,26 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
 
-const normalizeCommissionRate = (rate: number | string | null | undefined) => {
+const getCommissionDisplayLevel = (commissionType: string | null | undefined, level: number | string | null | undefined) => {
+  const numericLevel = Number(level ?? 0);
+
+  if (!Number.isFinite(numericLevel)) return 0;
+
+  return commissionType === "repurchase" && numericLevel > 100 ? numericLevel - 100 : numericLevel;
+};
+
+const normalizeStoredCommissionRate = (rate: number | string | null | undefined) => {
   const numericRate = Number(rate ?? 0);
 
   if (!Number.isFinite(numericRate)) return 0;
 
-  return numericRate > 0 && numericRate < 1 ? numericRate * 100 : numericRate;
+  const [, decimalPart = ""] = numericRate.toString().split(".");
+  const looksLikeStoredRatio =
+    numericRate > 0 &&
+    numericRate < 1 &&
+    (numericRate < 0.1 || decimalPart.length > 1);
+
+  return looksLikeStoredRatio ? numericRate * 100 : numericRate;
 };
 
 const AdminUserDetail = () => {
@@ -118,7 +132,7 @@ const AdminUserDetail = () => {
 
         const rateMap = new Map<string, number>();
         (levels || []).forEach((level: any) => {
-          const displayLevel = level.commission_type === "repurchase" ? Number(level.level) - 100 : Number(level.level);
+          const displayLevel = getCommissionDisplayLevel(level.commission_type, level.level);
           rateMap.set(`${level.commission_type}-${displayLevel}`, Number(level.rate));
         });
 
@@ -126,11 +140,13 @@ const AdminUserDetail = () => {
         setOrders(o || []);
         setCommissions(
           (c || []).map((commission: any) => {
-            const configuredRate = rateMap.get(`${commission.commission_type}-${commission.level}`);
+            const displayLevel = getCommissionDisplayLevel(commission.commission_type, commission.level);
+            const configuredRate = rateMap.get(`${commission.commission_type}-${displayLevel}`);
 
             return {
               ...commission,
-              display_rate: configuredRate ?? normalizeCommissionRate(commission.rate),
+              display_level: displayLevel,
+              display_rate: configuredRate ?? normalizeStoredCommissionRate(commission.rate),
             };
           })
         );
@@ -357,9 +373,11 @@ const AdminUserDetail = () => {
   const nextTitle = titleRoadmap[currentTitleIndex + 1];
   const totalCommission = commissions.reduce((sum, c) => sum + Number(c.amount), 0);
   const formatCommissionRate = (rate: number | string | null | undefined) => {
-    const displayRate = normalizeCommissionRate(rate);
+    const numericRate = Number(rate ?? 0);
 
-    return `${parseFloat(displayRate.toFixed(2))}%`;
+    if (!Number.isFinite(numericRate)) return "0%";
+
+    return `${parseFloat(numericRate.toFixed(2))}%`;
   };
 
   return (
@@ -782,7 +800,7 @@ const AdminUserDetail = () => {
                         {commissions.map((c) => (
                           <tr key={c.id} className="hover:bg-secondary/30">
                             <td className="p-2 capitalize text-foreground">{c.commission_type}</td>
-                            <td className="p-2 text-muted-foreground">L{c.level}</td>
+                            <td className="p-2 text-muted-foreground">L{c.display_level ?? getCommissionDisplayLevel(c.commission_type, c.level)}</td>
                             <td className="p-2 text-muted-foreground">{formatCommissionRate(c.display_rate ?? c.rate)}</td>
                             <td className="p-2 font-semibold text-foreground">₹{c.amount}</td>
                             <td className="p-2">
