@@ -20,7 +20,7 @@ import {
 import {
   DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
   Layers, RefreshCw, Repeat, BarChart3, Trophy, SlidersHorizontal, X,
-  ChevronsUpDown, Check, User,
+  ChevronsUpDown, Check,
 } from "lucide-react";
 import {
   Popover, PopoverContent, PopoverTrigger,
