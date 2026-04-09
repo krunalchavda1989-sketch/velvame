@@ -93,7 +93,7 @@ const PayoutReport = () => {
     while (hasMore) {
       const q1 = (supabase as any).from(tableName).select(selectCols).range(from, from + PAGE - 1);
       let q = orderCol ? q1.order(orderCol) : q1;
-      if (orderCol) q = q.order(orderCol);
+      
       const { data, error } = await q;
       if (error || !data) break;
       allRows = allRows.concat(data);
