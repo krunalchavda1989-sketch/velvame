@@ -115,17 +115,23 @@ const AdminCommissions = () => {
     setBackfillRunning(false);
   };
 
+  const [orderMap, setOrderMap] = useState<Map<string, any>>(new Map());
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-    const [commRes, profilesRes] = await Promise.all([
+    const [commRes, profilesRes, ordersRes] = await Promise.all([
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
+      supabase.from("orders").select("id, order_number, order_source"),
     ]);
     const pMap = new Map<string, any>();
     (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
     setProfileMap(pMap);
+    const oMap = new Map<string, any>();
+    (ordersRes.data || []).forEach((o) => oMap.set(o.id, o));
+    setOrderMap(oMap);
     setCommissions(commRes.data || []);
     setSelectedComm(new Set());
     setLoading(false);
