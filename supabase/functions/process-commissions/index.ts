@@ -262,6 +262,119 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = body.action || "process_single";
 
+    // ── ACTION: fix_rates ──
+    // Corrects stored rates & amounts in all commission records to match current commission_levels config
+    if (action === "fix_rates") {
+      const { data: levelConfigs } = await supabase
+        .from("commission_levels")
+        .select("level, rate, commission_type")
+        .eq("is_active", true);
+
+      if (!levelConfigs || levelConfigs.length === 0) {
+        return new Response(JSON.stringify({ success: false, error: "No commission levels configured" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Build rate lookup: "level|repurchase" => decimal rate
+      const rateMap: Record<string, number> = {};
+      for (const lc of levelConfigs) {
+        // For repurchase, levels are stored as 101+ in config but 1+ in commissions
+        const commLevel = lc.commission_type === "repurchase" ? lc.level - 100 : lc.level;
+        rateMap[`${commLevel}|${lc.commission_type}`] = Number(lc.rate) / 100;
+      }
+
+      // Fetch ALL commissions with order amounts
+      const { data: allComm, error: commErr } = await supabase
+        .from("commissions")
+        .select("id, level, rate, amount, commission_type, order_id, beneficiary_id");
+      if (commErr) throw commErr;
+
+      // Fetch all relevant orders
+      const orderIds = [...new Set((allComm || []).map((c: any) => c.order_id))];
+      const orderAmounts: Record<string, number> = {};
+      for (let i = 0; i < orderIds.length; i += 50) {
+        const batch = orderIds.slice(i, i + 50);
+        const { data: orders } = await supabase
+          .from("orders")
+          .select("id, total_amount")
+          .in("id", batch);
+        for (const o of orders || []) {
+          orderAmounts[o.id] = Number(o.total_amount);
+        }
+      }
+
+      let fixed = 0;
+      const walletAdjustments: Record<string, number> = {};
+
+      for (const c of allComm || []) {
+        const key = `${c.level}|${c.commission_type}`;
+        const correctRate = rateMap[key];
+        if (correctRate === undefined) continue;
+
+        const orderAmt = orderAmounts[c.order_id];
+        if (!orderAmt) continue;
+
+        const correctAmount = Math.round(orderAmt * correctRate * 100) / 100;
+        const currentAmount = Number(c.amount);
+        const currentRate = Number(c.rate);
+
+        if (Math.abs(currentRate - correctRate) > 0.0001 || Math.abs(currentAmount - correctAmount) > 0.01) {
+          await supabase
+            .from("commissions")
+            .update({ rate: correctRate, amount: correctAmount })
+            .eq("id", c.id);
+
+          const diff = currentAmount - correctAmount;
+          if (Math.abs(diff) > 0.001) {
+            walletAdjustments[c.beneficiary_id] = (walletAdjustments[c.beneficiary_id] || 0) + diff;
+          }
+          fixed++;
+        }
+      }
+
+      // Adjust wallets
+      for (const [userId, adjustment] of Object.entries(walletAdjustments)) {
+        if (Math.abs(adjustment) < 0.01) continue;
+
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("balance, total_earned, commission_balance")
+          .eq("user_id", userId)
+          .single();
+
+        if (wallet) {
+          const newBalance = Math.max(0, Number(wallet.balance) - adjustment);
+          const newTotalEarned = Math.max(0, Number(wallet.total_earned) - adjustment);
+          const newCommBalance = Math.max(0, Number(wallet.commission_balance) - adjustment);
+
+          await supabase
+            .from("wallets")
+            .update({ balance: newBalance, total_earned: newTotalEarned, commission_balance: newCommBalance })
+            .eq("user_id", userId);
+
+          await supabase.from("wallet_transactions").insert({
+            user_id: userId,
+            type: adjustment > 0 ? "debit" : "credit",
+            amount: Math.abs(Math.round(adjustment * 100) / 100),
+            description: "Commission Rate Correction (System Audit)",
+            closing_balance: newBalance,
+            balance_type: "commission",
+          });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "fix_rates",
+          records_fixed: fixed,
+          wallet_adjustments: Object.keys(walletAdjustments).length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── ACTION: backfill_all ──
     // Processes orders in batches to avoid timeouts.
     // Accepts optional offset parameter for pagination.
