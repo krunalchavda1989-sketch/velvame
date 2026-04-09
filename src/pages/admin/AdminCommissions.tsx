@@ -72,6 +72,8 @@ const exportCsv = (columns: string[], rows: string[][], filename: string) => {
 // ChartCard moved to top with imports
 
 const AdminCommissions = () => {
+  // Rate lookup map: "level-2" → 4.5, "repurchase-1" → 3
+  const [configRateMap, setConfigRateMap] = useState<Map<string, number>>(new Map());
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(new Date());
   const [commissions, setCommissions] = useState<any[]>([]);
@@ -150,10 +152,11 @@ const AdminCommissions = () => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-    const [commRes, profilesRes, ordersRes] = await Promise.all([
+    const [commRes, profilesRes, ordersRes, levelsRes] = await Promise.all([
       supabase.from("commissions").select("*").gte("created_at", fromStr).lte("created_at", toStr).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, user_id, full_name, referral_code"),
       supabase.from("orders").select("id, order_number, order_source"),
+      supabase.from("commission_levels").select("level, rate, commission_type"),
     ]);
     const pMap = new Map<string, any>();
     (profilesRes.data || []).forEach((p) => { pMap.set(p.id, p); pMap.set(p.user_id, p); });
@@ -161,7 +164,24 @@ const AdminCommissions = () => {
     const oMap = new Map<string, any>();
     (ordersRes.data || []).forEach((o) => oMap.set(o.id, o));
     setOrderMap(oMap);
-    setCommissions(commRes.data || []);
+
+    // Build config rate map: "level-2" → 4.5 (whole number %)
+    const rMap = new Map<string, number>();
+    (levelsRes.data || []).forEach((l: any) => {
+      const displayLevel = l.commission_type === "repurchase" ? l.level - 100 : l.level;
+      rMap.set(`${l.commission_type}-${displayLevel}`, Number(l.rate));
+    });
+    setConfigRateMap(rMap);
+
+    // Enrich commissions with display_rate from config
+    const enriched = (commRes.data || []).map((c: any) => {
+      const configRate = rMap.get(`${c.commission_type}-${c.level}`);
+      // Config rate is whole number (4.5 = 4.5%), stored rate is decimal (0.045 = 4.5%)
+      const displayRate = configRate != null ? configRate : (c.rate < 1 ? c.rate * 100 : c.rate);
+      return { ...c, display_rate: displayRate };
+    });
+
+    setCommissions(enriched);
     setSelectedComm(new Set());
     setLoading(false);
   }, [from, to]);
@@ -525,8 +545,9 @@ const AdminCommissions = () => {
   );
 };
 
-/* ─── Format rate: stored as decimal (0.05) → display as 5% ─── */
+/* ─── Format rate: display_rate is already a whole-number % (e.g. 4.5 = 4.5%) ─── */
 const formatRate = (rate: number) => {
+  // If it's a decimal (stored in DB as 0.045), convert; otherwise it's already a %
   const pct = rate < 1 ? rate * 100 : rate;
   return `${parseFloat(pct.toFixed(2))}%`;
 };
@@ -631,7 +652,7 @@ const CommissionTable = ({
       getName(c.beneficiary_id),
       ...(showType ? [c.commission_type] : []),
       String(c.level),
-      formatRate(Number(c.rate)),
+      formatRate(Number(c.display_rate ?? c.rate)),
       String(Number(c.amount).toFixed(2)),
       c.status,
       format(new Date(c.created_at), "dd MMM yyyy"),
@@ -680,7 +701,7 @@ const CommissionTable = ({
                       <TableCell><Badge variant="outline" className="capitalize text-[10px]">{c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}</Badge></TableCell>
                     )}
                     <TableCell><Badge variant="secondary" className="text-[10px]">L{c.level}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">{formatRate(Number(c.rate))}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatRate(Number(c.display_rate ?? c.rate))}</TableCell>
                     <TableCell className="font-semibold text-primary">₹{Number(c.amount).toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{getName(c.source_user_id)}</TableCell>
                     <TableCell>
