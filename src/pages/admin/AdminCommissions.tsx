@@ -257,27 +257,41 @@ const AdminCommissions = () => {
     return Array.from(levels).sort((a, b) => a - b);
   }, [commissions]);
 
-  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", search.length > 0].filter(Boolean).length;
+  // Build unique user list from commissions for the dropdown
+  const userList = useMemo(() => {
+    const userIds = new Set<string>();
+    commissions.forEach((c) => {
+      userIds.add(c.beneficiary_id);
+      userIds.add(c.source_user_id);
+    });
+    return Array.from(userIds)
+      .map((id) => {
+        const profile = profileMap.get(id);
+        return {
+          id,
+          name: profile?.full_name || "Unknown",
+          code: profile?.referral_code || "",
+        };
+      })
+      .filter((u) => u.name !== "Unknown" || u.code)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [commissions, profileMap]);
+
+  const activeFilterCount = [statusFilter !== "all", levelFilter !== "all", typeFilter !== "all", orderSourceFilter !== "all", selectedUserId !== "all"].filter(Boolean).length;
 
   const clearAllFilters = () => {
-    setSearch(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
+    setSelectedUserId("all"); setUserSearchTerm(""); setStatusFilter("all"); setLevelFilter("all"); setTypeFilter("all"); setOrderSourceFilter("all");
   };
 
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
-      const name = getName(c[idField])?.toLowerCase() || "";
-      const code = getCode(c[idField])?.toLowerCase() || "";
-      const sourceName = getName(c.source_user_id)?.toLowerCase() || "";
-      const sourceCode = getCode(c.source_user_id)?.toLowerCase() || "";
-      const orderInfo = getOrderInfo(c.order_id);
-      const orderNum = (orderInfo.order_number || "").toLowerCase();
-      const q = search.toLowerCase();
-      const matchesSearch = !search || name.includes(q) || code.includes(q) || sourceName.includes(q) || sourceCode.includes(q) || orderNum.includes(q);
+      const matchesUser = selectedUserId === "all" || c[idField] === selectedUserId || c.source_user_id === selectedUserId;
       const matchesStatus = statusFilter === "all" || c.status === statusFilter;
       const matchesLevel = levelFilter === "all" || c.level === Number(levelFilter);
       const matchesType = typeFilter === "all" || c.commission_type === typeFilter;
+      const orderInfo = getOrderInfo(c.order_id);
       const matchesSource = orderSourceFilter === "all" || (orderInfo.order_source || "") === orderSourceFilter;
-      return matchesSearch && matchesStatus && matchesLevel && matchesType && matchesSource;
+      return matchesUser && matchesStatus && matchesLevel && matchesType && matchesSource;
     });
 
   const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
