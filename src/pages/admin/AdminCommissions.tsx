@@ -571,11 +571,13 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
   onBulkApprove?: () => void; pendingCount: number;
 }) => {
   const levelStats = useMemo(() => {
-    const map = new Map<number, { count: number; total: number; paid: number; pending: number }>();
+    const map = new Map<number, { count: number; total: number; paid: number; pending: number; rate: number }>();
     data.forEach((c) => {
-      const prev = map.get(c.level) || { count: 0, total: 0, paid: 0, pending: 0 };
+      const prev = map.get(c.level) || { count: 0, total: 0, paid: 0, pending: 0, rate: 0 };
       prev.count += 1; prev.total += Number(c.amount);
       if (c.status === "paid") prev.paid += Number(c.amount); else prev.pending += Number(c.amount);
+      // Use display_rate (already a whole-number %) from the first record of this level
+      if (prev.rate === 0 && c.display_rate != null) prev.rate = Number(c.display_rate);
       map.set(c.level, prev);
     });
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
