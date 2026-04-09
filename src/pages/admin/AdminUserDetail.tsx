@@ -26,6 +26,14 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
 
+const normalizeCommissionRate = (rate: number | string | null | undefined) => {
+  const numericRate = Number(rate ?? 0);
+
+  if (!Number.isFinite(numericRate)) return 0;
+
+  return numericRate > 0 && numericRate < 1 ? numericRate * 100 : numericRate;
+};
+
 const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
   const { toast } = useToast();
@@ -97,7 +105,7 @@ const AdminUserDetail = () => {
           if (avData?.publicUrl) setAdminAvatarPreview(avData.publicUrl);
         }
 
-        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }] = await Promise.all([
+        const [{ data: w }, { data: o }, { data: c }, { data: wdr }, { data: kyc }, { data: bank }, { data: addr }, { data: levels }] = await Promise.all([
           supabase.from("wallets").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("orders").select("*, order_items(*, products(name, image_url))").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("commissions").select("*").eq("beneficiary_id", prof.user_id).order("created_at", { ascending: false }),
@@ -105,10 +113,27 @@ const AdminUserDetail = () => {
           supabase.from("kyc_documents").select("*").eq("user_id", prof.user_id).order("created_at", { ascending: false }),
           supabase.from("bank_details").select("*").eq("user_id", prof.user_id).single(),
           supabase.from("user_addresses").select("*").eq("user_id", prof.user_id).order("is_default", { ascending: false }),
+          supabase.from("commission_levels").select("level, rate, commission_type").eq("is_active", true).order("commission_type").order("level"),
         ]);
+
+        const rateMap = new Map<string, number>();
+        (levels || []).forEach((level: any) => {
+          const displayLevel = level.commission_type === "repurchase" ? Number(level.level) - 100 : Number(level.level);
+          rateMap.set(`${level.commission_type}-${displayLevel}`, Number(level.rate));
+        });
+
         setWallet(w);
         setOrders(o || []);
-        setCommissions(c || []);
+        setCommissions(
+          (c || []).map((commission: any) => {
+            const configuredRate = rateMap.get(`${commission.commission_type}-${commission.level}`);
+
+            return {
+              ...commission,
+              display_rate: configuredRate ?? normalizeCommissionRate(commission.rate),
+            };
+          })
+        );
         setWithdrawals(wdr || []);
         setKycDocs((kyc as any) || []);
         setBankDetails(bank);
@@ -332,8 +357,7 @@ const AdminUserDetail = () => {
   const nextTitle = titleRoadmap[currentTitleIndex + 1];
   const totalCommission = commissions.reduce((sum, c) => sum + Number(c.amount), 0);
   const formatCommissionRate = (rate: number | string | null | undefined) => {
-    const numericRate = Number(rate ?? 0);
-    const displayRate = numericRate > 0 && numericRate < 1 ? numericRate * 100 : numericRate;
+    const displayRate = normalizeCommissionRate(rate);
 
     return `${parseFloat(displayRate.toFixed(2))}%`;
   };
@@ -759,7 +783,7 @@ const AdminUserDetail = () => {
                           <tr key={c.id} className="hover:bg-secondary/30">
                             <td className="p-2 capitalize text-foreground">{c.commission_type}</td>
                             <td className="p-2 text-muted-foreground">L{c.level}</td>
-                            <td className="p-2 text-muted-foreground">{formatCommissionRate(c.rate)}</td>
+                            <td className="p-2 text-muted-foreground">{formatCommissionRate(c.display_rate ?? c.rate)}</td>
                             <td className="p-2 font-semibold text-foreground">₹{c.amount}</td>
                             <td className="p-2">
                               <Badge variant="outline" className="text-xs capitalize">{c.status}</Badge>
