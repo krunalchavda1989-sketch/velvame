@@ -337,6 +337,15 @@ const AdminCommissions = () => {
               <SelectItem value="paid">Paid</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={levelFilter} onValueChange={setLevelFilter}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Level" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Levels</SelectItem>
+              {availableLevels.map((l) => (
+                <SelectItem key={l} value={String(l)}>Level {l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Tabs */}
