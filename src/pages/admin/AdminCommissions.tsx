@@ -71,10 +71,9 @@ const exportCsv = (columns: string[], rows: string[][], filename: string) => {
 
 // ChartCard moved to top with imports
 
-// Rate lookup map: "level-2" → 4.5, "repurchase-1" → 3
-const [configRateMap, setConfigRateMap] = useState<Map<string, number>>(new Map());
-
 const AdminCommissions = () => {
+  // Rate lookup map: "level-2" → 4.5, "repurchase-1" → 3
+  const [configRateMap, setConfigRateMap] = useState<Map<string, number>>(new Map());
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(new Date());
   const [commissions, setCommissions] = useState<any[]>([]);
