@@ -137,7 +137,7 @@ export function useEarningsData() {
           activeMembers: new Set(txns.map(e => e.source_user_id)).size,
           totalBusinessVolume: txns.reduce((s, e) => s + Number(e.order_amount || 0), 0),
           incomeEarned: txns.reduce((s, e) => s + Number(e.amount), 0),
-          rate: configLevel?.rate || txns[0]?.rate || 0,
+          rate: configLevel?.rate ?? (txns[0]?.rate ? (txns[0].rate < 1 ? txns[0].rate * 100 : txns[0].rate) : 0),
           transactions: txns,
         });
       }
