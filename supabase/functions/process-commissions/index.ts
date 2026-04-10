@@ -150,9 +150,26 @@ async function processOrderCommissions(
     const isQualified = upline.direct_referral_count >= config.min_referrals;
 
     let beneficiaryPurchaseOk = true;
-    if (isRepurchase && isQualified && minMonthlyPurchase > 0) {
-      const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
-      beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
+    if (isRepurchase && isQualified) {
+      // Beneficiary must have made at least one repurchase order themselves
+      const { count: repurchaseCount } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", upline.user_id)
+        .eq("is_repurchase", true)
+        .in("status", ["confirmed", "delivered", "shipped", "pending"]);
+
+      if (!repurchaseCount || repurchaseCount === 0) {
+        // Skip this level — beneficiary hasn't made a repurchase order
+        currentProfileId = upline.referred_by ?? null;
+        continue;
+      }
+
+      // Also check minimum monthly purchase requirement
+      if (minMonthlyPurchase > 0) {
+        const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
+        beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
+      }
     }
 
     if (isQualified && beneficiaryPurchaseOk) {
