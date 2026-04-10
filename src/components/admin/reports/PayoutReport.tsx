@@ -257,6 +257,34 @@ const PayoutReport = () => {
       return;
     }
 
+    // Mark pending commissions as "paid" (FIFO by created_at) up to the payout amount
+    try {
+      const { data: pendingCommissions } = await supabase
+        .from("commissions")
+        .select("id, amount")
+        .eq("beneficiary_id", selectedUser.user_id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true });
+
+      if (pendingCommissions && pendingCommissions.length > 0) {
+        let remaining = amount;
+        const idsToMark: string[] = [];
+        for (const c of pendingCommissions) {
+          if (remaining <= 0) break;
+          idsToMark.push(c.id);
+          remaining -= Number(c.amount);
+        }
+        if (idsToMark.length > 0) {
+          await supabase
+            .from("commissions")
+            .update({ status: "paid" })
+            .in("id", idsToMark);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync commission statuses:", e);
+    }
+
     // Send notification to user
     await supabase.from("notifications").insert({
       user_id: selectedUser.user_id,
