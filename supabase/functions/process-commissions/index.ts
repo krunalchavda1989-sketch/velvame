@@ -151,16 +151,22 @@ async function processOrderCommissions(
 
     let beneficiaryPurchaseOk = true;
     if (isRepurchase && isQualified) {
-      // Beneficiary must have made at least one repurchase order themselves
+      // Beneficiary must have made a repurchase order in the CURRENT month
+      const now = new Date();
+      const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const curMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
       const { count: repurchaseCount } = await supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("user_id", upline.user_id)
         .eq("is_repurchase", true)
+        .gte("created_at", curMonthStart)
+        .lt("created_at", curMonthEnd)
         .in("status", ["confirmed", "delivered", "shipped", "pending"]);
 
       if (!repurchaseCount || repurchaseCount === 0) {
-        // Skip this level — beneficiary hasn't made a repurchase order
+        // Skip — beneficiary has no repurchase order this month
         currentProfileId = upline.referred_by ?? null;
         continue;
       }
