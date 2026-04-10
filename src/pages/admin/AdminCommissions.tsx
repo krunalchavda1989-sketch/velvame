@@ -285,7 +285,7 @@ const AdminCommissions = () => {
 
   const filterAndSearch = (items: any[], idField: string) =>
     items.filter((c) => {
-      const matchesUser = selectedUserId === "all" || c[idField] === selectedUserId || c.source_user_id === selectedUserId;
+      const matchesUser = selectedUserId === "all" || c[idField] === selectedUserId;
       const matchesStatus = statusFilter === "all" || c.status === statusFilter;
       const matchesLevel = levelFilter === "all" || c.level === Number(levelFilter);
       const matchesType = typeFilter === "all" || c.commission_type === typeFilter;
