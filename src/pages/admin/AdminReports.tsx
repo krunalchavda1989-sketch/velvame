@@ -240,21 +240,42 @@ const IncomeReport = ({ from, to }: ReportProps) => {
     setLoading(true);
     const fromStr = from.toISOString();
     const toStr = toEnd(to).toISOString();
-    const { data: commissions } = await supabase
-      .from("commissions")
-      .select("id, amount, commission_type, level, status, created_at, beneficiary_id")
-      .gte("created_at", fromStr).lte("created_at", toStr)
-      .order("created_at", { ascending: false }).limit(200);
-    if (commissions) {
-      const userIds = [...new Set(commissions.map((c) => c.beneficiary_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
-      const nameMap = new Map(profiles?.map((p) => [p.user_id, p.full_name]) || []);
-      setData(commissions.map((c) => ({ ...c, user_name: nameMap.get(c.beneficiary_id) || "Unknown" })));
+
+    // Batch-fetch all commissions (bypass 1000-row default limit)
+    let allCommissions: any[] = [];
+    const PAGE_SIZE = 1000;
+    let page = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from("commissions")
+        .select("id, amount, commission_type, level, status, created_at, beneficiary_id")
+        .gte("created_at", fromStr).lte("created_at", toStr)
+        .order("created_at", { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      if (!batch || batch.length === 0) break;
+      allCommissions = allCommissions.concat(batch);
+      if (batch.length < PAGE_SIZE) break;
+      page++;
+    }
+
+    if (allCommissions.length > 0) {
+      const userIds = [...new Set(allCommissions.map((c) => c.beneficiary_id))];
+      // Batch-fetch profiles in chunks of 50 for the IN query
+      const nameMap = new Map<string, string>();
+      for (let i = 0; i < userIds.length; i += 50) {
+        const chunk = userIds.slice(i, i + 50);
+        const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", chunk);
+        profiles?.forEach((p) => nameMap.set(p.user_id, p.full_name));
+      }
+      setData(allCommissions.map((c) => ({ ...c, user_name: nameMap.get(c.beneficiary_id) || "Unknown" })));
       setStats({
-        totalCommissions: commissions.reduce((s, c) => s + Number(c.amount), 0),
-        totalWithdrawals: commissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0),
-        pending: commissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0),
+        totalCommissions: allCommissions.reduce((s, c) => s + Number(c.amount), 0),
+        totalWithdrawals: allCommissions.filter((c) => c.status === "paid").reduce((s, c) => s + Number(c.amount), 0),
+        pending: allCommissions.filter((c) => c.status === "pending").reduce((s, c) => s + Number(c.amount), 0),
       });
+    } else {
+      setData([]);
+      setStats({ totalCommissions: 0, totalWithdrawals: 0, pending: 0 });
     }
     setLoading(false);
   }, [from, to]);
