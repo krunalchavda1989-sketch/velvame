@@ -34,11 +34,11 @@ const getCommissionDisplayLevel = (commissionType: string | null | undefined, le
   return commissionType === "repurchase" && numericLevel > 100 ? numericLevel - 100 : numericLevel;
 };
 
-// Rates in DB are already whole-number percentages (e.g. 0.5 = 0.5%, 4.5 = 4.5%)
+// DB commissions store rates as decimals (0.005 = 0.5%, 0.05 = 5%). Multiply by 100 for display.
 const normalizeStoredCommissionRate = (rate: number | string | null | undefined) => {
   const numericRate = Number(rate ?? 0);
   if (!Number.isFinite(numericRate)) return 0;
-  return numericRate;
+  return numericRate * 100;
 };
 
 const AdminUserDetail = () => {
