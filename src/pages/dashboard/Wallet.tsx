@@ -323,7 +323,7 @@ const WalletPage = () => {
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { label: "Total Commission Earned", value: commissions.reduce((s, c) => s + Number(c.amount), 0), icon: TrendingUp, gradient: "from-emerald-500 to-emerald-600" },
+                { label: "Total Commission Earned", value: totalCommissionEarned, icon: TrendingUp, gradient: "from-emerald-500 to-emerald-600" },
                 { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine, gradient: "from-orange-500 to-orange-600" },
               ].map((s, i) => (
                 <motion.div
