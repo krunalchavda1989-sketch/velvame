@@ -93,9 +93,7 @@ const AdminCommissions = () => {
   const [levelFilter, setLevelFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [orderSourceFilter, setOrderSourceFilter] = useState("all");
-  const [selectedComm, setSelectedComm] = useState<Set<string>>(new Set());
-  const [bulkDialog, setBulkDialog] = useState<"commission" | null>(null);
-  const [bulkUpdating, setBulkUpdating] = useState(false);
+  
   const [backfillRunning, setBackfillRunning] = useState(false);
   const [backfillDialog, setBackfillDialog] = useState(false);
 
@@ -197,15 +195,7 @@ const AdminCommissions = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const bulkApproveCommissions = async () => {
-    setBulkUpdating(true);
-    const ids = Array.from(selectedComm);
-    const { error } = await supabase.from("commissions").update({ status: "paid" }).in("id", ids);
-    setBulkUpdating(false);
-    setBulkDialog(null);
-    if (error) { toast.error("Failed to update commissions"); }
-    else { toast.success(`${ids.length} commission(s) marked as paid`); fetchData(); }
-  };
+  
 
   // Derived
   const levelCommissions = useMemo(() => commissions.filter((c) => c.commission_type === "level"), [commissions]);
@@ -294,7 +284,7 @@ const AdminCommissions = () => {
       return matchesUser && matchesStatus && matchesLevel && matchesType && matchesSource;
     });
 
-  const pendingSelectedComm = Array.from(selectedComm).filter((id) => commissions.find((c) => c.id === id)?.status === "pending").length;
+  
 
   return (
     <AdminLayout>
@@ -546,49 +536,22 @@ const AdminCommissions = () => {
             <TabsContent value="all">
               <CommissionTable
                 data={filterAndSearch(commissions, "beneficiary_id")} getName={getName} showType csvFilename="all_commissions"
-                selected={selectedComm} setSelected={setSelectedComm}
-                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
-                pendingCount={pendingSelectedComm}
               />
             </TabsContent>
             <TabsContent value="level">
               <LevelBreakdown
                 data={filterAndSearch(levelCommissions, "beneficiary_id")} getName={getName}
-                selected={selectedComm} setSelected={setSelectedComm}
-                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
-                pendingCount={pendingSelectedComm}
               />
             </TabsContent>
             <TabsContent value="repurchase">
               <CommissionTable
                 data={filterAndSearch(repurchaseCommissions, "beneficiary_id")} getName={getName} showType={false} csvFilename="repurchase_commissions"
-                selected={selectedComm} setSelected={setSelectedComm}
-                onBulkApprove={pendingSelectedComm > 0 ? () => setBulkDialog("commission") : undefined}
-                pendingCount={pendingSelectedComm}
               />
             </TabsContent>
           </Tabs>
         )}
 
-        {/* Bulk Approve Dialog */}
-        <AlertDialog open={!!bulkDialog} onOpenChange={(open) => !open && setBulkDialog(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Mark as Paid</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to mark{" "}
-                <span className="font-semibold text-foreground">{pendingSelectedComm}</span>{" "}
-                pending commission(s) as paid? This action will update their status immediately.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={bulkUpdating}>Cancel</AlertDialogCancel>
-              <AlertDialogAction disabled={bulkUpdating} onClick={bulkApproveCommissions}>
-                {bulkUpdating ? "Updating..." : "Mark as Paid"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        
 
         {/* Backfill Confirmation Dialog */}
         <AlertDialog open={backfillDialog} onOpenChange={setBackfillDialog}>
@@ -632,10 +595,8 @@ const LEVEL_CARD_GRADIENTS = [
 ];
 
 /* ─── Level Breakdown ─── */
-const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, pendingCount }: {
+const LevelBreakdown = ({ data, getName }: {
   data: any[]; getName: (id: string) => string;
-  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
-  onBulkApprove?: () => void; pendingCount: number;
 }) => {
   const levelStats = useMemo(() => {
     const map = new Map<number, { count: number; total: number; paid: number; pending: number; rate: number }>();
@@ -685,7 +646,7 @@ const LevelBreakdown = ({ data, getName, selected, setSelected, onBulkApprove, p
           </ResponsiveContainer>
         </ChartCard>
       )}
-      <CommissionTable data={data} getName={getName} showType={false} csvFilename="level_commissions" selected={selected} setSelected={setSelected} onBulkApprove={onBulkApprove} pendingCount={pendingCount} />
+      <CommissionTable data={data} getName={getName} showType={false} csvFilename="level_commissions" />
     </div>
   );
 };
@@ -694,11 +655,9 @@ const PAGE_SIZE = 25;
 
 /* ─── Commission Table ─── */
 const CommissionTable = ({
-  data, getName, showType, csvFilename, selected, setSelected, onBulkApprove, pendingCount,
+  data, getName, showType, csvFilename,
 }: {
   data: any[]; getName: (id: string) => string; showType: boolean; csvFilename: string;
-  selected: Set<string>; setSelected: React.Dispatch<React.SetStateAction<Set<string>>>;
-  onBulkApprove?: () => void; pendingCount: number;
 }) => {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
@@ -707,13 +666,6 @@ const CommissionTable = ({
 
   // Reset page when data changes
   useEffect(() => { setPage(1); }, [data.length]);
-
-  const allSelected = pagedData.length > 0 && pagedData.every((c) => selected.has(c.id));
-  const toggleAll = () => {
-    if (allSelected) { setSelected((prev) => { const n = new Set(prev); pagedData.forEach((c) => n.delete(c.id)); return n; }); }
-    else { setSelected((prev) => { const n = new Set(prev); pagedData.forEach((c) => n.add(c.id)); return n; }); }
-  };
-  const toggle = (id: string) => setSelected((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const handleExport = () => {
     const cols = ["Beneficiary", ...(showType ? ["Type"] : []), "Level", "Rate", "Amount", "Status", "Date"];
@@ -732,13 +684,8 @@ const CommissionTable = ({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap justify-between items-center gap-2">
-        <p className="text-sm text-muted-foreground">{data.length} record(s){selected.size > 0 && ` · ${selected.size} selected`}</p>
+        <p className="text-sm text-muted-foreground">{data.length} record(s)</p>
         <div className="flex items-center gap-2">
-          {onBulkApprove && (
-            <Button size="sm" onClick={onBulkApprove} className="gap-1.5">
-              <CheckCircle className="h-4 w-4" /> Mark as Paid ({pendingCount})
-            </Button>
-          )}
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="h-4 w-4 mr-1.5" /> Export CSV</Button>
         </div>
       </div>
@@ -747,7 +694,7 @@ const CommissionTable = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10"><Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
+                
                 <TableHead>Beneficiary</TableHead>
                 {showType && <TableHead>Type</TableHead>}
                 <TableHead>Level</TableHead>
@@ -760,11 +707,10 @@ const CommissionTable = ({
             </TableHeader>
             <TableBody>
               {pagedData.length === 0 ? (
-                <TableRow><TableCell colSpan={showType ? 9 : 8} className="text-center py-10 text-muted-foreground">No commissions found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={showType ? 8 : 7} className="text-center py-10 text-muted-foreground">No commissions found</TableCell></TableRow>
               ) : (
                 pagedData.map((c) => (
-                  <TableRow key={c.id} className={`hover:bg-secondary/30 ${selected.has(c.id) ? "bg-primary/5" : ""}`}>
-                    <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} /></TableCell>
+                  <TableRow key={c.id} className="hover:bg-secondary/30">
                     <TableCell className="font-medium text-foreground">{getName(c.beneficiary_id)}</TableCell>
                     {showType && (
                       <TableCell><Badge variant="outline" className="capitalize text-[10px]">{c.commission_type === "level" ? "Level" : c.commission_type === "repurchase" ? "Repurchase" : c.commission_type}</Badge></TableCell>
@@ -784,7 +730,7 @@ const CommissionTable = ({
             {data.length > 0 && (
               <tfoot>
                 <TableRow className="bg-muted/50 font-semibold border-t-2 border-primary/20">
-                  <TableCell colSpan={showType ? 5 : 4} className="text-right text-foreground">Total ({data.length} records)</TableCell>
+                  <TableCell colSpan={showType ? 4 : 3} className="text-right text-foreground">Total ({data.length} records)</TableCell>
                   <TableCell className="font-bold text-primary text-base">₹{data.reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}</TableCell>
                   <TableCell colSpan={3}></TableCell>
                 </TableRow>
