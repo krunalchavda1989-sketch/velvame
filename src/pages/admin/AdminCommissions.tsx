@@ -183,8 +183,8 @@ const AdminCommissions = () => {
     // Enrich commissions with display_rate from config
     const enriched = (commRes.data || []).map((c: any) => {
       const configRate = rMap.get(`${c.commission_type}-${c.level}`);
-      // Config rate is whole number (4.5 = 4.5%), stored rate is decimal (0.045 = 4.5%)
-      const displayRate = configRate != null ? configRate : (c.rate < 1 ? c.rate * 100 : c.rate);
+      // Both config rate and DB rate are whole-number percentages (e.g. 0.5 = 0.5%, 4.5 = 4.5%)
+      const displayRate = configRate != null ? configRate : Number(c.rate);
       return { ...c, display_rate: displayRate };
     });
 
@@ -574,11 +574,9 @@ const AdminCommissions = () => {
   );
 };
 
-/* ─── Format rate: display_rate is already a whole-number % (e.g. 4.5 = 4.5%) ─── */
+/* ─── Format rate: display_rate is already a whole-number % (e.g. 0.5 = 0.5%, 4.5 = 4.5%) ─── */
 const formatRate = (rate: number) => {
-  // If it's a decimal (stored in DB as 0.045), convert; otherwise it's already a %
-  const pct = rate < 1 ? rate * 100 : rate;
-  return `${parseFloat(pct.toFixed(2))}%`;
+  return `${parseFloat(rate.toFixed(2))}%`;
 };
 
 const LEVEL_CARD_GRADIENTS = [
