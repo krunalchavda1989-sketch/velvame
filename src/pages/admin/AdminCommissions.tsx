@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -18,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  DollarSign, TrendingUp, Clock, Download, Search, CheckCircle,
+  DollarSign, TrendingUp, Clock, Download, Search,
   Layers, RefreshCw, Repeat, BarChart3, Trophy, SlidersHorizontal, X,
   ChevronsUpDown, Check,
 } from "lucide-react";
@@ -189,7 +189,6 @@ const AdminCommissions = () => {
     });
 
     setCommissions(enriched);
-    setSelectedComm(new Set());
     setLoading(false);
   }, [from, to]);
 
