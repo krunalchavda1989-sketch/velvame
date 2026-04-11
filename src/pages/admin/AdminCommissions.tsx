@@ -781,6 +781,15 @@ const CommissionTable = ({
                 ))
               )}
             </TableBody>
+            {data.length > 0 && (
+              <tfoot>
+                <TableRow className="bg-muted/50 font-semibold border-t-2 border-primary/20">
+                  <TableCell colSpan={showType ? 5 : 4} className="text-right text-foreground">Total ({data.length} records)</TableCell>
+                  <TableCell className="font-bold text-primary text-base">₹{data.reduce((s, c) => s + Number(c.amount), 0).toLocaleString()}</TableCell>
+                  <TableCell colSpan={3}></TableCell>
+                </TableRow>
+              </tfoot>
+            )}
           </Table>
         </div>
       </div>
