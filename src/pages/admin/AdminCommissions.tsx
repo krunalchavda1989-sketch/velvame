@@ -182,9 +182,9 @@ const AdminCommissions = () => {
 
     // Enrich commissions with display_rate from config
     const enriched = (commRes.data || []).map((c: any) => {
-      const configRate = rMap.get(`${c.commission_type}-${c.level}`);
-      // Both config rate and DB rate are whole-number percentages (e.g. 0.5 = 0.5%, 4.5 = 4.5%)
-      const displayRate = configRate != null ? configRate : Number(c.rate);
+      // Config rate is whole-number % (0.5 = 0.5%). DB stored rate is decimal (0.005 = 0.5%).
+      // Fallback: multiply DB rate by 100 to convert to whole-number %.
+      const displayRate = configRate != null ? configRate : Number(c.rate) * 100;
       return { ...c, display_rate: displayRate };
     });
 
