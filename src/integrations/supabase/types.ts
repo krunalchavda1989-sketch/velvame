@@ -2392,6 +2392,102 @@ export type Database = {
           },
         ]
       }
+      reels_settings: {
+        Row: {
+          cards_desktop: number
+          cards_mobile: number
+          enable_swipe: boolean
+          id: string
+          is_enabled: boolean
+          section_subtitle: string
+          section_title: string
+          show_arrows: boolean
+          show_description: boolean
+          show_platform_badge: boolean
+          show_title: boolean
+          updated_at: string
+        }
+        Insert: {
+          cards_desktop?: number
+          cards_mobile?: number
+          enable_swipe?: boolean
+          id?: string
+          is_enabled?: boolean
+          section_subtitle?: string
+          section_title?: string
+          show_arrows?: boolean
+          show_description?: boolean
+          show_platform_badge?: boolean
+          show_title?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cards_desktop?: number
+          cards_mobile?: number
+          enable_swipe?: boolean
+          id?: string
+          is_enabled?: boolean
+          section_subtitle?: string
+          section_title?: string
+          show_arrows?: boolean
+          show_description?: boolean
+          show_platform_badge?: boolean
+          show_title?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reels_videos: {
+        Row: {
+          created_at: string
+          custom_thumbnail_url: string
+          description: string
+          destination_link: string
+          id: string
+          is_active: boolean
+          link_target: string
+          platform: string
+          sort_order: number
+          thumbnail_url: string
+          title: string
+          updated_at: string
+          video_id: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          custom_thumbnail_url?: string
+          description?: string
+          destination_link?: string
+          id?: string
+          is_active?: boolean
+          link_target?: string
+          platform?: string
+          sort_order?: number
+          thumbnail_url?: string
+          title?: string
+          updated_at?: string
+          video_id?: string
+          video_url?: string
+        }
+        Update: {
+          created_at?: string
+          custom_thumbnail_url?: string
+          description?: string
+          destination_link?: string
+          id?: string
+          is_active?: boolean
+          link_target?: string
+          platform?: string
+          sort_order?: number
+          thumbnail_url?: string
+          title?: string
+          updated_at?: string
+          video_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       referral_code_settings: {
         Row: {
           created_at: string
