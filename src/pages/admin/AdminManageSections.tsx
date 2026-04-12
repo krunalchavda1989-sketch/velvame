@@ -26,6 +26,7 @@ const SECTION_ICONS: Record<string, string> = {
   how_it_works: "⚙️",
   testimonials: "💬",
   marquee_bottom: "📢",
+  reels: "🎬",
   newsletter: "📧",
   footer: "🦶",
 };
