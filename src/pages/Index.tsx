@@ -261,6 +261,8 @@ const Index = () => {
 
     monthly_offers: () => <MonthlyOffersSection key="monthly_offers" />,
 
+    reels: () => <ReelsSlider key="reels" />,
+
     why_choose: () => {
       if (!whySettings?.is_active || whyItems.length === 0) return null;
       return (
