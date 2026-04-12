@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import BannerSlider from "@/components/landing/BannerSlider";
+import ReelsSlider from "@/components/landing/ReelsSlider";
 import MonthlyOffersSection from "@/components/landing/MonthlyOffersSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
