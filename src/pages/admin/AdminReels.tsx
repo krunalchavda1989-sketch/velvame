@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { GripVertical, Plus, Pencil, Trash2, Film, Settings, Loader2, ExternalLink, Play } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Film, Settings, Loader2, Play } from "lucide-react";
 
 interface ReelVideo {
   id: string;
