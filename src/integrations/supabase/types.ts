@@ -2033,6 +2033,237 @@ export type Database = {
         }
         Relationships: []
       }
+      popup_advanced_rules: {
+        Row: {
+          arriving_from_source: boolean
+          arriving_from_url: boolean
+          device_type: string
+          hide_logged_in: boolean
+          id: string
+          max_times: number
+          pageview_count: number
+          popup_id: string
+          referrer_url: string
+          session_count: number
+          show_after_pageviews: boolean
+          show_after_sessions: boolean
+          show_max_times: boolean
+          show_on_devices: boolean
+          traffic_source: string
+        }
+        Insert: {
+          arriving_from_source?: boolean
+          arriving_from_url?: boolean
+          device_type?: string
+          hide_logged_in?: boolean
+          id?: string
+          max_times?: number
+          pageview_count?: number
+          popup_id: string
+          referrer_url?: string
+          session_count?: number
+          show_after_pageviews?: boolean
+          show_after_sessions?: boolean
+          show_max_times?: boolean
+          show_on_devices?: boolean
+          traffic_source?: string
+        }
+        Update: {
+          arriving_from_source?: boolean
+          arriving_from_url?: boolean
+          device_type?: string
+          hide_logged_in?: boolean
+          id?: string
+          max_times?: number
+          pageview_count?: number
+          popup_id?: string
+          referrer_url?: string
+          session_count?: number
+          show_after_pageviews?: boolean
+          show_after_sessions?: boolean
+          show_max_times?: boolean
+          show_on_devices?: boolean
+          traffic_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popup_advanced_rules_popup_id_fkey"
+            columns: ["popup_id"]
+            isOneToOne: true
+            referencedRelation: "popups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      popup_conditions: {
+        Row: {
+          id: string
+          include_exclude: string
+          page_type: string
+          popup_id: string
+          scope: string
+          sort_order: number
+          specific_page: string
+        }
+        Insert: {
+          id?: string
+          include_exclude?: string
+          page_type?: string
+          popup_id: string
+          scope?: string
+          sort_order?: number
+          specific_page?: string
+        }
+        Update: {
+          id?: string
+          include_exclude?: string
+          page_type?: string
+          popup_id?: string
+          scope?: string
+          sort_order?: number
+          specific_page?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popup_conditions_popup_id_fkey"
+            columns: ["popup_id"]
+            isOneToOne: false
+            referencedRelation: "popups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      popup_triggers: {
+        Row: {
+          after_inactivity: boolean
+          click_count: number
+          element_selector: string
+          id: string
+          inactivity_seconds: number
+          on_click: boolean
+          on_exit_intent: boolean
+          on_page_load: boolean
+          on_scroll: boolean
+          on_scroll_to_element: boolean
+          page_load_delay: number
+          popup_id: string
+          scroll_direction: string
+          scroll_percent: number
+        }
+        Insert: {
+          after_inactivity?: boolean
+          click_count?: number
+          element_selector?: string
+          id?: string
+          inactivity_seconds?: number
+          on_click?: boolean
+          on_exit_intent?: boolean
+          on_page_load?: boolean
+          on_scroll?: boolean
+          on_scroll_to_element?: boolean
+          page_load_delay?: number
+          popup_id: string
+          scroll_direction?: string
+          scroll_percent?: number
+        }
+        Update: {
+          after_inactivity?: boolean
+          click_count?: number
+          element_selector?: string
+          id?: string
+          inactivity_seconds?: number
+          on_click?: boolean
+          on_exit_intent?: boolean
+          on_page_load?: boolean
+          on_scroll?: boolean
+          on_scroll_to_element?: boolean
+          page_load_delay?: number
+          popup_id?: string
+          scroll_direction?: string
+          scroll_percent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "popup_triggers_popup_id_fkey"
+            columns: ["popup_id"]
+            isOneToOne: true
+            referencedRelation: "popups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      popups: {
+        Row: {
+          bg_color: string
+          btn1_link: string
+          btn1_text: string
+          btn2_action: string
+          btn2_text: string
+          close_on_overlay: boolean
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          name: string
+          overlay_color: string
+          overlay_opacity: number
+          position: string
+          show_close_btn: boolean
+          sort_order: number
+          status: boolean
+          title: string
+          type: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          bg_color?: string
+          btn1_link?: string
+          btn1_text?: string
+          btn2_action?: string
+          btn2_text?: string
+          close_on_overlay?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          name?: string
+          overlay_color?: string
+          overlay_opacity?: number
+          position?: string
+          show_close_btn?: boolean
+          sort_order?: number
+          status?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          bg_color?: string
+          btn1_link?: string
+          btn1_text?: string
+          btn2_action?: string
+          btn2_text?: string
+          close_on_overlay?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          name?: string
+          overlay_color?: string
+          overlay_opacity?: number
+          position?: string
+          show_close_btn?: boolean
+          sort_order?: number
+          status?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           banner_url: string
