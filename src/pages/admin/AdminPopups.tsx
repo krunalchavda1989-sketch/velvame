@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, Copy, X, Check, ChevronRight, Crosshair, MousePointer, Clock, ArrowUp, Monitor } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Copy, X, Check, ChevronRight, Crosshair, MousePointer, Clock, ArrowUp, Monitor, Upload, Loader2 } from "lucide-react";
 
 interface Popup {
   id: string;
@@ -125,8 +125,9 @@ const AdminPopups = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewPopup, setPreviewPopup] = useState<Popup | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Form state
+
   const [form, setForm] = useState<Omit<Popup, "id" | "sort_order">>({
     name: "", type: "offer", title: "", description: "", image_url: "",
     btn1_text: "", btn1_link: "", btn2_text: "", btn2_action: "close",
@@ -347,8 +348,47 @@ const AdminPopups = () => {
               <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Body content / offer details" rows={3} />
             </div>
             <div className="space-y-2">
-              <Label>Popup Image URL</Label>
-              <Input value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+              <Label>Popup Image</Label>
+              {form.image_url ? (
+                <div className="relative w-full max-w-xs">
+                  <img src={form.image_url} alt="Popup" className="w-full rounded-lg border border-border object-cover max-h-40" />
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, image_url: "" })}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:opacity-80"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                  {uploadingImage ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-sm text-muted-foreground">{uploadingImage ? "Uploading..." : "Click to upload image"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingImage}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) { toast.error("Max 5MB allowed"); return; }
+                      setUploadingImage(true);
+                      const ext = file.name.split(".").pop();
+                      const path = `popup-${Date.now()}.${ext}`;
+                      const { error } = await supabase.storage.from("popup-images").upload(path, file);
+                      if (error) { toast.error("Upload failed"); setUploadingImage(false); return; }
+                      const { data: urlData } = supabase.storage.from("popup-images").getPublicUrl(path);
+                      setForm({ ...form, image_url: urlData.publicUrl });
+                      setUploadingImage(false);
+                    }}
+                  />
+                </label>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
