@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, Copy, X, Check, ChevronRight, Crosshair, MousePointer, Clock, ArrowUp, Monitor } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Copy, X, Check, ChevronRight, Crosshair, MousePointer, Clock, ArrowUp, Monitor, Upload, Loader2 } from "lucide-react";
 
 interface Popup {
   id: string;
