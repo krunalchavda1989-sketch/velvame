@@ -42,10 +42,10 @@ const PLATFORM_ICONS: Record<string, { color: string; label: string }> = {
   instagram: { color: "#E4405F", label: "Instagram" },
 };
 
-const getEmbedUrl = (platform: string, videoId: string): string | null => {
+const getEmbedUrl = (platform: string, videoId: string, videoUrl: string): string | null => {
   if (platform === "youtube") return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-  if (platform === "facebook") return `https://www.facebook.com/plugins/video.php?href=https://www.facebook.com/watch/?v=${videoId}&autoplay=true`;
-  if (platform === "instagram") return null; // Instagram doesn't support iframe embeds reliably
+  if (platform === "facebook") return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&autoplay=true`;
+  if (platform === "instagram") return `https://www.instagram.com/reel/${videoId}/embed/`;
   return null;
 };
 
@@ -95,15 +95,7 @@ const ReelsSlider = () => {
   };
 
   const handleClick = (v: ReelVideo) => {
-    const embedUrl = getEmbedUrl(v.platform, (v as any).video_id);
-    if (embedUrl) {
-      setActiveVideo(v);
-    } else {
-      // For Instagram or unsupported embeds, open in new tab
-      const url = v.destination_link || v.video_url;
-      const target = v.destination_link ? v.link_target : "_blank";
-      window.open(url, target);
-    }
+    setActiveVideo(v);
   };
 
   const thumb = (v: ReelVideo) => {
@@ -132,7 +124,7 @@ const ReelsSlider = () => {
     return style;
   };
 
-  const embedUrl = activeVideo ? getEmbedUrl(activeVideo.platform, (activeVideo as any).video_id) : null;
+  const embedUrl = activeVideo ? getEmbedUrl(activeVideo.platform, (activeVideo as any).video_id, activeVideo.video_url) : null;
 
   return (
     <>
