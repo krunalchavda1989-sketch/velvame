@@ -2394,11 +2394,18 @@ export type Database = {
       }
       reels_settings: {
         Row: {
+          bg_color: string
+          bg_image_url: string
+          bg_type: string
           cards_desktop: number
           cards_mobile: number
           enable_swipe: boolean
+          gradient_direction: string
+          gradient_stops: Json
           id: string
           is_enabled: boolean
+          padding_bottom: number
+          padding_top: number
           section_subtitle: string
           section_title: string
           show_arrows: boolean
@@ -2408,11 +2415,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bg_color?: string
+          bg_image_url?: string
+          bg_type?: string
           cards_desktop?: number
           cards_mobile?: number
           enable_swipe?: boolean
+          gradient_direction?: string
+          gradient_stops?: Json
           id?: string
           is_enabled?: boolean
+          padding_bottom?: number
+          padding_top?: number
           section_subtitle?: string
           section_title?: string
           show_arrows?: boolean
@@ -2422,11 +2436,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bg_color?: string
+          bg_image_url?: string
+          bg_type?: string
           cards_desktop?: number
           cards_mobile?: number
           enable_swipe?: boolean
+          gradient_direction?: string
+          gradient_stops?: Json
           id?: string
           is_enabled?: boolean
+          padding_bottom?: number
+          padding_top?: number
           section_subtitle?: string
           section_title?: string
           show_arrows?: boolean
