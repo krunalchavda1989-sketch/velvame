@@ -49,7 +49,6 @@ const setSessionData = (data: any) => {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
-// Increment page view counter
 const incrementPageViews = () => {
   const d = getStorageData();
   d.pageViews = (d.pageViews || 0) + 1;
@@ -57,7 +56,6 @@ const incrementPageViews = () => {
   return d.pageViews;
 };
 
-// Track session
 const trackSession = () => {
   const sd = getSessionData();
   if (!sd.sessionTracked) {
@@ -78,6 +76,17 @@ const recordShow = (popupId: string) => {
   const sd = getSessionData();
   sd[`shown_${popupId}`] = (sd[`shown_${popupId}`] || 0) + 1;
   setSessionData(sd);
+};
+
+const markDismissed = (popupId: string) => {
+  const sd = getSessionData();
+  sd[`dismissed_${popupId}`] = true;
+  setSessionData(sd);
+};
+
+const isDismissed = (popupId: string) => {
+  const sd = getSessionData();
+  return !!sd[`dismissed_${popupId}`];
 };
 
 const getDeviceType = (): string => {
@@ -102,14 +111,11 @@ const getTrafficSource = (): string => {
 
 const checkConditions = (conditions: any[], pathname: string): boolean => {
   if (!conditions || conditions.length === 0) return true;
-  let included = false;
-  let excluded = false;
   const includes = conditions.filter((c: any) => c.include_exclude === "include");
   const excludes = conditions.filter((c: any) => c.include_exclude === "exclude");
 
-  if (includes.length === 0) included = true;
-  else included = includes.some((c: any) => matchPage(c, pathname));
-  if (excludes.length > 0) excluded = excludes.some((c: any) => matchPage(c, pathname));
+  let included = includes.length === 0 || includes.some((c: any) => matchPage(c, pathname));
+  let excluded = excludes.length > 0 && excludes.some((c: any) => matchPage(c, pathname));
 
   return included && !excluded;
 };
@@ -177,16 +183,17 @@ const PopupEngine = () => {
   const [activePopup, setActivePopup] = useState<PopupData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
-  const triggersRegistered = useRef(false);
-  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
-  const exitIntentRegistered = useRef(false);
+  const dismissedIds = useRef<Set<string>>(new Set());
   const clickCount = useRef(0);
 
-  // Track page views and sessions
+  // Don't render on admin routes
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   useEffect(() => {
+    if (isAdminRoute) return;
     incrementPageViews();
     trackSession();
-  }, []);
+  }, [isAdminRoute]);
 
   // Auth check
   useEffect(() => {
@@ -197,6 +204,7 @@ const PopupEngine = () => {
 
   // Fetch all active popups once
   useEffect(() => {
+    if (isAdminRoute) return;
     const fetchPopups = async () => {
       const { data: popupsData } = await supabase.from("popups").select("*").eq("status", true).order("sort_order");
       if (!popupsData || popupsData.length === 0) return;
@@ -218,19 +226,18 @@ const PopupEngine = () => {
       setPopups(enriched);
     };
     fetchPopups();
-  }, []);
+  }, [isAdminRoute]);
 
   // Evaluate and register triggers when route changes
   useEffect(() => {
-    if (popups.length === 0 || activePopup) return;
+    if (isAdminRoute || popups.length === 0 || activePopup) return;
 
-    // Reset triggers on route change
-    triggersRegistered.current = false;
     clickCount.current = 0;
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
 
-    // Find first eligible popup
+    // Find first eligible popup that hasn't been dismissed
     const eligible = popups.find(p =>
+      !dismissedIds.current.has(p.id) &&
+      !isDismissed(p.id) &&
       checkConditions(p.conditions, location.pathname) &&
       checkAdvancedRules(p.advanced, isLoggedIn) &&
       checkMaxTimes(p.advanced, p.id)
@@ -241,18 +248,19 @@ const PopupEngine = () => {
     const t = eligible.triggers;
     if (!t) return;
 
+    let cancelled = false;
+
     const showPopup = () => {
-      if (activePopup) return;
+      if (cancelled || activePopup) return;
       recordShow(eligible.id);
       setActivePopup(eligible);
     };
 
-    // Register triggers
     // On Page Load
     if (t.on_page_load) {
       const delay = (t.page_load_delay || 0) * 1000;
       const timer = setTimeout(showPopup, delay);
-      return () => clearTimeout(timer);
+      return () => { cancelled = true; clearTimeout(timer); };
     }
 
     // On Scroll
@@ -265,7 +273,7 @@ const PopupEngine = () => {
         }
       };
       window.addEventListener("scroll", handler, { passive: true });
-      return () => window.removeEventListener("scroll", handler);
+      return () => { cancelled = true; window.removeEventListener("scroll", handler); };
     }
 
     // On Exit Intent
@@ -277,12 +285,12 @@ const PopupEngine = () => {
         }
       };
       document.addEventListener("mouseout", handler);
-      return () => document.removeEventListener("mouseout", handler);
+      return () => { cancelled = true; document.removeEventListener("mouseout", handler); };
     }
 
     // After Inactivity
     if (t.after_inactivity) {
-      let timer: NodeJS.Timeout;
+      let timer: ReturnType<typeof setTimeout>;
       const resetTimer = () => {
         clearTimeout(timer);
         timer = setTimeout(showPopup, (t.inactivity_seconds || 30) * 1000);
@@ -291,6 +299,7 @@ const PopupEngine = () => {
       const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
       events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
       return () => {
+        cancelled = true;
         clearTimeout(timer);
         events.forEach(e => window.removeEventListener(e, resetTimer));
       };
@@ -306,7 +315,7 @@ const PopupEngine = () => {
         }
       };
       document.addEventListener("click", handler);
-      return () => document.removeEventListener("click", handler);
+      return () => { cancelled = true; document.removeEventListener("click", handler); };
     }
 
     // On Scroll To Element
@@ -321,13 +330,17 @@ const PopupEngine = () => {
       });
       const el = document.querySelector(t.element_selector);
       if (el) observer.observe(el);
-      return () => observer.disconnect();
+      return () => { cancelled = true; observer.disconnect(); };
     }
-  }, [popups, location.pathname, isLoggedIn, activePopup]);
+  }, [popups, location.pathname, isLoggedIn, activePopup, isAdminRoute]);
 
   const closePopup = useCallback(() => {
+    if (activePopup) {
+      dismissedIds.current.add(activePopup.id);
+      markDismissed(activePopup.id);
+    }
     setActivePopup(null);
-  }, []);
+  }, [activePopup]);
 
   const handleBtn1 = () => {
     if (activePopup?.btn1_link) {
@@ -343,7 +356,7 @@ const PopupEngine = () => {
     closePopup();
   };
 
-  if (!activePopup) return null;
+  if (isAdminRoute || !activePopup) return null;
 
   const overlayBg = `${activePopup.overlay_color}${Math.round(activePopup.overlay_opacity * 2.55).toString(16).padStart(2, "0")}`;
 
