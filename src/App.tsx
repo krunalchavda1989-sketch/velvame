@@ -89,6 +89,8 @@ import CustomCodeInjector from "./components/CustomCodeInjector";
 import DynamicPage from "./pages/DynamicPage";
 import CategoryPage from "./pages/CategoryPage";
 import AdminReels from "./pages/admin/AdminReels";
+import AdminPopups from "./pages/admin/AdminPopups";
+import PopupEngine from "./components/PopupEngine";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,7 @@ const App = () => (
           <BrandProvider>
           <CartProvider>
           <CustomCodeInjector />
+          <PopupEngine />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -269,6 +272,7 @@ const App = () => (
             <Route path="/admin/manage-sections" element={<AdminRoute><AdminManageSections /></AdminRoute>} />
             <Route path="/admin/marquee" element={<AdminRoute><AdminMarquee /></AdminRoute>} />
             <Route path="/admin/reels" element={<AdminRoute><AdminReels /></AdminRoute>} />
+            <Route path="/admin/popups" element={<AdminRoute><AdminPopups /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />

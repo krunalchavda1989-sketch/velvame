@@ -10,7 +10,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap
 } from "lucide-react";
 
 interface MenuItem {
@@ -79,6 +79,7 @@ const menuItems: MenuItem[] = [
       { icon: Layers, label: "How It Works", href: "/admin/how-it-works" },
       { icon: MoveHorizontal, label: "Scrolling Marquee", href: "/admin/marquee" },
       { icon: Film, label: "Reels / Video Slider", href: "/admin/reels" },
+      { icon: Zap, label: "Popup Manager", href: "/admin/popups" },
       { icon: Layers, label: "Footer", href: "/admin/footer-settings" },
       { icon: Layers, label: "Breadcrumb", href: "/admin/breadcrumb-settings" },
       { icon: PanelTop, label: "Banners", href: "/admin/banners" },
