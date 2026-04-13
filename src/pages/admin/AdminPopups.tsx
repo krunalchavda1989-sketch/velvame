@@ -125,8 +125,9 @@ const AdminPopups = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewPopup, setPreviewPopup] = useState<Popup | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Form state
+
   const [form, setForm] = useState<Omit<Popup, "id" | "sort_order">>({
     name: "", type: "offer", title: "", description: "", image_url: "",
     btn1_text: "", btn1_link: "", btn2_text: "", btn2_action: "close",
