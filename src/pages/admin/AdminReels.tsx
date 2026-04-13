@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { GripVertical, Plus, Pencil, Trash2, Film, Settings, Loader2, Play } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Film, Settings, Loader2, Play, Upload, X } from "lucide-react";
 
 interface ReelVideo {
   id: string;
@@ -93,6 +93,8 @@ const AdminReels = () => {
   const [detectedVideoId, setDetectedVideoId] = useState("");
   const [autoThumb, setAutoThumb] = useState("");
   const [urlError, setUrlError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -129,7 +131,22 @@ const AdminReels = () => {
   const resetForm = () => {
     setFormUrl(""); setFormTitle(""); setFormDesc(""); setFormDestLink(""); setFormLinkTarget("_blank");
     setFormActive(true); setFormCustomThumb(""); setDetectedPlatform(""); setDetectedVideoId("");
-    setAutoThumb(""); setUrlError(""); setEditVideo(null);
+    setAutoThumb(""); setUrlError(""); setEditVideo(null); setUploading(false);
+  };
+
+  const handleThumbUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("reel-thumbnails").upload(path, file);
+    if (error) { toast.error("Upload failed: " + error.message); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("reel-thumbnails").getPublicUrl(path);
+    setFormCustomThumb(urlData.publicUrl);
+    setUploading(false);
+    toast.success("Thumbnail uploaded");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const openAdd = () => { resetForm(); setFormOpen(true); };
@@ -422,17 +439,31 @@ const AdminReels = () => {
               {thumbPreview && (
                 <div>
                   <Label>Thumbnail Preview</Label>
-                  <div className="w-24 h-36 rounded-lg overflow-hidden bg-muted mt-1"><img src={thumbPreview} alt="Thumbnail" className="w-full h-full object-cover" /></div>
+                  <div className="relative w-24 h-36 rounded-lg overflow-hidden bg-muted mt-1">
+                    <img src={thumbPreview} alt="Thumbnail" className="w-full h-full object-cover" />
+                    {formCustomThumb && (
+                      <button onClick={() => setFormCustomThumb("")} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
               {!thumbPreview && detectedPlatform && detectedPlatform !== "youtube" && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
-                  Auto-fetch not available for {detectedPlatform}. Please provide a custom thumbnail URL below.
+                  Auto-fetch not available for {detectedPlatform}. Please upload a thumbnail below.
                 </div>
               )}
               <div>
-                <Label>Custom Thumbnail URL {detectedPlatform && detectedPlatform !== "youtube" ? "(recommended)" : "(optional)"}</Label>
-                <Input placeholder="Paste thumbnail image URL" value={formCustomThumb} onChange={e => setFormCustomThumb(e.target.value)} />
+                <Label>Custom Thumbnail {detectedPlatform && detectedPlatform !== "youtube" ? "(recommended)" : "(optional)"}</Label>
+                <div className="flex gap-2 mt-1">
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploading ? "Uploading..." : "Upload Image"}
+                  </Button>
+                  <Input placeholder="Or paste image URL" value={formCustomThumb} onChange={e => setFormCustomThumb(e.target.value)} className="flex-1" />
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleThumbUpload} />
               </div>
               <div><Label>Video Title</Label><Input placeholder="Optional title" value={formTitle} onChange={e => setFormTitle(e.target.value)} /></div>
               <div><Label>Short Description</Label><Textarea rows={2} value={formDesc} onChange={e => setFormDesc(e.target.value)} /></div>
