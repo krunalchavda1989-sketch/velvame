@@ -213,9 +213,9 @@ const ReelsSlider = () => {
 
       {/* Video Popup */}
       <Dialog open={!!activeVideo} onOpenChange={(o) => { if (!o) setActiveVideo(null); }}>
-        <DialogContent className="max-w-3xl w-[95vw] p-0 bg-black border-none overflow-hidden [&>button]:text-white [&>button]:hover:text-white/80 [&>button]:z-20">
+        <DialogContent className={`p-0 bg-black border-none overflow-hidden [&>button]:text-white [&>button]:hover:text-white/80 [&>button]:z-20 ${activeVideo?.platform === "instagram" ? "max-w-md w-[90vw]" : "max-w-3xl w-[95vw]"}`}>
           {embedUrl && (
-            <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+            <div className="relative w-full" style={{ aspectRatio: activeVideo?.platform === "instagram" ? "9/16" : "16/9", maxHeight: "80vh" }}>
               <iframe
                 src={embedUrl}
                 className="absolute inset-0 w-full h-full"
