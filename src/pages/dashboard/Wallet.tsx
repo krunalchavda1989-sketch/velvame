@@ -83,22 +83,10 @@ const WalletPage = () => {
     setWithdrawals((withdrawalsRes.data as WithdrawalRequest[]) || []);
     if (toggleRes.data) setWithdrawalEnabled(toggleRes.data.is_enabled);
 
-    // Fetch actual total commission earned from ALL records (not limited to 50)
-    let allTotal = 0;
-    let page = 0;
-    const PAGE_SIZE = 1000;
-    while (true) {
-      const { data: batch } = await supabase
-        .from("commissions")
-        .select("amount")
-        .eq("beneficiary_id", user.id)
-        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-      if (!batch || batch.length === 0) break;
-      allTotal += batch.reduce((s: number, c: any) => s + Number(c.amount), 0);
-      if (batch.length < PAGE_SIZE) break;
-      page++;
+    // Use wallet's total_earned which already tracks commission totals
+    if (walletRes.data) {
+      setTotalCommissionEarned((walletRes.data as any).total_earned ?? 0);
     }
-    setTotalCommissionEarned(allTotal);
 
     setLoading(false);
   };

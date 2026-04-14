@@ -111,14 +111,12 @@ const AdminOrders = () => {
   };
 
   const fetchOrders = async () => {
-    const { data: ordersData } = await supabase
-      .from("orders").select("*").order("created_at", { ascending: false });
-
-    const { data: profilesData } = await supabase
-      .from("profiles").select("user_id, full_name, referral_code");
+    const [{ data: ordersData }, { data: profilesData }, { data: commData }] = await Promise.all([
+      supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("profiles").select("user_id, full_name, referral_code"),
+      supabase.from("commissions").select("order_id"),
+    ]);
     const profileMap = new Map((profilesData || []).map((p) => [p.user_id, p]));
-
-    const { data: commData } = await supabase.from("commissions").select("order_id");
     const processedOrderIds = new Set((commData || []).map((c) => c.order_id));
 
     const orderIds = (ordersData || []).map((o) => o.id);
