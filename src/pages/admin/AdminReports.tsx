@@ -62,7 +62,7 @@ const AdminReports = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 lg:p-8 max-w-6xl">
+      <div className="p-6 lg:p-8 w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-primary" /> Reports
