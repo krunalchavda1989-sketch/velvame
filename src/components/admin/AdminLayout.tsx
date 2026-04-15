@@ -105,6 +105,7 @@ const menuItems: MenuItem[] = [
       { icon: Settings, label: "Custom Code", href: "/admin/custom-code" },
       { icon: UserPlus, label: "Default Placement", href: "/admin/default-placement" },
       { icon: ShieldCheck, label: "Sub-Admins", href: "/admin/sub-users" },
+      { icon: Server, label: "Storage Monitor", href: "/admin/storage" },
     ],
   },
   { icon: User, label: "My Profile", href: "/admin/profile" },

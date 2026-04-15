@@ -90,6 +90,7 @@ import DynamicPage from "./pages/DynamicPage";
 import CategoryPage from "./pages/CategoryPage";
 import AdminReels from "./pages/admin/AdminReels";
 import AdminPopups from "./pages/admin/AdminPopups";
+import AdminStorageMonitor from "./pages/admin/AdminStorageMonitor";
 import PopupEngine from "./components/PopupEngine";
 
 const queryClient = new QueryClient();
