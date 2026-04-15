@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Database, HardDrive, Cloud, RefreshCw, AlertTriangle, CheckCircle, Server, FolderOpen, Loader2 } from "lucide-react";
+import { Database, HardDrive, Cloud, RefreshCw, AlertTriangle, CheckCircle, Server, FolderOpen, Loader2, FileStack, Shield, BarChart3 } from "lucide-react";
 
 interface TableStat {
   name: string;
@@ -42,7 +42,8 @@ interface StorageData {
   storage_buckets: BucketStat[];
 }
 
-const DB_LIMIT_MB = 500; // Free tier Supabase limit
+const DB_LIMIT_MB = 500;
+const STORAGE_LIMIT_GB = 1; // 1 GB free tier file storage limit
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return "0 B";
@@ -51,6 +52,18 @@ const formatBytes = (bytes: number) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
+
+const BUCKET_COLORS = [
+  { bg: "bg-blue-50 border-blue-200", icon: "text-blue-600", badge: "bg-blue-100 text-blue-700" },
+  { bg: "bg-purple-50 border-purple-200", icon: "text-purple-600", badge: "bg-purple-100 text-purple-700" },
+  { bg: "bg-emerald-50 border-emerald-200", icon: "text-emerald-600", badge: "bg-emerald-100 text-emerald-700" },
+  { bg: "bg-orange-50 border-orange-200", icon: "text-orange-600", badge: "bg-orange-100 text-orange-700" },
+  { bg: "bg-pink-50 border-pink-200", icon: "text-pink-600", badge: "bg-pink-100 text-pink-700" },
+  { bg: "bg-cyan-50 border-cyan-200", icon: "text-cyan-600", badge: "bg-cyan-100 text-cyan-700" },
+  { bg: "bg-amber-50 border-amber-200", icon: "text-amber-600", badge: "bg-amber-100 text-amber-700" },
+  { bg: "bg-indigo-50 border-indigo-200", icon: "text-indigo-600", badge: "bg-indigo-100 text-indigo-700" },
+  { bg: "bg-rose-50 border-rose-200", icon: "text-rose-600", badge: "bg-rose-100 text-rose-700" },
+];
 
 const AdminStorageMonitor = () => {
   const [data, setData] = useState<StorageData | null>(null);
@@ -72,11 +85,9 @@ const AdminStorageMonitor = () => {
         toast({ title: "Session expired", variant: "destructive" });
         return;
       }
-
       const { data: result, error } = await supabase.functions.invoke("storage-stats", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-
       if (error) throw error;
       setData(result);
     } catch (err: any) {
@@ -86,13 +97,14 @@ const AdminStorageMonitor = () => {
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   const usagePct = data ? (parseFloat(data.database.total_mb) / DB_LIMIT_MB) * 100 : 0;
-  const usageColor = usagePct >= 95 ? "text-destructive" : usagePct >= 80 ? "text-yellow-600" : "text-emerald-600";
-  const progressColor = usagePct >= 95 ? "bg-destructive" : usagePct >= 80 ? "bg-yellow-500" : "bg-emerald-500";
+
+  const totalFiles = data ? data.storage_buckets.reduce((s, b) => s + b.file_count, 0) : 0;
+  const totalBuckets = data ? data.storage_buckets.length : 0;
+  const publicBuckets = data ? data.storage_buckets.filter(b => b.public).length : 0;
+  const privateBuckets = totalBuckets - publicBuckets;
 
   const rowMap = new Map<string, number>();
   data?.database.row_counts.forEach((r) => rowMap.set(r.table, r.rows));
@@ -103,7 +115,6 @@ const AdminStorageMonitor = () => {
       return;
     }
     setTestingConnection(true);
-    // Simulate test — actual S3 test would need an edge function
     setTimeout(() => {
       setTestingConnection(false);
       toast({ title: "S3 connection feature", description: "Connect your AWS S3 bucket from the Connectors panel to enable this feature." });
@@ -148,57 +159,65 @@ const AdminStorageMonitor = () => {
               </div>
             ) : data ? (
               <>
-                {/* Usage Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
+                  {/* Total DB Size - Blue */}
+                  <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm text-muted-foreground">Total DB Size</span>
-                        <HardDrive className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-blue-700">Total DB Size</span>
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <HardDrive className="h-5 w-5 text-blue-600" />
+                        </div>
                       </div>
-                      <p className={`text-3xl font-bold ${usageColor}`}>
+                      <p className="text-3xl font-bold text-blue-800">
                         {data.database.total_mb} MB
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">of {DB_LIMIT_MB} MB limit</p>
+                      <p className="text-xs text-blue-600/70 mt-1">of {DB_LIMIT_MB} MB limit</p>
                       <div className="mt-3 relative">
-                        <Progress value={Math.min(usagePct, 100)} className="h-2.5" />
-                        <div
-                          className={`absolute top-0 left-0 h-2.5 rounded-full transition-all ${progressColor}`}
-                          style={{ width: `${Math.min(usagePct, 100)}%` }}
-                        />
+                        <div className="w-full bg-blue-200/50 rounded-full h-2.5">
+                          <div
+                            className={`h-2.5 rounded-full transition-all ${usagePct >= 95 ? "bg-red-500" : usagePct >= 80 ? "bg-yellow-500" : "bg-blue-500"}`}
+                            style={{ width: `${Math.min(usagePct, 100)}%` }}
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{usagePct.toFixed(1)}% used</p>
+                      <p className="text-xs text-blue-600/70 mt-1">{usagePct.toFixed(1)}% used</p>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  {/* Total Tables - Purple */}
+                  <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm text-muted-foreground">Total Tables</span>
-                        <Database className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-purple-700">Total Tables</span>
+                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <Database className="h-5 w-5 text-purple-600" />
+                        </div>
                       </div>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-3xl font-bold text-purple-800">
                         {data.database.tables.length}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">public schema tables</p>
+                      <p className="text-xs text-purple-600/70 mt-1">public schema tables</p>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  {/* Total Rows - Emerald */}
+                  <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50 shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm text-muted-foreground">Total Rows</span>
-                        <Server className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-emerald-700">Total Rows</span>
+                        <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <BarChart3 className="h-5 w-5 text-emerald-600" />
+                        </div>
                       </div>
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-3xl font-bold text-emerald-800">
                         {data.database.row_counts.reduce((sum, r) => sum + r.rows, 0).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">across all tables (estimated)</p>
+                      <p className="text-xs text-emerald-600/70 mt-1">across all tables (estimated)</p>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Warning Banner */}
                 {usagePct >= 80 && (
                   <Card className={`border-2 ${usagePct >= 95 ? "border-destructive bg-destructive/5" : "border-yellow-500 bg-yellow-50"}`}>
                     <CardContent className="pt-6 flex items-start gap-3">
@@ -217,7 +236,6 @@ const AdminStorageMonitor = () => {
                   </Card>
                 )}
 
-                {/* Table Breakdown */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Table-wise Breakdown</CardTitle>
@@ -285,25 +303,96 @@ const AdminStorageMonitor = () => {
               </div>
             ) : data ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {data.storage_buckets.map((bucket) => (
-                    <Card key={bucket.name}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-foreground">{bucket.name}</span>
-                          <Badge variant={bucket.public ? "default" : "secondary"}>
-                            {bucket.public ? "Public" : "Private"}
-                          </Badge>
+                {/* Storage Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Total Files - Blue */}
+                  <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100/50 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-blue-700">Total Files</span>
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <FileStack className="h-5 w-5 text-blue-600" />
                         </div>
-                        <div className="flex items-center gap-2 mt-3">
-                          <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            {bucket.file_count} file{bucket.file_count !== 1 ? "s" : ""}
-                          </span>
+                      </div>
+                      <p className="text-3xl font-bold text-blue-800">{totalFiles}</p>
+                      <p className="text-xs text-blue-600/70 mt-1">across all buckets</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Total Buckets - Purple */}
+                  <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-purple-700">Storage Buckets</span>
+                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <FolderOpen className="h-5 w-5 text-purple-600" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                      <p className="text-3xl font-bold text-purple-800">{totalBuckets}</p>
+                      <p className="text-xs text-purple-600/70 mt-1">{publicBuckets} public · {privateBuckets} private</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Provider - Emerald */}
+                  <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-emerald-700">Current Provider</span>
+                        <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <Cloud className="h-5 w-5 text-emerald-600" />
+                        </div>
+                      </div>
+                      <p className="text-xl font-bold text-emerald-800">Lovable Cloud</p>
+                      <p className="text-xs text-emerald-600/70 mt-1">Supabase Storage</p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Storage Limit - Orange */}
+                  <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100/50 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-orange-700">Storage Limit</span>
+                        <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                          <Shield className="h-5 w-5 text-orange-600" />
+                        </div>
+                      </div>
+                      <p className="text-3xl font-bold text-orange-800">{STORAGE_LIMIT_GB} GB</p>
+                      <p className="text-xs text-orange-600/70 mt-1">file storage limit</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Bucket Cards */}
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Storage Buckets</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {data.storage_buckets.map((bucket, idx) => {
+                      const color = BUCKET_COLORS[idx % BUCKET_COLORS.length];
+                      return (
+                        <Card key={bucket.name} className={`border ${color.bg} shadow-sm`}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color.badge}`}>
+                                  <FolderOpen className={`h-4 w-4`} />
+                                </div>
+                                <span className="font-semibold text-foreground">{bucket.name}</span>
+                              </div>
+                              <Badge className={bucket.public ? "bg-emerald-100 text-emerald-700 border-emerald-300" : "bg-slate-100 text-slate-700 border-slate-300"}>
+                                {bucket.public ? "Public" : "Private"}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mt-3 ml-10">
+                              <FileStack className={`h-4 w-4 ${color.icon}`} />
+                              <span className="text-sm text-muted-foreground font-medium">
+                                {bucket.file_count} file{bucket.file_count !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {data.storage_buckets.length === 0 && (
@@ -341,12 +430,8 @@ const AdminStorageMonitor = () => {
                 {!s3Enabled ? (
                   <div className="text-center py-8">
                     <Cloud className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">
-                      Enable the toggle above to configure Amazon S3 integration
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      S3 can be used for large file uploads, backups, and media storage
-                    </p>
+                    <p className="text-muted-foreground">Enable the toggle above to configure Amazon S3 integration</p>
+                    <p className="text-xs text-muted-foreground mt-2">S3 can be used for large file uploads, backups, and media storage</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -368,58 +453,28 @@ const AdminStorageMonitor = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="access-key">Access Key ID</Label>
-                        <Input
-                          id="access-key"
-                          type="password"
-                          placeholder="AKIAIOSFODNN7EXAMPLE"
-                          value={s3Config.accessKey}
-                          onChange={(e) => setS3Config(p => ({ ...p, accessKey: e.target.value }))}
-                        />
+                        <Input id="access-key" type="password" placeholder="AKIAIOSFODNN7EXAMPLE" value={s3Config.accessKey} onChange={(e) => setS3Config(p => ({ ...p, accessKey: e.target.value }))} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secret-key">Secret Access Key</Label>
-                        <Input
-                          id="secret-key"
-                          type="password"
-                          placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                          value={s3Config.secretKey}
-                          onChange={(e) => setS3Config(p => ({ ...p, secretKey: e.target.value }))}
-                        />
+                        <Input id="secret-key" type="password" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" value={s3Config.secretKey} onChange={(e) => setS3Config(p => ({ ...p, secretKey: e.target.value }))} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="region">AWS Region</Label>
-                        <Input
-                          id="region"
-                          placeholder="ap-south-1"
-                          value={s3Config.region}
-                          onChange={(e) => setS3Config(p => ({ ...p, region: e.target.value }))}
-                        />
+                        <Input id="region" placeholder="ap-south-1" value={s3Config.region} onChange={(e) => setS3Config(p => ({ ...p, region: e.target.value }))} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="bucket">Bucket Name</Label>
-                        <Input
-                          id="bucket"
-                          placeholder="my-app-storage"
-                          value={s3Config.bucketName}
-                          onChange={(e) => setS3Config(p => ({ ...p, bucketName: e.target.value }))}
-                        />
+                        <Input id="bucket" placeholder="my-app-storage" value={s3Config.bucketName} onChange={(e) => setS3Config(p => ({ ...p, bucketName: e.target.value }))} />
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <Button onClick={handleTestConnection} disabled={testingConnection} variant="outline">
-                        {testingConnection ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                        )}
+                        {testingConnection ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                         Test Connection
                       </Button>
-                      <Button
-                        onClick={() => {
-                          toast({ title: "S3 Configuration", description: "To fully enable S3, connect your AWS S3 bucket from the Connectors panel. Credentials will be securely stored." });
-                        }}
-                      >
+                      <Button onClick={() => toast({ title: "S3 Configuration", description: "To fully enable S3, connect your AWS S3 bucket from the Connectors panel. Credentials will be securely stored." })}>
                         Save Configuration
                       </Button>
                     </div>
