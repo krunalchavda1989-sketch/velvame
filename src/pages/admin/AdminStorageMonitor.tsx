@@ -30,6 +30,7 @@ interface BucketStat {
   name: string;
   public: boolean;
   file_count: number;
+  size_bytes: number;
 }
 
 interface StorageData {
@@ -40,6 +41,7 @@ interface StorageData {
     row_counts: RowCount[];
   };
   storage_buckets: BucketStat[];
+  total_storage_bytes: number;
 }
 
 const DB_LIMIT_MB = 500;
@@ -347,19 +349,35 @@ const AdminStorageMonitor = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Storage Limit - Orange */}
-                  <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100/50 shadow-sm">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-orange-700">Storage Limit</span>
-                        <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                          <Shield className="h-5 w-5 text-orange-600" />
-                        </div>
-                      </div>
-                      <p className="text-3xl font-bold text-orange-800">{STORAGE_LIMIT_GB} GB</p>
-                      <p className="text-xs text-orange-600/70 mt-1">file storage limit</p>
-                    </CardContent>
-                  </Card>
+                  {/* Storage Usage - Orange */}
+                  {(() => {
+                    const totalStorageMB = (data.total_storage_bytes || 0) / (1024 * 1024);
+                    const storageLimitMB = STORAGE_LIMIT_GB * 1024;
+                    const storagePct = storageLimitMB > 0 ? (totalStorageMB / storageLimitMB) * 100 : 0;
+                    return (
+                      <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100/50 shadow-sm">
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-orange-700">Storage Usage</span>
+                            <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                              <Shield className="h-5 w-5 text-orange-600" />
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-orange-800">
+                            {totalStorageMB < 1 ? `${(totalStorageMB * 1024).toFixed(0)} KB` : `${totalStorageMB.toFixed(1)} MB`}
+                            <span className="text-base font-normal text-orange-600"> / {STORAGE_LIMIT_GB} GB</span>
+                          </p>
+                          <div className="mt-2 w-full bg-orange-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${storagePct >= 95 ? "bg-red-500" : storagePct >= 80 ? "bg-yellow-500" : "bg-orange-500"}`}
+                              style={{ width: `${Math.min(storagePct, 100)}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-orange-600/70 mt-1">{storagePct.toFixed(1)}% of storage limit used</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                 </div>
 
                 {/* Bucket Cards */}
