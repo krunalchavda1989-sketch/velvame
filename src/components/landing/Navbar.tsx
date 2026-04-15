@@ -110,7 +110,7 @@ const Navbar = () => {
                 <Link to="/dashboard" className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" className="text-gray-700 hover:text-gray-900 gap-2">
                     <LayoutDashboard className="h-4 w-4" />
-                    {profile?.full_name || "Dashboard"}
+                    {profile?.full_name?.split(" ")[0] || "Dashboard"}
                   </Button>
                   {profile?.subscription_paid ? (
                     <Badge className="bg-success/15 text-success border-success/30 text-[10px] px-1.5 py-0 h-5 gap-0.5">
@@ -195,7 +195,7 @@ const Navbar = () => {
                     <Link to="/dashboard" onClick={() => setOpen(false)} className="w-full">
                       <Button variant="ghost" className="w-full justify-start text-muted-foreground gap-2">
                         <LayoutDashboard className="h-4 w-4" />
-                        {profile?.full_name || "Dashboard"}
+                        {profile?.full_name?.split(" ")[0] || "Dashboard"}
                         {profile?.subscription_paid ? (
                           <Badge className="bg-success/15 text-success border-success/30 text-[10px] px-1.5 py-0 h-5 gap-0.5 ml-auto">
                             <BadgeCheck className="h-3 w-3" />
