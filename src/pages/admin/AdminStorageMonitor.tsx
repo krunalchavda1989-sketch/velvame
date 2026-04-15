@@ -400,10 +400,15 @@ const AdminStorageMonitor = () => {
                                 {bucket.public ? "Public" : "Private"}
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-2 mt-3 ml-10">
-                              <FileStack className={`h-4 w-4 ${color.icon}`} />
+                            <div className="flex items-center gap-4 mt-3 ml-10">
+                              <div className="flex items-center gap-1.5">
+                                <FileStack className={`h-4 w-4 ${color.icon}`} />
+                                <span className="text-sm text-muted-foreground font-medium">
+                                  {bucket.file_count} file{bucket.file_count !== 1 ? "s" : ""}
+                                </span>
+                              </div>
                               <span className="text-sm text-muted-foreground font-medium">
-                                {bucket.file_count} file{bucket.file_count !== 1 ? "s" : ""}
+                                · {formatBytes(bucket.size_bytes || 0)}
                               </span>
                             </div>
                           </CardContent>
