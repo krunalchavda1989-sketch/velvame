@@ -10,7 +10,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server
 } from "lucide-react";
 
 interface MenuItem {
@@ -105,6 +105,7 @@ const menuItems: MenuItem[] = [
       { icon: Settings, label: "Custom Code", href: "/admin/custom-code" },
       { icon: UserPlus, label: "Default Placement", href: "/admin/default-placement" },
       { icon: ShieldCheck, label: "Sub-Admins", href: "/admin/sub-users" },
+      { icon: Server, label: "Storage Monitor", href: "/admin/storage" },
     ],
   },
   { icon: User, label: "My Profile", href: "/admin/profile" },
