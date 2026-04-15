@@ -101,18 +101,29 @@ Deno.serve(async (req) => {
     const { data: buckets } = await adminClient.storage.listBuckets();
 
     let bucketStats: any[] = [];
+    let totalStorageBytes = 0;
     if (buckets) {
       for (const bucket of buckets) {
         try {
           const { data: files } = await adminClient.storage.from(bucket.name).list("", { limit: 1000 });
           const fileCount = files?.length || 0;
+          let bucketSize = 0;
+          if (files) {
+            for (const file of files) {
+              if (file.metadata && file.metadata.size) {
+                bucketSize += Number(file.metadata.size);
+              }
+            }
+          }
+          totalStorageBytes += bucketSize;
           bucketStats.push({
             name: bucket.name,
             public: bucket.public,
             file_count: fileCount,
+            size_bytes: bucketSize,
           });
         } catch {
-          bucketStats.push({ name: bucket.name, public: bucket.public, file_count: 0 });
+          bucketStats.push({ name: bucket.name, public: bucket.public, file_count: 0, size_bytes: 0 });
         }
       }
     }
@@ -136,6 +147,7 @@ Deno.serve(async (req) => {
         })),
       },
       storage_buckets: bucketStats,
+      total_storage_bytes: totalStorageBytes,
     };
 
     return new Response(JSON.stringify(result), {
