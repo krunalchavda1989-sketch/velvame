@@ -350,12 +350,12 @@ const AdminStorageMonitor = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                       <div className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <CheckCircle className="h-4 w-4 text-primary mt-0.5" />
                         <div className="text-sm">
-                          <p className="font-medium text-blue-800">Setup Guide</p>
-                          <ol className="text-blue-700 mt-1 space-y-1 list-decimal list-inside">
+                          <p className="font-medium text-primary">Setup Guide</p>
+                          <ol className="text-primary/80 mt-1 space-y-1 list-decimal list-inside">
                             <li>Create an S3 bucket in your AWS console</li>
                             <li>Create an IAM user with S3 permissions</li>
                             <li>Enter the credentials below</li>
