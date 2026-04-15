@@ -274,6 +274,7 @@ const App = () => (
             <Route path="/admin/marquee" element={<AdminRoute><AdminMarquee /></AdminRoute>} />
             <Route path="/admin/reels" element={<AdminRoute><AdminReels /></AdminRoute>} />
             <Route path="/admin/popups" element={<AdminRoute><AdminPopups /></AdminRoute>} />
+            <Route path="/admin/storage" element={<AdminRoute><AdminStorageMonitor /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
