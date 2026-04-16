@@ -1,63 +1,85 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
-const WARNING_DURATION = 30 * 1000; // 30 seconds
+const COUNTDOWN_SECONDS = 30;
 
 const ACTIVITY_EVENTS = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
 
 export const useSessionTimeout = (onLogout: () => void) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const warningActive = useRef(false);
+  const onLogoutRef = useRef(onLogout);
+  onLogoutRef.current = onLogout;
 
   const clearAllTimers = useCallback(() => {
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    if (countdownTimer.current) clearInterval(countdownTimer.current);
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
+    if (countdownTimer.current) {
+      clearInterval(countdownTimer.current);
+      countdownTimer.current = null;
+    }
   }, []);
 
+  const doLogout = useCallback(() => {
+    clearAllTimers();
+    warningActive.current = false;
+    setShowWarning(false);
+    onLogoutRef.current();
+  }, [clearAllTimers]);
+
   const startWarning = useCallback(() => {
+    warningActive.current = true;
     setShowWarning(true);
-    setCountdown(30);
-    let remaining = 30;
+    setCountdown(COUNTDOWN_SECONDS);
+    let remaining = COUNTDOWN_SECONDS;
     countdownTimer.current = setInterval(() => {
       remaining -= 1;
       setCountdown(remaining);
       if (remaining <= 0) {
-        clearAllTimers();
-        setShowWarning(false);
-        onLogout();
+        doLogout();
       }
     }, 1000);
-  }, [onLogout, clearAllTimers]);
+  }, [doLogout]);
 
-  const resetInactivityTimer = useCallback(() => {
-    if (showWarning) return; // don't reset while warning is showing
-    clearAllTimers();
+  const startInactivityTimer = useCallback(() => {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
     inactivityTimer.current = setTimeout(startWarning, INACTIVITY_LIMIT);
-  }, [showWarning, clearAllTimers, startWarning]);
+  }, [startWarning]);
 
   const keepAlive = useCallback(() => {
     clearAllTimers();
+    warningActive.current = false;
     setShowWarning(false);
-    setCountdown(30);
-    inactivityTimer.current = setTimeout(startWarning, INACTIVITY_LIMIT);
-  }, [clearAllTimers, startWarning]);
+    setCountdown(COUNTDOWN_SECONDS);
+    startInactivityTimer();
+  }, [clearAllTimers, startInactivityTimer]);
+
+  // Activity listener — stable ref to avoid effect re-runs
+  const handleActivity = useCallback(() => {
+    if (warningActive.current) return;
+    startInactivityTimer();
+  }, [startInactivityTimer]);
 
   useEffect(() => {
-    inactivityTimer.current = setTimeout(startWarning, INACTIVITY_LIMIT);
+    startInactivityTimer();
 
     ACTIVITY_EVENTS.forEach((event) =>
-      window.addEventListener(event, resetInactivityTimer, { passive: true })
+      window.addEventListener(event, handleActivity, { passive: true })
     );
 
     return () => {
       clearAllTimers();
       ACTIVITY_EVENTS.forEach((event) =>
-        window.removeEventListener(event, resetInactivityTimer)
+        window.removeEventListener(event, handleActivity)
       );
     };
-  }, [resetInactivityTimer, startWarning, clearAllTimers]);
+  }, [handleActivity, startInactivityTimer, clearAllTimers]);
 
-  return { showWarning, countdown, keepAlive, logout: onLogout };
+  return { showWarning, countdown, keepAlive, logout: doLogout };
 };
