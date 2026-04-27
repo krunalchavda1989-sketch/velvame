@@ -91,6 +91,7 @@ import CategoryPage from "./pages/CategoryPage";
 import AdminReels from "./pages/admin/AdminReels";
 import AdminPopups from "./pages/admin/AdminPopups";
 import AdminStorageMonitor from "./pages/admin/AdminStorageMonitor";
+import AdminCommissionReprocessLog from "./pages/admin/AdminCommissionReprocessLog";
 import PopupEngine from "./components/PopupEngine";
 
 const queryClient = new QueryClient();
@@ -275,6 +276,7 @@ const App = () => (
             <Route path="/admin/reels" element={<AdminRoute><AdminReels /></AdminRoute>} />
             <Route path="/admin/popups" element={<AdminRoute><AdminPopups /></AdminRoute>} />
             <Route path="/admin/storage" element={<AdminRoute><AdminStorageMonitor /></AdminRoute>} />
+            <Route path="/admin/commission-reprocess-log" element={<AdminRoute><AdminCommissionReprocessLog /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
