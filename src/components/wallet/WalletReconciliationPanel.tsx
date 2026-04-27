@@ -47,13 +47,15 @@ const CATEGORIES: { key: LedgerCategory | "all"; label: string }[] = [
 
 const fmt = (n: number) => `₹${(Math.round(n * 100) / 100).toLocaleString("en-IN")}`;
 
-export default function WalletReconciliationPanel({ userId, fileSuffix }: Props) {
+export default function WalletReconciliationPanel({ userId, fileSuffix, displayedBalance, displayedBalanceLabel = "Wallet Balance" }: Props) {
   const [from, setFrom] = useState<Date | undefined>(subDays(new Date(), 30));
   const [to, setTo] = useState<Date | undefined>(new Date());
   const [filter, setFilter] = useState<LedgerCategory | "all">("all");
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [reprocess, setReprocess] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [allTimeNet, setAllTimeNet] = useState<number | null>(null);
+  const [allTimeLoading, setAllTimeLoading] = useState(false);
 
   const fetchData = async () => {
     if (!userId) return;
