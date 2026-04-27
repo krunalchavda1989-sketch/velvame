@@ -353,7 +353,7 @@ const WalletPage = () => {
 
             {/* Wallet Reconciliation */}
             <div className="mb-6">
-              {user && <WalletReconciliationPanel userId={user.id} />}
+              {user && <WalletReconciliationPanel userId={user.id} displayedBalance={commissionBalance} displayedBalanceLabel="Commission Balance" />}
             </div>
 
 
