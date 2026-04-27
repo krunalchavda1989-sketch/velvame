@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
 import { AlertTriangle, Calendar as CalendarIcon, CheckCircle2, FileSpreadsheet, FileText, Filter, History, Info, RefreshCw, Wallet as WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
