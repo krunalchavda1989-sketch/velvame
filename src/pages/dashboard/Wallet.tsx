@@ -296,7 +296,17 @@ const WalletPage = () => {
                 </TooltipProvider>
 
                 <div className="border-t border-border pt-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">Total Wallet Balance</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-foreground">Total Wallet Balance</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild><Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
+                        <TooltipContent className="max-w-[260px] text-xs">
+                          <strong>Net of all activity.</strong> This is Subscription Balance + Commission Balance after every credit, debit, reversal, correction, repurchase deduction, and withdrawal. Use the Reconciliation panel below to audit each line.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <span className="text-xl font-display font-bold text-primary">{formatCurrency(wallet?.balance ?? 0)}</span>
                 </div>
               </div>
