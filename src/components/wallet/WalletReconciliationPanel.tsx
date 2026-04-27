@@ -95,8 +95,38 @@ export default function WalletReconciliationPanel({ userId, fileSuffix, displaye
     setLoading(false);
   };
 
+  // Fetch ALL-TIME net movement (commission bucket) so we can compare against the displayed wallet balance.
+  const fetchAllTimeNet = async () => {
+    if (!userId) return;
+    setAllTimeLoading(true);
+    let net = 0;
+    const pageSize = 1000;
+    let offset = 0;
+    // Pull only commission-bucket entries — that's what `commission_balance` reflects.
+    // Fall back to "all" if no bucket is set on historical rows.
+    while (true) {
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select("type,amount,balance_type")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+      if (error || !data || data.length === 0) break;
+      for (const r of data) {
+        if (r.balance_type && r.balance_type !== "commission") continue;
+        const amt = Number(r.amount) || 0;
+        net += r.type === "credit" ? amt : -amt;
+      }
+      if (data.length < pageSize) break;
+      offset += pageSize;
+    }
+    setAllTimeNet(net);
+    setAllTimeLoading(false);
+  };
+
   useEffect(() => {
     fetchData();
+    fetchAllTimeNet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, from, to]);
 
@@ -105,6 +135,14 @@ export default function WalletReconciliationPanel({ userId, fileSuffix, displaye
     [rows, filter],
   );
   const summary = useMemo(() => summarize(rows), [rows]);
+
+  // Reconciliation check: ledger all-time net should equal displayed wallet balance (within ₹0.01 tolerance).
+  const reconciliation = useMemo(() => {
+    if (displayedBalance == null || allTimeNet == null) return null;
+    const diff = Math.round((allTimeNet - displayedBalance) * 100) / 100;
+    const ok = Math.abs(diff) < 0.01;
+    return { ok, diff, ledger: allTimeNet, displayed: displayedBalance };
+  }, [displayedBalance, allTimeNet]);
 
   const fname = (ext: string) =>
     `wallet-reconciliation${fileSuffix ? `-${fileSuffix}` : ""}-${format(from || new Date(), "yyyyMMdd")}-${format(to || new Date(), "yyyyMMdd")}.${ext}`;
