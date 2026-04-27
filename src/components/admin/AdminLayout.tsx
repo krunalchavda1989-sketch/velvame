@@ -10,7 +10,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server, History
 } from "lucide-react";
 
 interface MenuItem {
@@ -62,6 +62,7 @@ const menuItems: MenuItem[] = [
     ],
   },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
+  { icon: History, label: "Reprocess Audit Log", href: "/admin/commission-reprocess-log" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: Wallet, label: "Wallet Management", href: "/admin/wallet-management" },
   {

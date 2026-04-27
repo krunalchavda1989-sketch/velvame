@@ -653,6 +653,57 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_reprocess_runs: {
+        Row: {
+          affected_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          net_change: number
+          notes: string
+          reason: string
+          run_label: string
+          scope: string
+          started_at: string
+          total_credits: number
+          total_debits: number
+          total_users_affected: number
+          triggered_by: string | null
+        }
+        Insert: {
+          affected_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          net_change?: number
+          notes?: string
+          reason?: string
+          run_label?: string
+          scope?: string
+          started_at?: string
+          total_credits?: number
+          total_debits?: number
+          total_users_affected?: number
+          triggered_by?: string | null
+        }
+        Update: {
+          affected_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          net_change?: number
+          notes?: string
+          reason?: string
+          run_label?: string
+          scope?: string
+          started_at?: string
+          total_credits?: number
+          total_debits?: number
+          total_users_affected?: number
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       commission_settings: {
         Row: {
           created_at: string
@@ -3429,6 +3480,19 @@ export type Database = {
           subscription_paid: boolean
           title: string
           user_id: string
+        }[]
+      }
+      get_derived_reprocess_runs: {
+        Args: { _user_id?: string }
+        Returns: {
+          affected_users: number
+          bucket_end: string
+          bucket_start: string
+          net_change: number
+          row_count: number
+          run_label: string
+          total_credits: number
+          total_debits: number
         }[]
       }
       get_direct_referrals: {
