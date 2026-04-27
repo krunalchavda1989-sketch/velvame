@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
-import { Calendar as CalendarIcon, FileSpreadsheet, FileText, Filter, History, Info, Wallet as WalletIcon } from "lucide-react";
+import { AlertTriangle, Calendar as CalendarIcon, CheckCircle2, FileSpreadsheet, FileText, Filter, History, Info, RefreshCw, Wallet as WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,6 +27,10 @@ interface Props {
   userId: string;
   /** Optional: when admin views another user, pass referral code for filename */
   fileSuffix?: string;
+  /** Currently displayed wallet balance (commission bucket) — used by the reconciliation checker. */
+  displayedBalance?: number;
+  /** Label for the displayed balance shown in the checker. Defaults to "Wallet Balance". */
+  displayedBalanceLabel?: string;
 }
 
 const CATEGORIES: { key: LedgerCategory | "all"; label: string }[] = [
@@ -42,13 +46,15 @@ const CATEGORIES: { key: LedgerCategory | "all"; label: string }[] = [
 
 const fmt = (n: number) => `₹${(Math.round(n * 100) / 100).toLocaleString("en-IN")}`;
 
-export default function WalletReconciliationPanel({ userId, fileSuffix }: Props) {
+export default function WalletReconciliationPanel({ userId, fileSuffix, displayedBalance, displayedBalanceLabel = "Wallet Balance" }: Props) {
   const [from, setFrom] = useState<Date | undefined>(subDays(new Date(), 30));
   const [to, setTo] = useState<Date | undefined>(new Date());
   const [filter, setFilter] = useState<LedgerCategory | "all">("all");
   const [rows, setRows] = useState<ReconciliationRow[]>([]);
   const [reprocess, setReprocess] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [allTimeNet, setAllTimeNet] = useState<number | null>(null);
+  const [allTimeLoading, setAllTimeLoading] = useState(false);
 
   const fetchData = async () => {
     if (!userId) return;
@@ -88,8 +94,38 @@ export default function WalletReconciliationPanel({ userId, fileSuffix }: Props)
     setLoading(false);
   };
 
+  // Fetch ALL-TIME net movement (commission bucket) so we can compare against the displayed wallet balance.
+  const fetchAllTimeNet = async () => {
+    if (!userId) return;
+    setAllTimeLoading(true);
+    let net = 0;
+    const pageSize = 1000;
+    let offset = 0;
+    // Pull only commission-bucket entries — that's what `commission_balance` reflects.
+    // Fall back to "all" if no bucket is set on historical rows.
+    while (true) {
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select("type,amount,balance_type")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+      if (error || !data || data.length === 0) break;
+      for (const r of data) {
+        if (r.balance_type && r.balance_type !== "commission") continue;
+        const amt = Number(r.amount) || 0;
+        net += r.type === "credit" ? amt : -amt;
+      }
+      if (data.length < pageSize) break;
+      offset += pageSize;
+    }
+    setAllTimeNet(net);
+    setAllTimeLoading(false);
+  };
+
   useEffect(() => {
     fetchData();
+    fetchAllTimeNet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, from, to]);
 
@@ -98,6 +134,14 @@ export default function WalletReconciliationPanel({ userId, fileSuffix }: Props)
     [rows, filter],
   );
   const summary = useMemo(() => summarize(rows), [rows]);
+
+  // Reconciliation check: ledger all-time net should equal displayed wallet balance (within ₹0.01 tolerance).
+  const reconciliation = useMemo(() => {
+    if (displayedBalance == null || allTimeNet == null) return null;
+    const diff = Math.round((allTimeNet - displayedBalance) * 100) / 100;
+    const ok = Math.abs(diff) < 0.01;
+    return { ok, diff, ledger: allTimeNet, displayed: displayedBalance };
+  }, [displayedBalance, allTimeNet]);
 
   const fname = (ext: string) =>
     `wallet-reconciliation${fileSuffix ? `-${fileSuffix}` : ""}-${format(from || new Date(), "yyyyMMdd")}-${format(to || new Date(), "yyyyMMdd")}.${ext}`;
@@ -141,6 +185,70 @@ export default function WalletReconciliationPanel({ userId, fileSuffix }: Props)
           <Stat label="Repurchase + Withdrawals" value={-(summary.repurchaseDeductions + summary.withdrawals)} color="text-orange-600" tip="Money leaving the wallet: repurchase order payments using commission balance + bank withdrawals." />
           <Stat label="Computed Net" value={summary.computedNet} color="text-primary" tip="Credits − Debits across this date range. This is the true ledger movement and should reconcile with your wallet balance changes." bold />
         </div>
+
+        {/* Reconciliation checker — compares all-time ledger net against the displayed wallet balance */}
+        {displayedBalance != null && (
+          <div className="px-4 py-3 border-b border-border">
+            {allTimeLoading || allTimeNet == null ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                Reconciling ledger with displayed balance…
+              </div>
+            ) : reconciliation && (
+              <div
+                className={cn(
+                  "rounded-lg border p-3 flex items-start gap-3",
+                  reconciliation.ok
+                    ? "border-emerald-500/30 bg-emerald-500/5"
+                    : "border-amber-500/40 bg-amber-500/5",
+                )}
+              >
+                {reconciliation.ok ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-foreground">
+                      {reconciliation.ok ? "Balance matches the ledger" : "Balance mismatch detected"}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                      <TooltipContent className="max-w-[300px] text-xs">
+                        We sum every credit and debit in the commission ledger (all time) and compare it to the {displayedBalanceLabel.toLowerCase()} shown above. A mismatch can indicate a missing reversal entry, a manual adjustment, or a pending reprocess.
+                      </TooltipContent>
+                    </Tooltip>
+                    <Button size="sm" variant="ghost" className="h-7 ml-auto" onClick={fetchAllTimeNet}>
+                      <RefreshCw className="h-3 w-3 mr-1" /> Recheck
+                    </Button>
+                  </div>
+                  <div className="mt-1.5 grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <div className="text-muted-foreground">Ledger net (all-time)</div>
+                      <div className="font-semibold tabular-nums text-foreground">{fmt(reconciliation.ledger)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">{displayedBalanceLabel}</div>
+                      <div className="font-semibold tabular-nums text-foreground">{fmt(reconciliation.displayed)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Difference</div>
+                      <div className={cn("font-semibold tabular-nums", reconciliation.ok ? "text-emerald-600" : "text-amber-600")}>
+                        {reconciliation.diff >= 0 ? "+" : ""}{fmt(reconciliation.diff)}
+                      </div>
+                    </div>
+                  </div>
+                  {!reconciliation.ok && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      The sum of every credit/debit in your commission ledger does not equal the {displayedBalanceLabel.toLowerCase()}. Export the ledger above to investigate, or contact support if this persists.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <Tabs defaultValue="ledger" className="w-full">
           <TabsList className="mx-4 mt-3">
