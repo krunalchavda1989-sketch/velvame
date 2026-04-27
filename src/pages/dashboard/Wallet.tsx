@@ -322,8 +322,8 @@ const WalletPage = () => {
             {/* Summary Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {[
-                { label: "Total Commission Earned", value: totalCommissionEarned, icon: TrendingUp, gradient: "from-emerald-500 to-emerald-600" },
-                { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine, gradient: "from-orange-500 to-orange-600" },
+                { label: "Total Commission Earned", value: totalCommissionEarned, icon: TrendingUp, gradient: "from-emerald-500 to-emerald-600", tip: "Net of system reversals & audit corrections — not raw gross. To see gross credits and every reversal, open the Reconciliation panel below." },
+                { label: "Total Withdrawn", value: wallet?.total_withdrawn ?? 0, icon: ArrowDownToLine, gradient: "from-orange-500 to-orange-600", tip: "Total amount paid out to your bank/UPI. Excludes internal repurchase deductions." },
               ].map((s, i) => (
                 <motion.div
                   key={s.label}
@@ -335,13 +335,27 @@ const WalletPage = () => {
                   <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-white/20">
                     <s.icon className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-2xl font-display font-bold">{formatCurrency(s.value)}</div>
-                    <div className="text-xs opacity-80">{s.label}</div>
+                    <div className="text-xs opacity-80 flex items-center gap-1">
+                      {s.label}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild><Info className="h-3 w-3 cursor-help opacity-90" /></TooltipTrigger>
+                          <TooltipContent className="max-w-[280px] text-xs">{s.tip}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </div>
+
+            {/* Wallet Reconciliation */}
+            <div className="mb-6">
+              {user && <WalletReconciliationPanel userId={user.id} />}
+            </div>
+
 
             {/* Withdrawal Requests */}
             {withdrawals.length > 0 && (
