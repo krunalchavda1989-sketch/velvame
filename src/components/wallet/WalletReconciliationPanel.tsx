@@ -187,6 +187,70 @@ export default function WalletReconciliationPanel({ userId, fileSuffix, displaye
           <Stat label="Computed Net" value={summary.computedNet} color="text-primary" tip="Credits − Debits across this date range. This is the true ledger movement and should reconcile with your wallet balance changes." bold />
         </div>
 
+        {/* Reconciliation checker — compares all-time ledger net against the displayed wallet balance */}
+        {displayedBalance != null && (
+          <div className="px-4 py-3 border-b border-border">
+            {allTimeLoading || allTimeNet == null ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                Reconciling ledger with displayed balance…
+              </div>
+            ) : reconciliation && (
+              <div
+                className={cn(
+                  "rounded-lg border p-3 flex items-start gap-3",
+                  reconciliation.ok
+                    ? "border-emerald-500/30 bg-emerald-500/5"
+                    : "border-amber-500/40 bg-amber-500/5",
+                )}
+              >
+                {reconciliation.ok ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-foreground">
+                      {reconciliation.ok ? "Balance matches the ledger" : "Balance mismatch detected"}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild><Info className="h-3 w-3 text-muted-foreground cursor-help" /></TooltipTrigger>
+                      <TooltipContent className="max-w-[300px] text-xs">
+                        We sum every credit and debit in the commission ledger (all time) and compare it to the {displayedBalanceLabel.toLowerCase()} shown above. A mismatch can indicate a missing reversal entry, a manual adjustment, or a pending reprocess.
+                      </TooltipContent>
+                    </Tooltip>
+                    <Button size="sm" variant="ghost" className="h-7 ml-auto" onClick={fetchAllTimeNet}>
+                      <RefreshCw className="h-3 w-3 mr-1" /> Recheck
+                    </Button>
+                  </div>
+                  <div className="mt-1.5 grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <div className="text-muted-foreground">Ledger net (all-time)</div>
+                      <div className="font-semibold tabular-nums text-foreground">{fmt(reconciliation.ledger)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">{displayedBalanceLabel}</div>
+                      <div className="font-semibold tabular-nums text-foreground">{fmt(reconciliation.displayed)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Difference</div>
+                      <div className={cn("font-semibold tabular-nums", reconciliation.ok ? "text-emerald-600" : "text-amber-600")}>
+                        {reconciliation.diff >= 0 ? "+" : ""}{fmt(reconciliation.diff)}
+                      </div>
+                    </div>
+                  </div>
+                  {!reconciliation.ok && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      The sum of every credit/debit in your commission ledger does not equal the {displayedBalanceLabel.toLowerCase()}. Export the ledger above to investigate, or contact support if this persists.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <Tabs defaultValue="ledger" className="w-full">
           <TabsList className="mx-4 mt-3">
             <TabsTrigger value="ledger">Itemized Ledger</TabsTrigger>
