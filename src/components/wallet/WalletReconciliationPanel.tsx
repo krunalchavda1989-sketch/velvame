@@ -28,6 +28,10 @@ interface Props {
   userId: string;
   /** Optional: when admin views another user, pass referral code for filename */
   fileSuffix?: string;
+  /** Currently displayed wallet balance (commission bucket) — used by the reconciliation checker. */
+  displayedBalance?: number;
+  /** Label for the displayed balance shown in the checker. Defaults to "Wallet Balance". */
+  displayedBalanceLabel?: string;
 }
 
 const CATEGORIES: { key: LedgerCategory | "all"; label: string }[] = [
