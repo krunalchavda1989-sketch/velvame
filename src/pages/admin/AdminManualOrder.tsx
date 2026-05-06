@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -630,13 +630,30 @@ const AdminManualOrder = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs text-muted-foreground">Qty</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                            className="mt-1 bg-background border-border"
-                          />
+                          <div className="flex items-center gap-0 mt-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 rounded-r-none border-r-0"
+                              onClick={() => updateItem(index, "quantity", Math.max(1, item.quantity - 1))}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <div className="h-10 min-w-[3rem] flex items-center justify-center border border-input bg-background text-sm font-medium">
+                              {item.quantity}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 rounded-l-none border-l-0"
+                              onClick={() => updateItem(index, "quantity", item.quantity + 1)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div>
                           <Label className="text-xs text-muted-foreground flex items-center gap-1">
