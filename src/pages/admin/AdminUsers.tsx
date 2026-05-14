@@ -44,54 +44,87 @@ const AdminUsers = () => {
   // Email map for search
   const [emailMap, setEmailMap] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const [{ data: profiles }, { data: kyc }, { data: banks }] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("kyc_documents").select("user_id, status"),
-        supabase.from("bank_details").select("user_id"),
-      ]);
-      setUsers(profiles || []);
+  const fetchUsers = async () => {
+    // Fetch ALL profiles using range pagination to bypass 1000 row cap
+    const pageSizeRows = 1000;
+    let from = 0;
+    let allProfiles: any[] = [];
+    let exactCount = 0;
+    while (true) {
+      const { data, count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSizeRows - 1);
+      if (error) break;
+      if (typeof count === "number") exactCount = count;
+      const batch = data || [];
+      allProfiles = allProfiles.concat(batch);
+      if (batch.length < pageSizeRows) break;
+      from += pageSizeRows;
+    }
+    setUsers(allProfiles);
+    setTotalUserCount(exactCount || allProfiles.length);
+    setSubscriberCount(allProfiles.filter((p: any) => p.subscription_paid).length);
 
-      // KYC map
-      const grouped = new Map<string, string[]>();
-      (kyc || []).forEach((k: any) => {
-        const arr = grouped.get(k.user_id) || [];
-        arr.push(k.status);
-        grouped.set(k.user_id, arr);
-      });
-      const kMap: Record<string, string> = {};
-      grouped.forEach((statuses, uid) => {
-        if (statuses.length >= 2 && statuses.every((s) => s === "approved")) kMap[uid] = "verified";
-        else if (statuses.some((s) => s === "pending")) kMap[uid] = "pending";
-        else if (statuses.some((s) => s === "rejected")) kMap[uid] = "rejected";
-        else kMap[uid] = "partial";
-      });
-      setKycMap(kMap);
+    const [{ data: kyc }, { data: banks }] = await Promise.all([
+      supabase.from("kyc_documents").select("user_id, status"),
+      supabase.from("bank_details").select("user_id"),
+    ]);
 
-      // Bank map
-      const bMap: Record<string, boolean> = {};
-      (banks || []).forEach((b: any) => { bMap[b.user_id] = true; });
-      setBankMap(bMap);
+    // KYC map
+    const grouped = new Map<string, string[]>();
+    (kyc || []).forEach((k: any) => {
+      const arr = grouped.get(k.user_id) || [];
+      arr.push(k.status);
+      grouped.set(k.user_id, arr);
+    });
+    const kMap: Record<string, string> = {};
+    grouped.forEach((statuses, uid) => {
+      if (statuses.length >= 2 && statuses.every((s) => s === "approved")) kMap[uid] = "verified";
+      else if (statuses.some((s) => s === "pending")) kMap[uid] = "pending";
+      else if (statuses.some((s) => s === "rejected")) kMap[uid] = "rejected";
+      else kMap[uid] = "partial";
+    });
+    setKycMap(kMap);
 
-      // Fetch emails via edge function
-      try {
-        const userIds = (profiles || []).map((p: any) => p.user_id);
-        if (userIds.length > 0) {
-          const { data: emailData } = await supabase.functions.invoke("admin-settings", {
-            body: { action: "get_user_emails", user_ids: userIds },
-          });
-          if (emailData?.emails) {
-            const eMap: Record<string, string> = {};
-            emailData.emails.forEach((e: any) => { eMap[e.id] = e.email; });
-            setEmailMap(eMap);
-          }
+    // Bank map
+    const bMap: Record<string, boolean> = {};
+    (banks || []).forEach((b: any) => { bMap[b.user_id] = true; });
+    setBankMap(bMap);
+
+    // Fetch emails via edge function
+    try {
+      const userIds = allProfiles.map((p: any) => p.user_id);
+      if (userIds.length > 0) {
+        const { data: emailData } = await supabase.functions.invoke("admin-settings", {
+          body: { action: "get_user_emails", user_ids: userIds },
+        });
+        if (emailData?.emails) {
+          const eMap: Record<string, string> = {};
+          emailData.emails.forEach((e: any) => { eMap[e.id] = e.email; });
+          setEmailMap(eMap);
         }
-      } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchUsers();
+
+    // Realtime: keep counts and list in sync as users register / update
+    const channel = supabase
+      .channel("admin-users-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => { fetchUsers(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Stats
