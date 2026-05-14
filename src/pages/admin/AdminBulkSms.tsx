@@ -93,21 +93,31 @@ const AdminBulkSms = () => {
   const [userCount, setUserCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+    const channel = supabase
+      .channel("admin-bulksms-profiles-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => { fetchAll(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const fetchAll = async () => {
     setLoading(true);
-    const [campaignRes, templateRes, profileRes] = await Promise.all([
+    const [campaignRes, templateRes, totalRes, activeRes] = await Promise.all([
       supabase.from("sms_campaigns").select("*").order("created_at", { ascending: false }),
       supabase.from("sms_templates").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, subscription_paid"),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("subscription_paid", true),
     ]);
     if (campaignRes.data) setCampaigns(campaignRes.data);
     if (templateRes.data) setTemplates(templateRes.data);
-    if (profileRes.data) {
-      setUserCount(profileRes.data.length);
-      setActiveCount(profileRes.data.filter((p) => p.subscription_paid).length);
-    }
+    setUserCount(totalRes.count || 0);
+    setActiveCount(activeRes.count || 0);
     setLoading(false);
   };
 

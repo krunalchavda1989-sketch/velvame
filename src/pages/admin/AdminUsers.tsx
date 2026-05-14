@@ -21,6 +21,8 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100, 200];
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
+  const [totalUserCount, setTotalUserCount] = useState(0);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const [kycMap, setKycMap] = useState<Record<string, string>>({});
   const [bankMap, setBankMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -42,65 +44,98 @@ const AdminUsers = () => {
   // Email map for search
   const [emailMap, setEmailMap] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const [{ data: profiles }, { data: kyc }, { data: banks }] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("kyc_documents").select("user_id, status"),
-        supabase.from("bank_details").select("user_id"),
-      ]);
-      setUsers(profiles || []);
+  const fetchUsers = async () => {
+    // Fetch ALL profiles using range pagination to bypass 1000 row cap
+    const pageSizeRows = 1000;
+    let from = 0;
+    let allProfiles: any[] = [];
+    let exactCount = 0;
+    while (true) {
+      const { data, count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSizeRows - 1);
+      if (error) break;
+      if (typeof count === "number") exactCount = count;
+      const batch = data || [];
+      allProfiles = allProfiles.concat(batch);
+      if (batch.length < pageSizeRows) break;
+      from += pageSizeRows;
+    }
+    setUsers(allProfiles);
+    setTotalUserCount(exactCount || allProfiles.length);
+    setSubscriberCount(allProfiles.filter((p: any) => p.subscription_paid).length);
 
-      // KYC map
-      const grouped = new Map<string, string[]>();
-      (kyc || []).forEach((k: any) => {
-        const arr = grouped.get(k.user_id) || [];
-        arr.push(k.status);
-        grouped.set(k.user_id, arr);
-      });
-      const kMap: Record<string, string> = {};
-      grouped.forEach((statuses, uid) => {
-        if (statuses.length >= 2 && statuses.every((s) => s === "approved")) kMap[uid] = "verified";
-        else if (statuses.some((s) => s === "pending")) kMap[uid] = "pending";
-        else if (statuses.some((s) => s === "rejected")) kMap[uid] = "rejected";
-        else kMap[uid] = "partial";
-      });
-      setKycMap(kMap);
+    const [{ data: kyc }, { data: banks }] = await Promise.all([
+      supabase.from("kyc_documents").select("user_id, status"),
+      supabase.from("bank_details").select("user_id"),
+    ]);
 
-      // Bank map
-      const bMap: Record<string, boolean> = {};
-      (banks || []).forEach((b: any) => { bMap[b.user_id] = true; });
-      setBankMap(bMap);
+    // KYC map
+    const grouped = new Map<string, string[]>();
+    (kyc || []).forEach((k: any) => {
+      const arr = grouped.get(k.user_id) || [];
+      arr.push(k.status);
+      grouped.set(k.user_id, arr);
+    });
+    const kMap: Record<string, string> = {};
+    grouped.forEach((statuses, uid) => {
+      if (statuses.length >= 2 && statuses.every((s) => s === "approved")) kMap[uid] = "verified";
+      else if (statuses.some((s) => s === "pending")) kMap[uid] = "pending";
+      else if (statuses.some((s) => s === "rejected")) kMap[uid] = "rejected";
+      else kMap[uid] = "partial";
+    });
+    setKycMap(kMap);
 
-      // Fetch emails via edge function
-      try {
-        const userIds = (profiles || []).map((p: any) => p.user_id);
-        if (userIds.length > 0) {
-          const { data: emailData } = await supabase.functions.invoke("admin-settings", {
-            body: { action: "get_user_emails", user_ids: userIds },
-          });
-          if (emailData?.emails) {
-            const eMap: Record<string, string> = {};
-            emailData.emails.forEach((e: any) => { eMap[e.id] = e.email; });
-            setEmailMap(eMap);
-          }
+    // Bank map
+    const bMap: Record<string, boolean> = {};
+    (banks || []).forEach((b: any) => { bMap[b.user_id] = true; });
+    setBankMap(bMap);
+
+    // Fetch emails via edge function
+    try {
+      const userIds = allProfiles.map((p: any) => p.user_id);
+      if (userIds.length > 0) {
+        const { data: emailData } = await supabase.functions.invoke("admin-settings", {
+          body: { action: "get_user_emails", user_ids: userIds },
+        });
+        if (emailData?.emails) {
+          const eMap: Record<string, string> = {};
+          emailData.emails.forEach((e: any) => { eMap[e.id] = e.email; });
+          setEmailMap(eMap);
         }
-      } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchUsers();
+
+    // Realtime: keep counts and list in sync as users register / update
+    const channel = supabase
+      .channel("admin-users-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => { fetchUsers(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Stats
+  // Stats — Total/Subscribers come from authoritative count queries (kept in sync via realtime)
   const stats = useMemo(() => {
-    const total = users.length;
-    const subscribers = users.filter((u) => u.subscription_paid).length;
-    const nonSubscribers = total - subscribers;
+    const total = totalUserCount || users.length;
+    const subscribers = subscriberCount;
+    const nonSubscribers = Math.max(0, total - subscribers);
     const kycCompleted = Object.values(kycMap).filter((s) => s === "verified").length;
     const bankCompleted = Object.values(bankMap).filter(Boolean).length;
     return { total, subscribers, nonSubscribers, kycCompleted, bankCompleted };
-  }, [users, kycMap, bankMap]);
+  }, [users, totalUserCount, subscriberCount, kycMap, bankMap]);
 
   // Filtered users
   const filtered = useMemo(() => {
@@ -180,10 +215,38 @@ const AdminUsers = () => {
   };
 
   const STAT_CARDS = [
-    { label: "Total Users", value: stats.total, icon: Users, gradient: "from-blue-500 to-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
-    { label: "Subscribers", value: stats.subscribers, icon: UserCheck, gradient: "from-emerald-500 to-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", sub: `${stats.nonSubscribers} Non-Subscriber` },
-    { label: "KYC Completed", value: stats.kycCompleted, icon: FileCheck, gradient: "from-violet-500 to-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30" },
-    { label: "Bank Details", value: stats.bankCompleted, icon: Landmark, gradient: "from-orange-500 to-orange-600", bg: "bg-orange-50 dark:bg-orange-950/30" },
+    {
+      label: "Total Users",
+      value: stats.total,
+      icon: Users,
+      from: "#4f46e5",
+      to: "#7c3aed",
+      sub: "All registered accounts",
+    },
+    {
+      label: "Subscribers",
+      value: stats.subscribers,
+      icon: UserCheck,
+      from: "#10b981",
+      to: "#059669",
+      sub: `${stats.nonSubscribers} Non-Subscriber`,
+    },
+    {
+      label: "KYC Completed",
+      value: stats.kycCompleted,
+      icon: FileCheck,
+      from: "#8b5cf6",
+      to: "#6366f1",
+      sub: `${Math.max(0, stats.total - stats.kycCompleted)} Pending`,
+    },
+    {
+      label: "Bank Details",
+      value: stats.bankCompleted,
+      icon: Landmark,
+      from: "#f59e0b",
+      to: "#ef4444",
+      sub: `${Math.max(0, stats.total - stats.bankCompleted)} Missing`,
+    },
   ];
 
   return (
@@ -197,7 +260,7 @@ const AdminUsers = () => {
             </div>
             <div>
               <h1 className="text-2xl font-display font-bold text-foreground">User Management</h1>
-              <p className="text-sm text-muted-foreground">{users.length} registered users</p>
+              <p className="text-sm text-muted-foreground">{stats.total} registered users · live</p>
             </div>
           </div>
           <Button onClick={exportToExcel} variant="outline" className="gap-2">
@@ -205,21 +268,35 @@ const AdminUsers = () => {
           </Button>
         </div>
 
-        {/* Stat Cards */}
+        {/* Stat Cards — vibrant gradient color-card view (auto-syncs via realtime) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {STAT_CARDS.map((s) => (
-            <Card key={s.label} className={cn("border-0 shadow-sm", s.bg)}>
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={cn("h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0", s.gradient)}>
-                  <s.icon className="h-6 w-6 text-white" />
+            <div
+              key={s.label}
+              className="relative overflow-hidden rounded-2xl p-4 text-white shadow-lg hover:scale-[1.02] transition-transform"
+              style={{
+                background: `linear-gradient(135deg, ${s.from}, ${s.to})`,
+                boxShadow: `0 10px 30px -10px ${s.from}66`,
+              }}
+            >
+              <div
+                className="absolute -top-6 -right-6 h-24 w-24 rounded-full opacity-20"
+                style={{ background: "white" }}
+              />
+              <div className="relative flex items-start justify-between">
+                <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/30">
+                  <s.icon className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                  <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
-                  {s.sub && <p className="text-[10px] text-muted-foreground">{s.sub}</p>}
-                </div>
-              </CardContent>
-            </Card>
+                <span className="text-[10px] uppercase tracking-wider opacity-80 font-semibold">Live</span>
+              </div>
+              <div className="relative mt-4">
+                <p className="text-3xl font-display font-bold leading-none">
+                  {Number(s.value).toLocaleString()}
+                </p>
+                <p className="text-xs font-medium mt-1 opacity-95">{s.label}</p>
+                {s.sub && <p className="text-[10px] mt-0.5 opacity-75">{s.sub}</p>}
+              </div>
+            </div>
           ))}
         </div>
 
