@@ -21,6 +21,8 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100, 200];
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
+  const [totalUserCount, setTotalUserCount] = useState(0);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const [kycMap, setKycMap] = useState<Record<string, string>>({});
   const [bankMap, setBankMap] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
