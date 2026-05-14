@@ -149,6 +149,15 @@ const AdminOverview = () => {
       }
     };
     fetchAll();
+
+    // Keep dashboard counters in sync as new users sign up / orders flow in
+    const channel = supabase
+      .channel("admin-overview-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "commissions" }, () => fetchAll())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const adminColors = [statColors.stat_color_1, statColors.stat_color_2, statColors.stat_color_3, statColors.stat_color_4, "#8b5cf6"];
