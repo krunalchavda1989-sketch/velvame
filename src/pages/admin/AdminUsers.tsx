@@ -215,10 +215,38 @@ const AdminUsers = () => {
   };
 
   const STAT_CARDS = [
-    { label: "Total Users", value: stats.total, icon: Users, gradient: "from-blue-500 to-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30" },
-    { label: "Subscribers", value: stats.subscribers, icon: UserCheck, gradient: "from-emerald-500 to-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/30", sub: `${stats.nonSubscribers} Non-Subscriber` },
-    { label: "KYC Completed", value: stats.kycCompleted, icon: FileCheck, gradient: "from-violet-500 to-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30" },
-    { label: "Bank Details", value: stats.bankCompleted, icon: Landmark, gradient: "from-orange-500 to-orange-600", bg: "bg-orange-50 dark:bg-orange-950/30" },
+    {
+      label: "Total Users",
+      value: stats.total,
+      icon: Users,
+      from: "#4f46e5",
+      to: "#7c3aed",
+      sub: "All registered accounts",
+    },
+    {
+      label: "Subscribers",
+      value: stats.subscribers,
+      icon: UserCheck,
+      from: "#10b981",
+      to: "#059669",
+      sub: `${stats.nonSubscribers} Non-Subscriber`,
+    },
+    {
+      label: "KYC Completed",
+      value: stats.kycCompleted,
+      icon: FileCheck,
+      from: "#8b5cf6",
+      to: "#6366f1",
+      sub: `${Math.max(0, stats.total - stats.kycCompleted)} Pending`,
+    },
+    {
+      label: "Bank Details",
+      value: stats.bankCompleted,
+      icon: Landmark,
+      from: "#f59e0b",
+      to: "#ef4444",
+      sub: `${Math.max(0, stats.total - stats.bankCompleted)} Missing`,
+    },
   ];
 
   return (
@@ -232,7 +260,7 @@ const AdminUsers = () => {
             </div>
             <div>
               <h1 className="text-2xl font-display font-bold text-foreground">User Management</h1>
-              <p className="text-sm text-muted-foreground">{users.length} registered users</p>
+              <p className="text-sm text-muted-foreground">{stats.total} registered users · live</p>
             </div>
           </div>
           <Button onClick={exportToExcel} variant="outline" className="gap-2">
@@ -240,21 +268,35 @@ const AdminUsers = () => {
           </Button>
         </div>
 
-        {/* Stat Cards */}
+        {/* Stat Cards — vibrant gradient color-card view (auto-syncs via realtime) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {STAT_CARDS.map((s) => (
-            <Card key={s.label} className={cn("border-0 shadow-sm", s.bg)}>
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={cn("h-12 w-12 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0", s.gradient)}>
-                  <s.icon className="h-6 w-6 text-white" />
+            <div
+              key={s.label}
+              className="relative overflow-hidden rounded-2xl p-4 text-white shadow-lg hover:scale-[1.02] transition-transform"
+              style={{
+                background: `linear-gradient(135deg, ${s.from}, ${s.to})`,
+                boxShadow: `0 10px 30px -10px ${s.from}66`,
+              }}
+            >
+              <div
+                className="absolute -top-6 -right-6 h-24 w-24 rounded-full opacity-20"
+                style={{ background: "white" }}
+              />
+              <div className="relative flex items-start justify-between">
+                <div className="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/30">
+                  <s.icon className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                  <p className="text-xs text-muted-foreground font-medium">{s.label}</p>
-                  {s.sub && <p className="text-[10px] text-muted-foreground">{s.sub}</p>}
-                </div>
-              </CardContent>
-            </Card>
+                <span className="text-[10px] uppercase tracking-wider opacity-80 font-semibold">Live</span>
+              </div>
+              <div className="relative mt-4">
+                <p className="text-3xl font-display font-bold leading-none">
+                  {Number(s.value).toLocaleString()}
+                </p>
+                <p className="text-xs font-medium mt-1 opacity-95">{s.label}</p>
+                {s.sub && <p className="text-[10px] mt-0.5 opacity-75">{s.sub}</p>}
+              </div>
+            </div>
           ))}
         </div>
 
