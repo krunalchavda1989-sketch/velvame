@@ -127,15 +127,15 @@ const AdminUsers = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Stats
+  // Stats — Total/Subscribers come from authoritative count queries (kept in sync via realtime)
   const stats = useMemo(() => {
-    const total = users.length;
-    const subscribers = users.filter((u) => u.subscription_paid).length;
-    const nonSubscribers = total - subscribers;
+    const total = totalUserCount || users.length;
+    const subscribers = subscriberCount;
+    const nonSubscribers = Math.max(0, total - subscribers);
     const kycCompleted = Object.values(kycMap).filter((s) => s === "verified").length;
     const bankCompleted = Object.values(bankMap).filter(Boolean).length;
     return { total, subscribers, nonSubscribers, kycCompleted, bankCompleted };
-  }, [users, kycMap, bankMap]);
+  }, [users, totalUserCount, subscriberCount, kycMap, bankMap]);
 
   // Filtered users
   const filtered = useMemo(() => {
