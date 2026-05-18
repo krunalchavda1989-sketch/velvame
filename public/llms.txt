@@ -1,0 +1,17 @@
+# Velvame
+
+> Premium health & wellness eCommerce platform with a member rewards program. Members unlock distributor pricing and earn level-based commissions on referrals.
+
+## Pages
+
+- [Home](/): Featured products, offers, and brand story.
+- [Shop](/shop): Browse the full catalog of health & wellness products.
+- [Offers](/offers): Active discounts, coupons, and seasonal promotions.
+- [About](/about): Mission, vision, and company values.
+- [Contact](/contact): Get in touch with the Velvame team.
+- [FAQ](/faq): Common questions about products, membership, and rewards.
+
+## Optional
+
+- [Login](/login): Member sign-in.
+- [Register](/register): Create a new account.

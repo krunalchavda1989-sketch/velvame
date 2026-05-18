@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Loader2, Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -181,8 +182,30 @@ const Contact = () => {
     { icon: Clock, label: "Working Hours", value: content.working_hours },
   ].filter((c) => c.value);
 
+  const canonical = `${typeof window !== "undefined" ? window.location.origin : "https://velvame.lovable.app"}/contact`;
+  const localBizJsonLd: any = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: brand?.brand_name || "Velvame",
+    url: canonical,
+    ...(brand?.email && { email: brand.email }),
+    ...(brand?.phone && { telephone: brand.phone }),
+    ...(brand?.address && { address: { "@type": "PostalAddress", streetAddress: brand.address } }),
+    ...(content.working_hours && { openingHours: content.working_hours }),
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Contact Velvame — Health & Wellness Support</title>
+        <meta name="description" content="Reach the Velvame team for product, order, or membership questions. Email, phone, and a contact form available." />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="Contact Velvame" />
+        <meta property="og:description" content="Get in touch with the Velvame team for product and membership support." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify(localBizJsonLd)}</script>
+      </Helmet>
       <Navbar />
       <div className="pb-16">
         <PageBreadcrumb

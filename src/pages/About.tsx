@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Loader2, Target, Eye, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/landing/Navbar";
@@ -31,8 +32,19 @@ const About = () => {
   const content = page?.content || {};
   const values: string[] = content.values || [];
 
+  const canonical = `${typeof window !== "undefined" ? window.location.origin : "https://velvame.lovable.app"}/about`;
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>About Velvame — Our Mission for Health & Wellness</title>
+        <meta name="description" content="Learn about Velvame's mission, vision, and values powering our premium health and wellness rewards platform." />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="About Velvame" />
+        <meta property="og:description" content="Our mission, vision, and the values behind Velvame." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <div className="pb-16">
         <PageBreadcrumb
