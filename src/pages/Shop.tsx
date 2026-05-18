@@ -35,8 +35,19 @@ const Shop = () => {
   const filtered = filter === "All" ? products : products.filter((p) => p.category === filter);
   const loading = products.length === 0;
 
+  const canonical = `${typeof window !== "undefined" ? window.location.origin : "https://velvame.lovable.app"}/shop`;
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Shop — Velvame Premium Health & Wellness Products</title>
+        <meta name="description" content="Shop premium health & wellness products at Velvame. Members unlock exclusive distributor pricing on every order." />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="Shop — Velvame" />
+        <meta property="og:description" content="Premium health & wellness products with exclusive member pricing." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       
       <div className="pb-16">

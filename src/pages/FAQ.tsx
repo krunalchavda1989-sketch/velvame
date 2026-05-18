@@ -38,8 +38,29 @@ const FAQPage = () => {
     return matchesSearch && matchesCat;
   });
 
+  const canonical = `${typeof window !== "undefined" ? window.location.origin : "https://velvame.lovable.app"}/faq`;
+  const faqJsonLd = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: { "@type": "Answer", text: f.answer },
+    })),
+  } : null;
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>FAQ — Velvame Health & Wellness</title>
+        <meta name="description" content="Answers about Velvame products, membership pricing, ordering, and the rewards program." />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="FAQ — Velvame" />
+        <meta property="og:description" content="Common questions about Velvame products, membership, and rewards." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:type" content="website" />
+        {faqJsonLd && <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>}
+      </Helmet>
       <Navbar />
       <div className="pb-16">
         <PageBreadcrumb
