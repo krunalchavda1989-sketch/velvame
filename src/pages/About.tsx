@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Loader2, Target, Eye, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/landing/Navbar";

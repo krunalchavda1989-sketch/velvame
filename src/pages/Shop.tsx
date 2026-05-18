@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import OffersCarousel from "@/components/shop/OffersCarousel";
