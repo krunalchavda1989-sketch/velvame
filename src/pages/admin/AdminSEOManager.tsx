@@ -19,7 +19,7 @@ import {
 
 type Settings = Record<string, any>;
 
-const BASE_URL = "https://velvame.lovable.app";
+const BASE_URL = "https://www.velvame.com";
 
 const useSEOSettings = () => {
   const [settings, setSettings] = useState<Settings>({});
