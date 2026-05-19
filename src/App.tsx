@@ -109,6 +109,8 @@ const App = () => (
           <BrandProvider>
           <CartProvider>
           <CustomCodeInjector />
+          <SEOHead />
+          <RedirectHandler />
           <PopupEngine />
           <Routes>
             <Route path="/" element={<Index />} />
