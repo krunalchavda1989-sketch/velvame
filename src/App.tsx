@@ -283,6 +283,7 @@ const App = () => (
             <Route path="/admin/storage" element={<AdminRoute><AdminStorageMonitor /></AdminRoute>} />
             <Route path="/admin/commission-reprocess-log" element={<AdminRoute><AdminCommissionReprocessLog /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
+            <Route path="/admin/seo" element={<AdminRoute><AdminSEOManager /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
