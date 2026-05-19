@@ -31,13 +31,78 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://velvame.lovable.app/login</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://velvame.lovable.app/product/body-bikini-wax-powder-100g-ubtan-and-aloevera</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://velvame.lovable.app/register</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <loc>https://velvame.lovable.app/product/aloevera-gel-150g</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/face-wax-powder-100g-ubtan-and-aloevera</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/face-wax-powder-100g-chocolate</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/velvame-sanitary-pad-extra-large-360mm-8pcs</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/velvame-sanitary-pad-large-280mm-9pcs</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/200ml-aloevera-gel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/velvame-intimate-wash-100ml</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/body-bikini-wax-powder-100g-haldi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/body-bikini-wax-powder-100g-rose</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/velvame-sanitary-pad-small-180mm</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/product/body-bikini-wax-powder-100g-chocolate</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/category/wax-powder</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/category/skin-care</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://velvame.lovable.app/category/personal-hygiene</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
