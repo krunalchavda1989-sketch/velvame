@@ -86,8 +86,11 @@ import AdminMarquee from "./pages/admin/AdminMarquee";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminInventory from "./pages/admin/AdminInventory";
 import CustomCodeInjector from "./components/CustomCodeInjector";
+import SEOHead from "./components/SEOHead";
+import RedirectHandler from "./components/RedirectHandler";
 import DynamicPage from "./pages/DynamicPage";
 import CategoryPage from "./pages/CategoryPage";
+import AdminSEOManager from "./pages/admin/AdminSEOManager";
 import AdminReels from "./pages/admin/AdminReels";
 import AdminPopups from "./pages/admin/AdminPopups";
 import AdminStorageMonitor from "./pages/admin/AdminStorageMonitor";
@@ -106,6 +109,8 @@ const App = () => (
           <BrandProvider>
           <CartProvider>
           <CustomCodeInjector />
+          <SEOHead />
+          <RedirectHandler />
           <PopupEngine />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -278,6 +283,7 @@ const App = () => (
             <Route path="/admin/storage" element={<AdminRoute><AdminStorageMonitor /></AdminRoute>} />
             <Route path="/admin/commission-reprocess-log" element={<AdminRoute><AdminCommissionReprocessLog /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
+            <Route path="/admin/seo" element={<AdminRoute><AdminSEOManager /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
