@@ -2,7 +2,7 @@
 import { writeFileSync, readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 
-const BASE_URL = "https://velvame.lovable.app";
+const BASE_URL = "https://www.velvame.com";
 
 // Load .env for SUPABASE creds (build-time fetch of dynamic routes)
 function loadEnv() {
