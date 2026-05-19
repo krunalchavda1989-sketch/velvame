@@ -33,8 +33,16 @@ async function fetchRows(path) {
   }
 }
 
+// Load admin SEO settings (sitemap toggles + robots.txt content)
+const seoRows = await fetchRows("seo_settings?select=key,config&key=in.(sitemap,robots,global)");
+const seoMap = {};
+for (const r of Array.isArray(seoRows) ? seoRows : []) seoMap[r.key] = r.config || {};
+const smCfg = seoMap.sitemap || {};
+const globalCfg = seoMap.global || {};
+const BASE = globalCfg.base_url || BASE_URL;
+
 // Static, public, indexable routes (excludes auth, checkout, admin, dashboard)
-const staticEntries = [
+const staticEntries = smCfg.include_static === false ? [] : [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/shop", changefreq: "daily", priority: "0.9" },
   { path: "/offers", changefreq: "daily", priority: "0.8" },
@@ -43,19 +51,19 @@ const staticEntries = [
   { path: "/faq", changefreq: "monthly", priority: "0.6" },
 ];
 
-const products = await fetchRows("products?select=id,seo_slug&active=eq.true");
+const products = smCfg.include_products === false ? [] : await fetchRows("products?select=id,seo_slug&active=eq.true");
 const productEntries = products.map((p) => ({
   path: `/product/${p.seo_slug && p.seo_slug.length > 0 ? p.seo_slug : p.id}`,
   changefreq: "weekly",
   priority: "0.8",
 }));
 
-const categories = await fetchRows("product_categories?select=slug&is_active=eq.true&slug=not.is.null");
+const categories = smCfg.include_categories === false ? [] : await fetchRows("product_categories?select=slug&is_active=eq.true&slug=not.is.null");
 const categoryEntries = categories
   .filter((c) => c.slug)
   .map((c) => ({ path: `/category/${c.slug}`, changefreq: "weekly", priority: "0.7" }));
 
-const pages = await fetchRows("cms_pages?select=slug&is_published=eq.true").catch(() => []);
+const pages = smCfg.include_cms_pages === false ? [] : await fetchRows("cms_pages?select=slug&is_published=eq.true").catch(() => []);
 const pageEntries = (Array.isArray(pages) ? pages : [])
   .filter((p) => p.slug)
   .map((p) => ({ path: `/${p.slug}`, changefreq: "monthly", priority: "0.5" }));
