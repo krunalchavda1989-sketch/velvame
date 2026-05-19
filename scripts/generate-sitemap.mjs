@@ -93,3 +93,10 @@ function generateSitemap(entries) {
 
 writeFileSync(resolve("public/sitemap.xml"), generateSitemap(entries));
 console.log(`sitemap.xml written (${entries.length} entries)`);
+
+// Write robots.txt from admin SEO settings (if configured)
+const robotsCfg = seoMap.robots || {};
+if (robotsCfg.content && typeof robotsCfg.content === "string") {
+  writeFileSync(resolve("public/robots.txt"), robotsCfg.content);
+  console.log("robots.txt written from admin settings");
+}
