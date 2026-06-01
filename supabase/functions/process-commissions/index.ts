@@ -557,7 +557,7 @@ Deno.serve(async (req: Request) => {
       await supabase.from("commission_reprocess_runs").insert({
         run_label: `Monthly Repurchase Reprocess ${year}-${String(month).padStart(2, "0")}`,
         scope: "global",
-        triggered_by: user.id,
+        triggered_by: user?.id ?? null,
         reason: "Scheduled end-of-month repurchase commission distribution",
         total_users_affected: processed,
         total_credits: totalDistributed,
