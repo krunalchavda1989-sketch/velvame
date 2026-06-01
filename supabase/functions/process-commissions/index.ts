@@ -113,16 +113,20 @@ async function processOrderCommissions(
     }
   }
 
+  // Reference month for eligibility = the month the ORDER was placed (not now())
+  // This makes processing timing-agnostic: upline can repurchase earlier OR later
+  // in the same calendar month and still qualify when the order is (re)processed.
+  const orderDate = new Date(order.created_at);
+  const refMonthStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), 1).toISOString();
+  const refMonthEnd = new Date(orderDate.getFullYear(), orderDate.getMonth() + 1, 1).toISOString();
+
   const getMonthlyPurchase = async (userId: string): Promise<number> => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
     const { data } = await supabase
       .from("orders")
       .select("total_amount")
       .eq("user_id", userId)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd)
+      .gte("created_at", refMonthStart)
+      .lt("created_at", refMonthEnd)
       .in("status", ["confirmed", "delivered", "shipped", "pending"]);
     return (data || []).reduce((sum: number, o: any) => sum + Number(o.total_amount), 0);
   };
@@ -151,27 +155,21 @@ async function processOrderCommissions(
 
     let beneficiaryPurchaseOk = true;
     if (isRepurchase && isQualified) {
-      // Beneficiary must have made a repurchase order in the CURRENT month
-      const now = new Date();
-      const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const curMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
-
+      // Beneficiary must have made a repurchase order in the same month as the ORDER
       const { count: repurchaseCount } = await supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("user_id", upline.user_id)
         .eq("is_repurchase", true)
-        .gte("created_at", curMonthStart)
-        .lt("created_at", curMonthEnd)
+        .gte("created_at", refMonthStart)
+        .lt("created_at", refMonthEnd)
         .in("status", ["confirmed", "delivered", "shipped", "pending"]);
 
       if (!repurchaseCount || repurchaseCount === 0) {
-        // Skip — beneficiary has no repurchase order this month
         currentProfileId = upline.referred_by ?? null;
         continue;
       }
 
-      // Also check minimum monthly purchase requirement
       if (minMonthlyPurchase > 0) {
         const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
         beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
@@ -267,20 +265,23 @@ Deno.serve(async (req: Request) => {
     if (!authHeader) throw new Error("Missing Authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error("Unauthorized");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isServiceRole = token === serviceRoleKey;
 
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+    let user: any = null;
+    if (!isServiceRole) {
+      const { data: { user: authedUser }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authedUser) throw new Error("Unauthorized");
+      user = authedUser;
 
-    if (!roleRow) throw new Error("Forbidden: admin access required");
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) throw new Error("Forbidden: admin access required");
+    }
 
     const body = await req.json();
     const action = body.action || "process_single";
@@ -506,6 +507,73 @@ Deno.serve(async (req: Request) => {
           skipped,
           has_more: hasMore,
           next_offset: nextOffset,
+          details: results,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── ACTION: process_monthly_repurchase ──
+    // Designed to run on the last date of each month via pg_cron.
+    // Reprocesses every repurchase order for the target month so that uplines who
+    // qualified later in the month (e.g. last-date repurchase) get their commissions.
+    // Body params (optional): { year, month } — month is 1-12. Defaults to current month.
+    if (action === "process_monthly_repurchase") {
+      const now = new Date();
+      const year = Number(body.year) || now.getFullYear();
+      const month = Number(body.month) || now.getMonth() + 1; // 1-12
+      const monthStart = new Date(year, month - 1, 1).toISOString();
+      const monthEnd = new Date(year, month, 1).toISOString();
+
+      const { data: monthOrders, error: moErr } = await supabase
+        .from("orders")
+        .select("id, order_number, user_id, total_amount, is_repurchase, status, created_at")
+        .eq("is_repurchase", true)
+        .in("status", ["confirmed", "delivered", "shipped", "pending"])
+        .gte("created_at", monthStart)
+        .lt("created_at", monthEnd)
+        .order("created_at", { ascending: true });
+      if (moErr) throw moErr;
+
+      const results: any[] = [];
+      let processed = 0, skipped = 0, totalDistributed = 0;
+
+      for (const o of monthOrders || []) {
+        try {
+          const r = await processOrderCommissions(supabase, o.id, { force: true });
+          if (r && r.distributed > 0) {
+            processed++;
+            totalDistributed += r.total;
+            results.push({ order_number: o.order_number, distributed: r.distributed, total: r.total });
+          } else {
+            skipped++;
+          }
+        } catch (e) {
+          results.push({ order_number: o.order_number, error: String(e) });
+        }
+      }
+
+      // Log the run
+      await supabase.from("commission_reprocess_runs").insert({
+        run_label: `Monthly Repurchase Reprocess ${year}-${String(month).padStart(2, "0")}`,
+        scope: "global",
+        triggered_by: user?.id ?? null,
+        reason: "Scheduled end-of-month repurchase commission distribution",
+        total_users_affected: processed,
+        total_credits: totalDistributed,
+        total_debits: 0,
+        net_change: totalDistributed,
+        completed_at: new Date().toISOString(),
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "process_monthly_repurchase",
+          year, month,
+          orders_scanned: monthOrders?.length || 0,
+          processed, skipped,
+          total_distributed: Math.round(totalDistributed * 100) / 100,
           details: results,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
