@@ -56,6 +56,8 @@ const AdminUserDetail = () => {
   const [bankDetails, setBankDetails] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [userEmail, setUserEmail] = useState("");
+  const [upline, setUpline] = useState<any>(null);
+  const [uplineEmail, setUplineEmail] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Edit state
