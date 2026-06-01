@@ -598,6 +598,64 @@ const AdminUserDetail = () => {
           ))}
         </div>
 
+        {/* Upline / Sponsor Details (highlighted) */}
+        <Card className="border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              Upline / Sponsor Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {upline ? (
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <Avatar className="h-14 w-14 ring-2 ring-primary/30">
+                  {upline.avatar_url ? (
+                    <AvatarImage src={supabase.storage.from("avatars").getPublicUrl(upline.avatar_url).data.publicUrl} />
+                  ) : null}
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                    {(upline.full_name || upline.first_name || "U").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-1">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Name</p>
+                    <Link to={`/admin/users/${upline.id}`} className="text-sm font-semibold text-foreground hover:text-primary truncate block">
+                      {upline.full_name || `${upline.first_name || ""} ${upline.last_name || ""}`.trim() || "—"}
+                    </Link>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">User ID</p>
+                    <Badge variant="outline" className="font-mono text-xs">{upline.referral_code || "—"}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Mobile</p>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      {upline.phone || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Email</p>
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1 truncate">
+                      <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="truncate">{uplineEmail || "—"}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 md:items-end">
+                  <Badge className={upline.subscription_paid ? "bg-success text-success-foreground" : "bg-destructive/10 text-destructive"}>
+                    {upline.subscription_paid ? "Active" : "Inactive"}
+                  </Badge>
+                  {upline.title && <Badge variant="secondary" className="text-xs">{upline.title}</Badge>}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No upline / sponsor assigned.</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Wallet Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
