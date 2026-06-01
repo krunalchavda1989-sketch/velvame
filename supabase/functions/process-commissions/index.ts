@@ -265,20 +265,23 @@ Deno.serve(async (req: Request) => {
     if (!authHeader) throw new Error("Missing Authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error("Unauthorized");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isServiceRole = token === serviceRoleKey;
 
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+    let user: any = null;
+    if (!isServiceRole) {
+      const { data: { user: authedUser }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authedUser) throw new Error("Unauthorized");
+      user = authedUser;
 
-    if (!roleRow) throw new Error("Forbidden: admin access required");
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) throw new Error("Forbidden: admin access required");
+    }
 
     const body = await req.json();
     const action = body.action || "process_single";
