@@ -510,6 +510,73 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // ── ACTION: process_monthly_repurchase ──
+    // Designed to run on the last date of each month via pg_cron.
+    // Reprocesses every repurchase order for the target month so that uplines who
+    // qualified later in the month (e.g. last-date repurchase) get their commissions.
+    // Body params (optional): { year, month } — month is 1-12. Defaults to current month.
+    if (action === "process_monthly_repurchase") {
+      const now = new Date();
+      const year = Number(body.year) || now.getFullYear();
+      const month = Number(body.month) || now.getMonth() + 1; // 1-12
+      const monthStart = new Date(year, month - 1, 1).toISOString();
+      const monthEnd = new Date(year, month, 1).toISOString();
+
+      const { data: monthOrders, error: moErr } = await supabase
+        .from("orders")
+        .select("id, order_number, user_id, total_amount, is_repurchase, status, created_at")
+        .eq("is_repurchase", true)
+        .in("status", ["confirmed", "delivered", "shipped", "pending"])
+        .gte("created_at", monthStart)
+        .lt("created_at", monthEnd)
+        .order("created_at", { ascending: true });
+      if (moErr) throw moErr;
+
+      const results: any[] = [];
+      let processed = 0, skipped = 0, totalDistributed = 0;
+
+      for (const o of monthOrders || []) {
+        try {
+          const r = await processOrderCommissions(supabase, o.id, { force: true });
+          if (r && r.distributed > 0) {
+            processed++;
+            totalDistributed += r.total;
+            results.push({ order_number: o.order_number, distributed: r.distributed, total: r.total });
+          } else {
+            skipped++;
+          }
+        } catch (e) {
+          results.push({ order_number: o.order_number, error: String(e) });
+        }
+      }
+
+      // Log the run
+      await supabase.from("commission_reprocess_runs").insert({
+        run_label: `Monthly Repurchase Reprocess ${year}-${String(month).padStart(2, "0")}`,
+        scope: "global",
+        triggered_by: user.id,
+        reason: "Scheduled end-of-month repurchase commission distribution",
+        total_users_affected: processed,
+        total_credits: totalDistributed,
+        total_debits: 0,
+        net_change: totalDistributed,
+        completed_at: new Date().toISOString(),
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: "process_monthly_repurchase",
+          year, month,
+          orders_scanned: monthOrders?.length || 0,
+          processed, skipped,
+          total_distributed: Math.round(totalDistributed * 100) / 100,
+          details: results,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── ACTION: process_single (default) ──
     const { order_id } = body;
     if (!order_id || typeof order_id !== "string") {
