@@ -113,16 +113,20 @@ async function processOrderCommissions(
     }
   }
 
+  // Reference month for eligibility = the month the ORDER was placed (not now())
+  // This makes processing timing-agnostic: upline can repurchase earlier OR later
+  // in the same calendar month and still qualify when the order is (re)processed.
+  const orderDate = new Date(order.created_at);
+  const refMonthStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), 1).toISOString();
+  const refMonthEnd = new Date(orderDate.getFullYear(), orderDate.getMonth() + 1, 1).toISOString();
+
   const getMonthlyPurchase = async (userId: string): Promise<number> => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
     const { data } = await supabase
       .from("orders")
       .select("total_amount")
       .eq("user_id", userId)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd)
+      .gte("created_at", refMonthStart)
+      .lt("created_at", refMonthEnd)
       .in("status", ["confirmed", "delivered", "shipped", "pending"]);
     return (data || []).reduce((sum: number, o: any) => sum + Number(o.total_amount), 0);
   };
@@ -151,27 +155,21 @@ async function processOrderCommissions(
 
     let beneficiaryPurchaseOk = true;
     if (isRepurchase && isQualified) {
-      // Beneficiary must have made a repurchase order in the CURRENT month
-      const now = new Date();
-      const curMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const curMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
-
+      // Beneficiary must have made a repurchase order in the same month as the ORDER
       const { count: repurchaseCount } = await supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
         .eq("user_id", upline.user_id)
         .eq("is_repurchase", true)
-        .gte("created_at", curMonthStart)
-        .lt("created_at", curMonthEnd)
+        .gte("created_at", refMonthStart)
+        .lt("created_at", refMonthEnd)
         .in("status", ["confirmed", "delivered", "shipped", "pending"]);
 
       if (!repurchaseCount || repurchaseCount === 0) {
-        // Skip — beneficiary has no repurchase order this month
         currentProfileId = upline.referred_by ?? null;
         continue;
       }
 
-      // Also check minimum monthly purchase requirement
       if (minMonthlyPurchase > 0) {
         const uplineMonthlyTotal = await getMonthlyPurchase(upline.user_id);
         beneficiaryPurchaseOk = uplineMonthlyTotal >= minMonthlyPurchase;
