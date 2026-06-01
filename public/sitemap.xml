@@ -31,12 +31,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.velvame.com/product/body-bikini-wax-powder-100g-ubtan-and-aloevera</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.velvame.com/product/aloevera-gel-150g</loc>
+    <loc>https://www.velvame.com/product/face-wax-powder-100g-chocolate</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -46,12 +41,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.velvame.com/product/face-wax-powder-100g-chocolate</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.velvame.com/product/velvame-sanitary-pad-extra-large-360mm-8pcs</loc>
+    <loc>https://www.velvame.com/product/aloevera-gel-150g</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -66,12 +56,22 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.velvame.com/product/velvame-intimate-wash-100ml</loc>
+    <loc>https://www.velvame.com/product/velvame-sanitary-pad-extra-large-360mm-8pcs</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.velvame.com/product/body-bikini-wax-powder-100g-haldi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.velvame.com/product/body-bikini-wax-powder-100g-ubtan-and-aloevera</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.velvame.com/product/velvame-intimate-wash-100ml</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
