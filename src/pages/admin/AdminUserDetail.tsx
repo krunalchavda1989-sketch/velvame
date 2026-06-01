@@ -155,6 +155,22 @@ const AdminUserDetail = () => {
           body: { action: "get_user_email", user_id: prof.user_id },
         });
         if (emailData?.email) setUserEmail(emailData.email);
+
+        // Fetch upline (sponsor) details
+        if (prof.referred_by) {
+          const { data: up } = await supabase
+            .from("profiles")
+            .select("id, user_id, referral_code, full_name, first_name, last_name, phone, avatar_url, title, subscription_paid")
+            .eq("id", prof.referred_by)
+            .maybeSingle();
+          if (up) {
+            setUpline(up);
+            const { data: upEmailData } = await supabase.functions.invoke("admin-settings", {
+              body: { action: "get_user_email", user_id: up.user_id },
+            });
+            if (upEmailData?.email) setUplineEmail(upEmailData.email);
+          }
+        }
       }
 
       setLoading(false);
