@@ -116,16 +116,19 @@ const PayoutReport = () => {
 
     const bankDetails = await fetchAllRows("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
 
-    // Fetch commission-balance debits (wallet usage on orders) — these reduce pending payout
-    const walletDebits = await fetchAllRows(
+    // Fetch ALL commission-balance wallet transactions (credits = earned, debits = wallet used on orders).
+    // The wallet ledger is the authoritative source for the user's commission balance because the
+    // commissions table can be reprocessed/cleaned over time, while every credit that ever landed
+    // in the user's commission wallet — and every debit drawn against it — is recorded here.
+    const walletTxns = await fetchAllRows(
       "wallet_transactions",
       "user_id, amount, type, balance_type"
     );
 
-    // Aggregate commissions per user
-    const earningsMap = new Map<string, number>();
+    // Aggregate commissions table per user (fallback for users without wallet ledger entries)
+    const commissionsTableMap = new Map<string, number>();
     commissions.forEach(c => {
-      earningsMap.set(c.beneficiary_id, (earningsMap.get(c.beneficiary_id) || 0) + Number(c.amount));
+      commissionsTableMap.set(c.beneficiary_id, (commissionsTableMap.get(c.beneficiary_id) || 0) + Number(c.amount));
     });
 
     // Aggregate payouts per user
@@ -137,10 +140,14 @@ const PayoutReport = () => {
       paidMap.set(p.user_id, prev);
     });
 
-    // Aggregate commission-balance debits (wallet used towards orders) per user
+    // Aggregate commission-balance credits (earned) and debits (wallet used towards orders) per user
+    const walletCreditMap = new Map<string, number>();
     const walletUsedMap = new Map<string, number>();
-    walletDebits.forEach((w: any) => {
-      if (w.type === "debit" && w.balance_type === "commission") {
+    walletTxns.forEach((w: any) => {
+      if (w.balance_type !== "commission") return;
+      if (w.type === "credit") {
+        walletCreditMap.set(w.user_id, (walletCreditMap.get(w.user_id) || 0) + Number(w.amount));
+      } else if (w.type === "debit") {
         walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + Number(w.amount));
       }
     });
@@ -149,10 +156,19 @@ const PayoutReport = () => {
     const bankMap = new Map(bankDetails.map(b => [b.user_id, b]));
 
     const result: PayoutUser[] = profiles.map(p => {
-      const earned = earningsMap.get(p.user_id) || 0;
+      const walletCredited = walletCreditMap.get(p.user_id) || 0;
+      const commissionTableTotal = commissionsTableMap.get(p.user_id) || 0;
+      // Earned = max(wallet credits, commissions table). Covers reprocessed accounts (wallet
+      // ledger is source of truth) AND edge cases where a commission row exists without a
+      // matching wallet credit yet.
+      const earned = Math.max(walletCredited, commissionTableTotal);
+
       const paidInfo = paidMap.get(p.user_id) || { total: 0, lastDate: null };
       const walletUsed = walletUsedMap.get(p.user_id) || 0;
-      const settled = paidInfo.total + walletUsed;
+      // Cap settled at earned so Total Paid can never exceed Total Earned. This fixes the
+      // mismatch where wallet debits (which historically include credits no longer in the
+      // commissions table) made Paid look larger than Earned.
+      const settled = Math.min(earned, paidInfo.total + walletUsed);
       const bank = bankMap.get(p.user_id);
       return {
         user_id: p.user_id,
@@ -163,7 +179,7 @@ const PayoutReport = () => {
         referral_code: p.referral_code || "",
         total_earned: earned,
         total_paid: settled,
-        pending_payout: earned - settled,
+        pending_payout: Math.max(0, earned - settled),
         bank_name: bank?.bank_name || "",
         account_holder_name: bank?.account_holder_name || "",
         account_number: bank?.account_number || "",
