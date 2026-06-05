@@ -173,7 +173,7 @@ const PayoutReport = () => {
         last_paid_date: paidInfo.lastDate,
         email: "",
       };
-    }).filter(u => u.total_earned > 0 && u.pending_payout > 0.01); // Only show users with remaining unpaid balance
+    }).filter(u => u.total_earned > 0); // Show all users who earned commissions
 
 
     setUsers(result);
