@@ -116,6 +116,12 @@ const PayoutReport = () => {
 
     const bankDetails = await fetchAllRows("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
 
+    // Fetch commission-balance debits (wallet usage on orders) — these reduce pending payout
+    const walletDebits = await fetchAllRows(
+      "wallet_transactions",
+      "user_id, amount, type, balance_type"
+    );
+
     // Aggregate commissions per user
     const earningsMap = new Map<string, number>();
     commissions.forEach(c => {
@@ -131,12 +137,22 @@ const PayoutReport = () => {
       paidMap.set(p.user_id, prev);
     });
 
+    // Aggregate commission-balance debits (wallet used towards orders) per user
+    const walletUsedMap = new Map<string, number>();
+    walletDebits.forEach((w: any) => {
+      if (w.type === "debit" && w.balance_type === "commission") {
+        walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + Number(w.amount));
+      }
+    });
+
     // Bank details map
     const bankMap = new Map(bankDetails.map(b => [b.user_id, b]));
 
     const result: PayoutUser[] = profiles.map(p => {
       const earned = earningsMap.get(p.user_id) || 0;
       const paidInfo = paidMap.get(p.user_id) || { total: 0, lastDate: null };
+      const walletUsed = walletUsedMap.get(p.user_id) || 0;
+      const settled = paidInfo.total + walletUsed;
       const bank = bankMap.get(p.user_id);
       return {
         user_id: p.user_id,
@@ -146,8 +162,8 @@ const PayoutReport = () => {
         phone: p.phone || "",
         referral_code: p.referral_code || "",
         total_earned: earned,
-        total_paid: paidInfo.total,
-        pending_payout: earned - paidInfo.total,
+        total_paid: settled,
+        pending_payout: earned - settled,
         bank_name: bank?.bank_name || "",
         account_holder_name: bank?.account_holder_name || "",
         account_number: bank?.account_number || "",
@@ -158,6 +174,7 @@ const PayoutReport = () => {
         email: "",
       };
     }).filter(u => u.total_earned > 0); // Only show users with earnings
+
 
     setUsers(result);
     setLoading(false);
