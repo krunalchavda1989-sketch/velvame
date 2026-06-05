@@ -310,6 +310,22 @@ Deno.serve(async (req) => {
     // Use service role client for DB operations
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Authorization: only admin users may invoke this endpoint to prevent
+    // arbitrary outbound messaging at the company's expense.
+    const callerId = (claimsData.claims as any).sub as string;
+    const { data: roleRow } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callerId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) {
+      return new Response(JSON.stringify({ success: false, error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Parse request
     const body: WhatsAppRequest = await req.json();
     const { phone, message, purpose, media_url, media_type, link_url, link_text } = body;
