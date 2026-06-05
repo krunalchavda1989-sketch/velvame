@@ -263,33 +263,37 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = body.action || "process_single";
 
-    // Special path: scheduled end-of-month repurchase distribution.
-    // No admin auth required, but guarded by server-side date check:
-    // only runs if today is the last day of the current month.
+    // All actions (including the end-of-month repurchase processing) require
+    // either the service role key OR an authenticated admin JWT. The previous
+    // unauthenticated EOM path has been removed to prevent abuse.
     let user: any = null;
-    const isScheduledEom =
-      action === "process_monthly_repurchase" && body.eom_only === true;
-
-    if (isScheduledEom) {
-      const today = new Date();
-      const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-      const isLastDayOfMonth = tomorrow.getDate() === 1;
-      if (!isLastDayOfMonth) {
-        return new Response(
-          JSON.stringify({ success: true, skipped: true, reason: "Not end of month" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    } else {
-      // Verify caller is an admin (or service role)
+    {
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) throw new Error("Missing Authorization header");
 
       const token = authHeader.replace("Bearer ", "");
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const cronSecret = Deno.env.get("CRON_SECRET");
+      const providedCronSecret = req.headers.get("x-cron-secret");
       const isServiceRole = token === serviceRoleKey;
+      const isCronCaller =
+        action === "process_monthly_repurchase" &&
+        body.eom_only === true &&
+        !!cronSecret &&
+        providedCronSecret === cronSecret;
 
-      if (!isServiceRole) {
+      if (isCronCaller) {
+        // Scheduled cron path: still enforce that today is the last day of month.
+        const today = new Date();
+        const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        const isLastDayOfMonth = tomorrow.getDate() === 1;
+        if (!isLastDayOfMonth) {
+          return new Response(
+            JSON.stringify({ success: true, skipped: true, reason: "Not end of month" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else if (!isServiceRole) {
         const { data: { user: authedUser }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !authedUser) throw new Error("Unauthorized");
         user = authedUser;
