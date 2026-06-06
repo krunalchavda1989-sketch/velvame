@@ -116,13 +116,12 @@ const PayoutReport = () => {
 
     const bankDetails = await fetchAllRows("bank_details", "user_id, bank_name, account_holder_name, account_number, ifsc_code, branch_name, upi_id");
 
-    // Fetch ALL commission-balance wallet transactions (credits = earned, debits = wallet used on orders).
-    // The wallet ledger is the authoritative source for the user's commission balance because the
-    // commissions table can be reprocessed/cleaned over time, while every credit that ever landed
-    // in the user's commission wallet — and every debit drawn against it — is recorded here.
+    // Fetch ALL commission-balance wallet transactions. Credits = earned; debits split into:
+    //   - reversal/correction debits → cancel prior credits, must be subtracted from earned
+    //   - other debits (e.g. "Order Payment (Commission Balance)") → wallet used toward orders
     const walletTxns = await fetchAllRows(
       "wallet_transactions",
-      "user_id, amount, type, balance_type"
+      "user_id, amount, type, balance_type, description"
     );
 
     // Aggregate commissions table per user (fallback for users without wallet ledger entries)
@@ -140,15 +139,23 @@ const PayoutReport = () => {
       paidMap.set(p.user_id, prev);
     });
 
-    // Aggregate commission-balance credits (earned) and debits (wallet used towards orders) per user
+    // Aggregate commission-balance ledger per user: credits, reversal debits, order-usage debits
     const walletCreditMap = new Map<string, number>();
+    const walletReversalMap = new Map<string, number>();
     const walletUsedMap = new Map<string, number>();
     walletTxns.forEach((w: any) => {
       if (w.balance_type !== "commission") return;
+      const amt = Number(w.amount);
+      const desc: string = w.description || "";
       if (w.type === "credit") {
-        walletCreditMap.set(w.user_id, (walletCreditMap.get(w.user_id) || 0) + Number(w.amount));
+        walletCreditMap.set(w.user_id, (walletCreditMap.get(w.user_id) || 0) + amt);
       } else if (w.type === "debit") {
-        walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + Number(w.amount));
+        const isReversal = /Reversal|Correction|Reprocess/i.test(desc);
+        if (isReversal) {
+          walletReversalMap.set(w.user_id, (walletReversalMap.get(w.user_id) || 0) + amt);
+        } else {
+          walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + amt);
+        }
       }
     });
 
@@ -157,17 +164,17 @@ const PayoutReport = () => {
 
     const result: PayoutUser[] = profiles.map(p => {
       const walletCredited = walletCreditMap.get(p.user_id) || 0;
+      const walletReversed = walletReversalMap.get(p.user_id) || 0;
+      const netWalletEarned = Math.max(0, walletCredited - walletReversed);
       const commissionTableTotal = commissionsTableMap.get(p.user_id) || 0;
-      // Earned = max(wallet credits, commissions table). Covers reprocessed accounts (wallet
-      // ledger is source of truth) AND edge cases where a commission row exists without a
-      // matching wallet credit yet.
-      const earned = Math.max(walletCredited, commissionTableTotal);
+      // Earned = max(net wallet after reversals, commissions table). Net wallet subtracts
+      // reprocess/correction reversals so users with credit→reversal→re-credit cycles
+      // (e.g. VM518) no longer double-count. Commissions table acts as a fallback.
+      const earned = Math.max(netWalletEarned, commissionTableTotal);
 
       const paidInfo = paidMap.get(p.user_id) || { total: 0, lastDate: null };
       const walletUsed = walletUsedMap.get(p.user_id) || 0;
-      // Cap settled at earned so Total Paid can never exceed Total Earned. This fixes the
-      // mismatch where wallet debits (which historically include credits no longer in the
-      // commissions table) made Paid look larger than Earned.
+      // Cap settled at earned so Total Paid can never exceed Total Earned.
       const settled = Math.min(earned, paidInfo.total + walletUsed);
       const bank = bankMap.get(p.user_id);
       return {
