@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBrand } from "@/contexts/BrandContext";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import SessionTimeoutDialog from "@/components/SessionTimeoutDialog";
+import AIAssistant from "@/components/admin/AIAssistant";
 import {
   Crown, LayoutDashboard, Users, Package, ShoppingCart,
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
