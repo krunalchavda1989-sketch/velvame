@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.login-with-identifier]
 verify_jwt = false
+
+[functions.admin-ai-assistant]
+verify_jwt = false
