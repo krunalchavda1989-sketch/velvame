@@ -311,6 +311,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         {children}
       </main>
       <SessionTimeoutDialog open={showWarning} countdown={countdown} onKeepAlive={keepAlive} onLogout={sessionLogout} />
+      <AIAssistant />
     </div>
   );
 };
