@@ -276,53 +276,25 @@ const PayoutReport = () => {
 
     setPaying(true);
 
-    const { error } = await supabase.from("payout_transactions").insert({
-      user_id: selectedUser.user_id,
-      amount,
-      payment_mode: payMode,
-      transaction_ref: payRef.trim(),
-      payment_date: payDate,
-      paid_by_admin_id: adminUser.id,
-      note: payNote || "",
-      status: "paid",
+    const { data: rpcData, error } = await supabase.rpc("admin_record_payout", {
+      _user_id: selectedUser.user_id,
+      _amount: amount,
+      _payment_mode: payMode,
+      _transaction_ref: payRef.trim(),
+      _payment_date: payDate,
+      _admin_id: adminUser.id,
+      _note: payNote || "",
     });
 
-    if (error) {
-      if (error.message?.includes("duplicate") || error.message?.includes("unique")) {
+    if (error || (rpcData && (rpcData as any).success === false)) {
+      const msg = error?.message || (rpcData as any)?.error || "Failed to record payout";
+      if (msg.includes("duplicate") || msg.includes("unique")) {
         toast.error("This transaction reference has already been used");
       } else {
-        toast.error("Failed to record payout: " + error.message);
+        toast.error("Failed to record payout: " + msg);
       }
       setPaying(false);
       return;
-    }
-
-    // Mark pending commissions as "paid" (FIFO by created_at) up to the payout amount
-    try {
-      const { data: pendingCommissions } = await supabase
-        .from("commissions")
-        .select("id, amount")
-        .eq("beneficiary_id", selectedUser.user_id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: true });
-
-      if (pendingCommissions && pendingCommissions.length > 0) {
-        let remaining = amount;
-        const idsToMark: string[] = [];
-        for (const c of pendingCommissions) {
-          if (remaining <= 0) break;
-          idsToMark.push(c.id);
-          remaining -= Number(c.amount);
-        }
-        if (idsToMark.length > 0) {
-          await supabase
-            .from("commissions")
-            .update({ status: "paid" })
-            .in("id", idsToMark);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to sync commission statuses:", e);
     }
 
     // Send notification to user

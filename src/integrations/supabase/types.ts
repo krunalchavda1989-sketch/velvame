@@ -3495,6 +3495,18 @@ export type Database = {
         Args: { _order_id: string }
         Returns: Json
       }
+      admin_record_payout: {
+        Args: {
+          _admin_id: string
+          _amount: number
+          _note?: string
+          _payment_date: string
+          _payment_mode: string
+          _transaction_ref: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       admin_wallet_adjust:
         | {
             Args: {
