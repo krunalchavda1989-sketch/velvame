@@ -534,11 +534,11 @@ const Checkout = () => {
                   )}
 
                   {checkoutProducts.length > 0 && (
-                    <div className="flex justify-between pt-4 border-t border-border">
-                      <Button variant="ghost" className="text-muted-foreground gap-2" onClick={() => navigate("/shop")}>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4 border-t border-border">
+                      <Button variant="ghost" className="text-muted-foreground gap-2 w-full sm:w-auto justify-center" onClick={() => navigate("/shop")}>
                         <ArrowLeft className="h-4 w-4" /> Continue Shopping
                       </Button>
-                      <Button onClick={() => setStep("information")}>
+                      <Button className="w-full sm:w-auto" onClick={() => setStep("information")}>
                         Continue to Information
                       </Button>
                     </div>
@@ -627,11 +627,11 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between pt-4">
-                    <Button variant="ghost" className="text-muted-foreground gap-2" onClick={() => setStep("cart")}>
+                  <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
+                    <Button variant="ghost" className="text-muted-foreground gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("cart")}>
                       <ArrowLeft className="h-4 w-4" /> Return to cart
                     </Button>
-                    <Button onClick={() => {
+                    <Button className="w-full sm:w-auto" onClick={() => {
                       const addr = getShippingAddress();
                       if (!addr || !addr.name || !addr.line1 || !addr.city || !addr.state || !addr.pincode || !addr.phone) {
                         toast.error("Please fill all required fields");
@@ -702,11 +702,11 @@ const Checkout = () => {
                     </p>
                   )}
 
-                  <div className="flex justify-between pt-4">
-                    <Button variant="ghost" className="text-gray-600 gap-2" onClick={() => setStep("information")}>
+                  <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
+                    <Button variant="ghost" className="text-gray-600 gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("information")}>
                       <ArrowLeft className="h-4 w-4" /> Return to information
                     </Button>
-                    <Button onClick={() => setStep("payment")}>Continue to payment</Button>
+                    <Button className="w-full sm:w-auto" onClick={() => setStep("payment")}>Continue to payment</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -802,11 +802,11 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between pt-4">
-                    <Button variant="ghost" className="text-gray-600 gap-2" onClick={() => setStep("shipping")}>
+                  <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
+                    <Button variant="ghost" className="text-gray-600 gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("shipping")}>
                       <ArrowLeft className="h-4 w-4" /> Return to shipping
                     </Button>
-                    <Button onClick={handlePlaceOrder} disabled={processing} className="min-w-[160px]">
+                    <Button onClick={handlePlaceOrder} disabled={processing} className="w-full sm:w-auto sm:min-w-[160px]">
                       {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                       {isFullWalletPayment ? `Pay with Wallet` : `Pay ${fc(finalPrice)}`}
                     </Button>
