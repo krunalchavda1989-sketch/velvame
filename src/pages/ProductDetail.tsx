@@ -113,16 +113,17 @@ const ProductDetail = () => {
       setQty(1);
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+      // Use safe RPC so anonymous visitors don't see distributor pricing
+      const { data: allProducts } = await supabase.rpc("get_public_products");
+      const list = (allProducts as any[]) || [];
       let data: any = null;
 
       if (!isUUID) {
-        const res = await supabase.from("products").select("*").eq("seo_slug", slug).single();
-        data = res.data;
+        data = list.find((p) => p.seo_slug === slug) || null;
       }
-
       if (!data) {
-        const res = await supabase.from("products").select("*").eq("id", slug).single();
-        data = res.data;
+        data = list.find((p) => p.id === slug) || null;
       }
 
       if (!data) {
@@ -146,24 +147,12 @@ const ProductDetail = () => {
       }
 
       if (data) {
-        const { data: rec } = await supabase
-          .from("products")
-          .select("*")
-          .eq("active", true)
-          .eq("category", data.category)
-          .neq("id", data.id)
-          .limit(4);
-        
-        let items = rec || [];
+        const sameCategory = list.filter((p) => p.category === data.category && p.id !== data.id).slice(0, 4);
+        let items = sameCategory;
         if (items.length < 4) {
-          const excludeIds = [data.id, ...items.map((p: any) => p.id)];
-          const { data: more } = await supabase
-            .from("products")
-            .select("*")
-            .eq("active", true)
-            .not("id", "in", `(${excludeIds.join(",")})`)
-            .limit(4 - items.length);
-          items = [...items, ...(more || [])];
+          const excludeIds = new Set([data.id, ...items.map((p) => p.id)]);
+          const more = list.filter((p) => !excludeIds.has(p.id)).slice(0, 4 - items.length);
+          items = [...items, ...more];
         }
         setRecommended(items);
       }
