@@ -379,7 +379,6 @@ export type Database = {
           font_body: string | null
           font_heading: string | null
           footer_logo_url: string | null
-          gst_number: string | null
           id: string
           info_color: string | null
           logo_url: string | null
@@ -410,7 +409,6 @@ export type Database = {
           font_body?: string | null
           font_heading?: string | null
           footer_logo_url?: string | null
-          gst_number?: string | null
           id?: string
           info_color?: string | null
           logo_url?: string | null
@@ -441,7 +439,6 @@ export type Database = {
           font_body?: string | null
           font_heading?: string | null
           footer_logo_url?: string | null
-          gst_number?: string | null
           id?: string
           info_color?: string | null
           logo_url?: string | null
@@ -3094,6 +3091,27 @@ export type Database = {
           feature_date?: string
           id?: string
           title?: string
+        }
+        Relationships: []
+      }
+      tax_settings: {
+        Row: {
+          created_at: string
+          gst_number: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gst_number?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gst_number?: string
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
