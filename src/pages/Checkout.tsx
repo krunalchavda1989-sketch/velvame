@@ -534,11 +534,11 @@ const Checkout = () => {
                   )}
 
                   {checkoutProducts.length > 0 && (
-                    <div className="flex justify-between pt-4 border-t border-border">
-                      <Button variant="ghost" className="text-muted-foreground gap-2" onClick={() => navigate("/shop")}>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4 border-t border-border">
+                      <Button variant="ghost" className="text-muted-foreground gap-2 w-full sm:w-auto justify-center" onClick={() => navigate("/shop")}>
                         <ArrowLeft className="h-4 w-4" /> Continue Shopping
                       </Button>
-                      <Button onClick={() => setStep("information")}>
+                      <Button className="w-full sm:w-auto" onClick={() => setStep("information")}>
                         Continue to Information
                       </Button>
                     </div>
