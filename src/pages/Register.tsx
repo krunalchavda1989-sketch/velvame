@@ -89,7 +89,7 @@ const Register = () => {
         email: form.email,
         password: form.password,
         options: {
-          data: { full_name: form.fullName, referral_code: form.referralCode },
+          data: { full_name: form.fullName, referral_code: form.referralCode, phone: form.phone.trim() },
           emailRedirectTo: window.location.origin,
         },
       });
