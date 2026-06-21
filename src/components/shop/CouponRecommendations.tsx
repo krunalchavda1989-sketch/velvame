@@ -23,18 +23,8 @@ const CouponRecommendations = ({ onSelect, appliedCode }: Props) => {
 
   useEffect(() => {
     const fetchCoupons = async () => {
-      const now = new Date().toISOString();
-      const { data } = await supabase
-        .from("coupons")
-        .select("id, code, discount_type, discount_value, max_discount_amount, min_order_amount, end_date, max_uses, used_count")
-        .eq("is_active", true)
-        .gte("end_date", now)
-        .order("discount_value", { ascending: false });
-
-      const valid = (data || []).filter(
-        (c: any) => !c.max_uses || c.used_count < c.max_uses
-      );
-      setCoupons(valid);
+      const { data } = await supabase.rpc("list_public_coupons" as any);
+      setCoupons((data as any) || []);
     };
     fetchCoupons();
   }, []);
