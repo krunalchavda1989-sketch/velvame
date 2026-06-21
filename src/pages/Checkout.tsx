@@ -217,16 +217,14 @@ const Checkout = () => {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
     try {
-      const { data, error } = await supabase.from("coupons").select("*").eq("code", couponCode.toUpperCase().trim()).eq("is_active", true).maybeSingle();
-      if (error || !data) { toast.error("Invalid coupon code"); setCouponLoading(false); return; }
-      const coupon = data as any;
-      const now = new Date();
-      if (new Date(coupon.start_date) > now || new Date(coupon.end_date) < now) { toast.error("Coupon has expired"); setCouponLoading(false); return; }
-      if (coupon.max_uses > 0 && coupon.used_count >= coupon.max_uses) { toast.error("Coupon usage limit reached"); setCouponLoading(false); return; }
-      if (coupon.min_order_amount > 0 && checkoutTotal < coupon.min_order_amount) { toast.error(`Minimum order ${fc(coupon.min_order_amount)} required`); setCouponLoading(false); return; }
-      const discountAmount = calculateDiscount(coupon, checkoutTotal);
-      setAppliedCoupon({ id: coupon.id, code: coupon.code, discount_type: coupon.discount_type, discount_value: coupon.discount_value, max_discount_amount: coupon.max_discount_amount, discountAmount });
-      toast.success(`Coupon applied! You save ${fc(discountAmount)}`);
+      const { data, error } = await supabase.rpc("validate_coupon" as any, {
+        _code: couponCode.toUpperCase().trim(),
+        _order_amount: checkoutTotal,
+      });
+      const res = data as any;
+      if (error || !res?.valid) { toast.error(res?.error || "Invalid coupon code"); setCouponLoading(false); return; }
+      setAppliedCoupon({ id: res.id, code: res.code, discount_type: res.discount_type, discount_value: res.discount_value, max_discount_amount: res.max_discount_amount, discountAmount: res.discount_amount });
+      toast.success(`Coupon applied! You save ${fc(res.discount_amount)}`);
     } catch { toast.error("Failed to apply coupon"); }
     setCouponLoading(false);
   };
