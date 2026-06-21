@@ -52,7 +52,13 @@ const AdminBrandSettings = () => {
   useEffect(() => {
     const fetch = async () => {
       const { data } = await supabase.from("brand_settings").select("*").limit(1).maybeSingle();
-      if (data) setSettings(data as unknown as BrandSettings);
+      const { data: tax } = await supabase.from("tax_settings" as any).select("gst_number").limit(1).maybeSingle();
+      if (data) {
+        setSettings({
+          ...(data as any),
+          gst_number: (tax as any)?.gst_number || "",
+        } as BrandSettings);
+      }
       setLoading(false);
     };
     fetch();
@@ -60,12 +66,21 @@ const AdminBrandSettings = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    const { id, ...rest } = settings;
+    const { id, gst_number, ...rest } = settings;
     const { error } = await supabase.from("brand_settings").update(rest as any).eq("id", id);
-    if (error) toast.error("Failed to save");
+    // Upsert GST into private tax_settings (admin-only)
+    const { data: existingTax } = await supabase.from("tax_settings" as any).select("id").limit(1).maybeSingle();
+    let taxError: any = null;
+    if (existingTax && (existingTax as any).id) {
+      ({ error: taxError } = await supabase.from("tax_settings" as any).update({ gst_number, updated_at: new Date().toISOString() } as any).eq("id", (existingTax as any).id));
+    } else {
+      ({ error: taxError } = await supabase.from("tax_settings" as any).insert({ gst_number } as any));
+    }
+    if (error || taxError) toast.error("Failed to save");
     else toast.success("Brand settings saved! Refresh the site to see changes.");
     setSaving(false);
   };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo_url' | 'favicon_url' | 'footer_logo_url' | 'og_image_url') => {
     const file = e.target.files?.[0];
