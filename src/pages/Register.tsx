@@ -191,6 +191,21 @@ const Register = () => {
             </div>
 
             <div>
+              <Label htmlFor="phone" className="text-foreground text-sm font-medium">Mobile Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                required
+                maxLength={10}
+                className="mt-1.5 h-11 bg-background border-border"
+                placeholder="10-digit mobile number"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="password" className="text-foreground text-sm font-medium">Password</Label>
               <div className="relative mt-1.5">
                 <Input
