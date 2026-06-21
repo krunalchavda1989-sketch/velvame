@@ -111,7 +111,7 @@ function buildEmailHtml(
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <!-- Header -->
         <tr><td style="background:#1a1a2e;padding:24px 32px;text-align:center;">
-          <h1 style="margin:0;color:#D4AF37;font-size:22px;font-weight:bold;">${brandName}</h1>
+          <h1 style="margin:0;color:#D4AF37;font-size:22px;font-weight:bold;">${e(brandName)}</h1>
         </td></tr>
         <!-- Status Badge -->
         <tr><td style="padding:24px 32px 0;text-align:center;">
@@ -121,7 +121,7 @@ function buildEmailHtml(
         </td></tr>
         <!-- Message -->
         <tr><td style="padding:20px 32px;">
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 6px;">Hi ${customerName},</p>
+          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 6px;">Hi ${e(customerName)},</p>
           <p style="font-size:14px;color:#555;line-height:1.7;margin:0;">${messageMap[type]}</p>
         </td></tr>
         <!-- Order Summary -->
@@ -135,7 +135,7 @@ function buildEmailHtml(
             ${itemRows}
             <tr style="background:#f9f9f9;">
               <td colspan="2" style="padding:10px 12px;font-size:14px;font-weight:bold;color:#333;">Total</td>
-              <td style="padding:10px 12px;font-size:14px;font-weight:bold;color:#D4AF37;text-align:right;">${total}</td>
+              <td style="padding:10px 12px;font-size:14px;font-weight:bold;color:#D4AF37;text-align:right;">${e(total)}</td>
             </tr>
           </table>
         </td></tr>
@@ -144,21 +144,21 @@ function buildEmailHtml(
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="font-size:12px;color:#888;">Order Number</td>
-              <td style="font-size:13px;color:#333;text-align:right;font-weight:600;">#${orderNumber}</td>
+              <td style="font-size:13px;color:#333;text-align:right;font-weight:600;">#${onum}</td>
             </tr>
             <tr>
               <td style="font-size:12px;color:#888;padding-top:6px;">Order Date</td>
-              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${orderDate}</td>
+              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${e(orderDate)}</td>
             </tr>
             <tr>
               <td style="font-size:12px;color:#888;padding-top:6px;">Payment Method</td>
-              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${order.payment_method || "Online"}</td>
+              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${e(order.payment_method || "Online")}</td>
             </tr>
           </table>
         </td></tr>
         <!-- Footer -->
         <tr><td style="background:#f9f9f9;padding:16px 32px;text-align:center;">
-          <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${brandName}!</p>
+          <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${e(brandName)}!</p>
           <p style="font-size:11px;color:#bbb;margin:4px 0 0;">This is an automated email. Please do not reply.</p>
         </td></tr>
       </table>
