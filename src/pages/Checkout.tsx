@@ -802,11 +802,11 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between pt-4">
-                    <Button variant="ghost" className="text-gray-600 gap-2" onClick={() => setStep("shipping")}>
+                  <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
+                    <Button variant="ghost" className="text-gray-600 gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("shipping")}>
                       <ArrowLeft className="h-4 w-4" /> Return to shipping
                     </Button>
-                    <Button onClick={handlePlaceOrder} disabled={processing} className="min-w-[160px]">
+                    <Button onClick={handlePlaceOrder} disabled={processing} className="w-full sm:w-auto sm:min-w-[160px]">
                       {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                       {isFullWalletPayment ? `Pay with Wallet` : `Pay ${fc(finalPrice)}`}
                     </Button>
