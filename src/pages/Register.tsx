@@ -23,9 +23,11 @@ const Register = () => {
   const [cooldown, setCooldown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
   const [referralWarning, setReferralWarning] = useState("");
+  const [referralLocked, setReferralLocked] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
+    phone: "",
     password: "",
     referralCode: searchParams.get("ref") || "",
   });
