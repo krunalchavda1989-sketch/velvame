@@ -3657,6 +3657,22 @@ export type Database = {
         Args: { _profile_id: string; _viewer_user_id: string }
         Returns: boolean
       }
+      list_public_coupons: {
+        Args: never
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          end_date: string
+          id: string
+          max_discount_amount: number
+          min_order_amount: number
+        }[]
+      }
+      validate_coupon: {
+        Args: { _code: string; _order_amount: number }
+        Returns: Json
+      }
       validate_referral_code: { Args: { _code: string }; Returns: boolean }
       validate_referral_with_subscription: {
         Args: { _code: string }
