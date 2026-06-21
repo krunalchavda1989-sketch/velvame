@@ -474,8 +474,8 @@ const Checkout = () => {
                   ) : (
                     <div className="space-y-3">
                       {checkoutProducts.map((p) => (
-                        <div key={p.id} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-secondary/30">
-                          <div className="w-16 h-16 rounded-lg border border-border bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+                        <div key={p.id} className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-border bg-secondary/30">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg border border-border bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
                             {p.image_url?.startsWith("http") ? (
                               <img src={p.image_url} alt={p.name} className="w-full h-full object-cover rounded-lg" />
                             ) : (
@@ -483,43 +483,51 @@ const Checkout = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                            <p className="text-sm text-primary font-semibold">{fc(getCheckoutPrice(p))}</p>
-                          </div>
-                          {!isBuyNow && (
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8"
-                                onClick={() => updateQty(p.id, -1)}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-8 text-center text-sm font-medium text-foreground">{p.qty}</span>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                className="h-8 w-8"
-                                onClick={() => updateQty(p.id, 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground line-clamp-2">{p.name}</p>
+                                <p className="text-sm text-primary font-semibold mt-0.5">{fc(getCheckoutPrice(p))}</p>
+                              </div>
+                              {!isBuyNow && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 shrink-0 text-destructive hover:text-destructive -mt-1 -mr-1"
+                                  onClick={() => removeItem(p.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
-                          )}
-                          <p className="text-sm font-semibold text-foreground shrink-0 w-20 text-right">
-                            {fc(getCheckoutPrice(p) * p.qty)}
-                          </p>
-                          {!isBuyNow && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => removeItem(p.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
+                            <div className="flex items-center justify-between gap-2 mt-2">
+                              {!isBuyNow ? (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8"
+                                    onClick={() => updateQty(p.id, -1)}
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="w-8 text-center text-sm font-medium text-foreground">{p.qty}</span>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8"
+                                    onClick={() => updateQty(p.id, 1)}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Qty: {p.qty}</span>
+                              )}
+                              <p className="text-sm font-semibold text-foreground text-right">
+                                {fc(getCheckoutPrice(p) * p.qty)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
