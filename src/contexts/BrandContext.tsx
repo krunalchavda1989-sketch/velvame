@@ -153,7 +153,7 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
             email: d.email || "",
             phone: d.phone || "",
             address: d.address || "",
-            gst_number: d.gst_number || "",
+            gst_number: "",
             website: d.website || "",
             brand_color: d.brand_color || defaultBrand.brand_color,
             button_color: d.button_color || defaultBrand.button_color,
@@ -166,9 +166,22 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
           };
           setBrand(b);
           applyBrandTheme(b);
+
+          // GST is private (authenticated users only) — fetch separately, silently fail for anon
+          supabase
+            .from("tax_settings" as any)
+            .select("gst_number")
+            .limit(1)
+            .maybeSingle()
+            .then(({ data: tax }) => {
+              if (tax && (tax as any).gst_number) {
+                setBrand((prev) => ({ ...prev, gst_number: (tax as any).gst_number }));
+              }
+            });
         }
       });
   }, []);
+
 
   return (
     <BrandContext.Provider value={brand}>{children}</BrandContext.Provider>
