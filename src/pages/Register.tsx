@@ -23,9 +23,11 @@ const Register = () => {
   const [cooldown, setCooldown] = useState(0);
   const [resendCount, setResendCount] = useState(0);
   const [referralWarning, setReferralWarning] = useState("");
+  const [referralLocked, setReferralLocked] = useState(false);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
+    phone: "",
     password: "",
     referralCode: searchParams.get("ref") || "",
   });
@@ -44,6 +46,9 @@ const Register = () => {
           setReferralWarning("This referral code is invalid. You can register without a referral code.");
         }
         setForm((prev) => ({ ...prev, referralCode: "" }));
+        setReferralLocked(false);
+      } else {
+        setReferralLocked(true);
       }
     };
     validateRef();
@@ -62,6 +67,7 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^[6-9]\d{9}$/.test(form.phone.trim())) { toast.error("Enter a valid 10-digit mobile number"); return; }
     if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
@@ -83,7 +89,7 @@ const Register = () => {
         email: form.email,
         password: form.password,
         options: {
-          data: { full_name: form.fullName, referral_code: form.referralCode },
+          data: { full_name: form.fullName, referral_code: form.referralCode, phone: form.phone.trim() },
           emailRedirectTo: window.location.origin,
         },
       });
@@ -185,6 +191,21 @@ const Register = () => {
             </div>
 
             <div>
+              <Label htmlFor="phone" className="text-foreground text-sm font-medium">Mobile Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                required
+                maxLength={10}
+                className="mt-1.5 h-11 bg-background border-border"
+                placeholder="10-digit mobile number"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="password" className="text-foreground text-sm font-medium">Password</Label>
               <div className="relative mt-1.5">
                 <Input
@@ -212,13 +233,18 @@ const Register = () => {
               <Input
                 id="referral"
                 value={form.referralCode}
+                readOnly={referralLocked}
                 onChange={(e) => {
+                  if (referralLocked) return;
                   setForm({ ...form, referralCode: e.target.value });
                   if (referralWarning) setReferralWarning("");
                 }}
-                className="mt-1.5 h-11 bg-background border-border"
+                className={`mt-1.5 h-11 border-border ${referralLocked ? "bg-muted cursor-not-allowed text-muted-foreground" : "bg-background"}`}
                 placeholder="e.g. NXM1A2B3C"
               />
+              {referralLocked && (
+                <p className="text-xs text-muted-foreground mt-1">Referral code applied from your invite link.</p>
+              )}
             </div>
 
             <Button
