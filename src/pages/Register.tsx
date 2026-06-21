@@ -46,6 +46,9 @@ const Register = () => {
           setReferralWarning("This referral code is invalid. You can register without a referral code.");
         }
         setForm((prev) => ({ ...prev, referralCode: "" }));
+        setReferralLocked(false);
+      } else {
+        setReferralLocked(true);
       }
     };
     validateRef();
