@@ -59,13 +59,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Fetch all active products once
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("active", true)
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: false });
-      setProducts((data as Product[]) || []);
+      // Use safe RPC: hides distributor pricing from non-members / anonymous users
+      const { data } = await supabase.rpc("get_public_products");
+      const sorted = ((data as Product[]) || []).sort((a: any, b: any) => {
+        const so = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+        if (so !== 0) return so;
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      setProducts(sorted);
     };
     fetchProducts();
   }, []);
