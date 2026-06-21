@@ -39,6 +39,21 @@ function buildEmailHtml(
   brandName: string,
   tracking?: { number?: string; url?: string }
 ): string {
+  const e = (val: unknown): string => {
+    if (val === null || val === undefined) return "";
+    return String(val)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  };
+  const safeUrl = (url: unknown): string | null => {
+    if (!url) return null;
+    const s = String(url).trim();
+    return /^https:\/\//i.test(s) ? s : null;
+  };
+
   const orderNumber = order.order_number || order.id.slice(0, 8).toUpperCase();
   const total = `₹${Number(order.total_amount).toLocaleString("en-IN")}`;
   const customerName = profile?.full_name || "Customer";
@@ -51,19 +66,22 @@ function buildEmailHtml(
     const qty = item.quantity;
     const price = `₹${Number(item.price).toLocaleString("en-IN")}`;
     return `<tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${name}${item.variation_label ? ` (${item.variation_label})` : ""}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:center;">${qty}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:right;">${price}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${e(name)}${item.variation_label ? ` (${e(item.variation_label)})` : ""}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:center;">${e(qty)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:right;">${e(price)}</td>
     </tr>`;
   }).join("");
 
+  const trackUrl = safeUrl(tracking?.url);
+  const trackNum = tracking?.number ? e(tracking.number) : "";
+  const onum = e(orderNumber);
   const messageMap: Record<EmailType, string> = {
-    order_success: `Thank you for your order! Your order <strong>#${orderNumber}</strong> has been placed successfully and is being processed.`,
-    order_failed: `Unfortunately, the payment for your order <strong>#${orderNumber}</strong> could not be completed. The order has been cancelled. Please try again or contact support.`,
-    order_confirmed: `Great news! Your order <strong>#${orderNumber}</strong> has been confirmed and is being prepared for shipment.`,
-    order_shipped: `Your order <strong>#${orderNumber}</strong> has been shipped!${tracking?.number ? ` Your tracking number is <strong>${tracking.number}</strong>.` : ""}${tracking?.url ? ` <a href="${tracking.url}" style="color:#D4AF37;">Track your shipment here</a>.` : ""}`,
-    order_delivered: `Your order <strong>#${orderNumber}</strong> has been delivered successfully. We hope you enjoy your purchase!`,
-    order_cancelled: `Your order <strong>#${orderNumber}</strong> has been cancelled. If you have any questions, please contact our support team.`,
+    order_success: `Thank you for your order! Your order <strong>#${onum}</strong> has been placed successfully and is being processed.`,
+    order_failed: `Unfortunately, the payment for your order <strong>#${onum}</strong> could not be completed. The order has been cancelled. Please try again or contact support.`,
+    order_confirmed: `Great news! Your order <strong>#${onum}</strong> has been confirmed and is being prepared for shipment.`,
+    order_shipped: `Your order <strong>#${onum}</strong> has been shipped!${trackNum ? ` Your tracking number is <strong>${trackNum}</strong>.` : ""}${trackUrl ? ` <a href="${e(trackUrl)}" style="color:#D4AF37;">Track your shipment here</a>.` : ""}`,
+    order_delivered: `Your order <strong>#${onum}</strong> has been delivered successfully. We hope you enjoy your purchase!`,
+    order_cancelled: `Your order <strong>#${onum}</strong> has been cancelled. If you have any questions, please contact our support team.`,
   };
 
   const statusColorMap: Record<EmailType, string> = {
@@ -93,7 +111,7 @@ function buildEmailHtml(
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <!-- Header -->
         <tr><td style="background:#1a1a2e;padding:24px 32px;text-align:center;">
-          <h1 style="margin:0;color:#D4AF37;font-size:22px;font-weight:bold;">${brandName}</h1>
+          <h1 style="margin:0;color:#D4AF37;font-size:22px;font-weight:bold;">${e(brandName)}</h1>
         </td></tr>
         <!-- Status Badge -->
         <tr><td style="padding:24px 32px 0;text-align:center;">
@@ -103,7 +121,7 @@ function buildEmailHtml(
         </td></tr>
         <!-- Message -->
         <tr><td style="padding:20px 32px;">
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 6px;">Hi ${customerName},</p>
+          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 6px;">Hi ${e(customerName)},</p>
           <p style="font-size:14px;color:#555;line-height:1.7;margin:0;">${messageMap[type]}</p>
         </td></tr>
         <!-- Order Summary -->
@@ -117,7 +135,7 @@ function buildEmailHtml(
             ${itemRows}
             <tr style="background:#f9f9f9;">
               <td colspan="2" style="padding:10px 12px;font-size:14px;font-weight:bold;color:#333;">Total</td>
-              <td style="padding:10px 12px;font-size:14px;font-weight:bold;color:#D4AF37;text-align:right;">${total}</td>
+              <td style="padding:10px 12px;font-size:14px;font-weight:bold;color:#D4AF37;text-align:right;">${e(total)}</td>
             </tr>
           </table>
         </td></tr>
@@ -126,21 +144,21 @@ function buildEmailHtml(
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="font-size:12px;color:#888;">Order Number</td>
-              <td style="font-size:13px;color:#333;text-align:right;font-weight:600;">#${orderNumber}</td>
+              <td style="font-size:13px;color:#333;text-align:right;font-weight:600;">#${onum}</td>
             </tr>
             <tr>
               <td style="font-size:12px;color:#888;padding-top:6px;">Order Date</td>
-              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${orderDate}</td>
+              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${e(orderDate)}</td>
             </tr>
             <tr>
               <td style="font-size:12px;color:#888;padding-top:6px;">Payment Method</td>
-              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${order.payment_method || "Online"}</td>
+              <td style="font-size:13px;color:#333;text-align:right;padding-top:6px;">${e(order.payment_method || "Online")}</td>
             </tr>
           </table>
         </td></tr>
         <!-- Footer -->
         <tr><td style="background:#f9f9f9;padding:16px 32px;text-align:center;">
-          <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${brandName}!</p>
+          <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${e(brandName)}!</p>
           <p style="font-size:11px;color:#bbb;margin:4px 0 0;">This is an automated email. Please do not reply.</p>
         </td></tr>
       </table>
