@@ -39,6 +39,21 @@ function buildEmailHtml(
   brandName: string,
   tracking?: { number?: string; url?: string }
 ): string {
+  const e = (val: unknown): string => {
+    if (val === null || val === undefined) return "";
+    return String(val)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  };
+  const safeUrl = (url: unknown): string | null => {
+    if (!url) return null;
+    const s = String(url).trim();
+    return /^https:\/\//i.test(s) ? s : null;
+  };
+
   const orderNumber = order.order_number || order.id.slice(0, 8).toUpperCase();
   const total = `₹${Number(order.total_amount).toLocaleString("en-IN")}`;
   const customerName = profile?.full_name || "Customer";
@@ -51,19 +66,22 @@ function buildEmailHtml(
     const qty = item.quantity;
     const price = `₹${Number(item.price).toLocaleString("en-IN")}`;
     return `<tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${name}${item.variation_label ? ` (${item.variation_label})` : ""}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:center;">${qty}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:right;">${price}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${e(name)}${item.variation_label ? ` (${e(item.variation_label)})` : ""}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:center;">${e(qty)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;text-align:right;">${e(price)}</td>
     </tr>`;
   }).join("");
 
+  const trackUrl = safeUrl(tracking?.url);
+  const trackNum = tracking?.number ? e(tracking.number) : "";
+  const onum = e(orderNumber);
   const messageMap: Record<EmailType, string> = {
-    order_success: `Thank you for your order! Your order <strong>#${orderNumber}</strong> has been placed successfully and is being processed.`,
-    order_failed: `Unfortunately, the payment for your order <strong>#${orderNumber}</strong> could not be completed. The order has been cancelled. Please try again or contact support.`,
-    order_confirmed: `Great news! Your order <strong>#${orderNumber}</strong> has been confirmed and is being prepared for shipment.`,
-    order_shipped: `Your order <strong>#${orderNumber}</strong> has been shipped!${tracking?.number ? ` Your tracking number is <strong>${tracking.number}</strong>.` : ""}${tracking?.url ? ` <a href="${tracking.url}" style="color:#D4AF37;">Track your shipment here</a>.` : ""}`,
-    order_delivered: `Your order <strong>#${orderNumber}</strong> has been delivered successfully. We hope you enjoy your purchase!`,
-    order_cancelled: `Your order <strong>#${orderNumber}</strong> has been cancelled. If you have any questions, please contact our support team.`,
+    order_success: `Thank you for your order! Your order <strong>#${onum}</strong> has been placed successfully and is being processed.`,
+    order_failed: `Unfortunately, the payment for your order <strong>#${onum}</strong> could not be completed. The order has been cancelled. Please try again or contact support.`,
+    order_confirmed: `Great news! Your order <strong>#${onum}</strong> has been confirmed and is being prepared for shipment.`,
+    order_shipped: `Your order <strong>#${onum}</strong> has been shipped!${trackNum ? ` Your tracking number is <strong>${trackNum}</strong>.` : ""}${trackUrl ? ` <a href="${e(trackUrl)}" style="color:#D4AF37;">Track your shipment here</a>.` : ""}`,
+    order_delivered: `Your order <strong>#${onum}</strong> has been delivered successfully. We hope you enjoy your purchase!`,
+    order_cancelled: `Your order <strong>#${onum}</strong> has been cancelled. If you have any questions, please contact our support team.`,
   };
 
   const statusColorMap: Record<EmailType, string> = {
