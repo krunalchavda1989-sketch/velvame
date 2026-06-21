@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can view order number settings" ON public.order_number_settings;
