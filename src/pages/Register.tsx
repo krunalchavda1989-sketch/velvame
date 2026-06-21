@@ -233,13 +233,18 @@ const Register = () => {
               <Input
                 id="referral"
                 value={form.referralCode}
+                readOnly={referralLocked}
                 onChange={(e) => {
+                  if (referralLocked) return;
                   setForm({ ...form, referralCode: e.target.value });
                   if (referralWarning) setReferralWarning("");
                 }}
-                className="mt-1.5 h-11 bg-background border-border"
+                className={`mt-1.5 h-11 border-border ${referralLocked ? "bg-muted cursor-not-allowed text-muted-foreground" : "bg-background"}`}
                 placeholder="e.g. NXM1A2B3C"
               />
+              {referralLocked && (
+                <p className="text-xs text-muted-foreground mt-1">Referral code applied from your invite link.</p>
+              )}
             </div>
 
             <Button
