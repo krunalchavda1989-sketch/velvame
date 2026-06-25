@@ -28,6 +28,9 @@ interface OrderDetailData {
   razorpay_amount?: number;
   is_first_order?: boolean;
   price_type_used?: string;
+  delivery_method?: string | null;
+  pickup_location_id?: string | null;
+  shipping_charge?: number | null;
 }
 
 interface OrderItemData {
@@ -77,6 +80,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const [items, setItems] = useState<OrderItemData[]>([]);
   const [payment, setPayment] = useState<PaymentData | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [pickupLoc, setPickupLoc] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   const { handlePrint } = useInvoicePrint({
@@ -129,6 +133,10 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       );
       setPayment(paymentRes.data?.[0] || null);
       if (profileRes.data) setProfile(profileRes.data as ProfileData);
+      if ((orderData as any).pickup_location_id) {
+        const { data: loc } = await supabase.from("pickup_locations" as any).select("*").eq("id", (orderData as any).pickup_location_id).maybeSingle();
+        if (loc) setPickupLoc(loc as any);
+      }
       setLoading(false);
     };
     fetchOrder();
