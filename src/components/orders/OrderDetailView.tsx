@@ -413,16 +413,36 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
           <div className="rounded-xl bg-card border border-border overflow-hidden">
             <div className="px-5 py-3 border-b border-border bg-secondary/30">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                Shipping
+                {(order as any).delivery_method === "pickup" ? <MapPin className="h-4 w-4 text-muted-foreground" /> : <Truck className="h-4 w-4 text-muted-foreground" />}
+                {(order as any).delivery_method === "pickup" ? "Self Pickup" : "Shipping"}
               </h2>
             </div>
             <div className="p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Method</span>
-                <span className="text-foreground capitalize">{order.shipping_method || "Free"}</span>
+                <span className="text-foreground capitalize">
+                  {(order as any).delivery_method === "pickup" ? "Self Pickup" : "Courier Delivery"}
+                </span>
               </div>
-              {shippingAddr.name || shippingAddr.line1 || shippingAddr.city ? (
+              {(order as any).shipping_charge !== null && (order as any).shipping_charge !== undefined && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping Charge</span>
+                  <span className="text-foreground">{Number((order as any).shipping_charge) === 0 ? "Free" : formatCurrency(Number((order as any).shipping_charge))}</span>
+                </div>
+              )}
+
+              {(order as any).delivery_method === "pickup" && pickupLoc && (
+                <div className="text-sm text-foreground space-y-0.5 pt-2 border-t border-border mt-2">
+                  <p className="font-medium">{pickupLoc.name}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {pickupLoc.address_line1}{pickupLoc.address_line2 ? `, ${pickupLoc.address_line2}` : ""}, {pickupLoc.city}{pickupLoc.state ? `, ${pickupLoc.state}` : ""}{pickupLoc.pincode ? ` – ${pickupLoc.pincode}` : ""}
+                  </p>
+                  {pickupLoc.phone && <p className="text-muted-foreground text-xs">📞 {pickupLoc.phone}</p>}
+                  {pickupLoc.hours && <p className="text-muted-foreground text-xs">🕒 {pickupLoc.hours}</p>}
+                </div>
+              )}
+
+              {(order as any).delivery_method !== "pickup" && (shippingAddr.name || shippingAddr.line1 || shippingAddr.city) ? (
                 <div className="text-sm text-foreground space-y-0.5 pt-1 border-t border-border mt-2">
                   {shippingAddr.name && <p className="font-medium">{shippingAddr.name}</p>}
                   {(shippingAddr.line1 || shippingAddr.address) && <p className="text-muted-foreground text-xs">{shippingAddr.line1 || shippingAddr.address}</p>}
@@ -434,9 +454,9 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
                   )}
                   {shippingAddr.phone && <p className="text-muted-foreground text-xs">📞 {shippingAddr.phone}</p>}
                 </div>
-              ) : (
+              ) : (order as any).delivery_method !== "pickup" ? (
                 <p className="text-xs text-muted-foreground">No shipping address provided</p>
-              )}
+              ) : null}
             </div>
           </div>
 
