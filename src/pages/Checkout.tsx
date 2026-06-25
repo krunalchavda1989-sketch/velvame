@@ -124,7 +124,21 @@ const Checkout = () => {
     ? `Self Pickup${pickupLocations.find(l => l.id === selectedPickupId)?.name ? ` — ${pickupLocations.find(l => l.id === selectedPickupId)?.name}` : ""}`
     : (freeShippingEligible && shipSettings?.courier_enabled ? "Free Courier Delivery" : "Courier Delivery");
 
+  useEffect(() => {
+    if (!user) { navigate("/login"); return; }
+    if (!isBuyNow && cartProducts.length === 0) { navigate("/shop"); return; }
 
+    // Fetch shipping settings & pickup locations
+    supabase.from("shipping_settings" as any).select("*").maybeSingle().then(({ data }) => {
+      const s: any = data || { courier_enabled: true, pickup_enabled: false, courier_charge: 0, free_courier_above: null, pickup_charge: 0 };
+      setShipSettings(s);
+      if (!s.courier_enabled && s.pickup_enabled) setDeliveryMethod("pickup");
+    });
+    supabase.from("pickup_locations" as any).select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      const locs = (data as any[]) || [];
+      setPickupLocations(locs);
+      if (locs.length > 0) setSelectedPickupId(locs[0].id);
+    });
 
     // Fetch enabled payment gateways from admin settings
     supabase.from("pages_content").select("content").eq("page_slug", "payment-gateway-settings").maybeSingle().then(({ data }) => {
