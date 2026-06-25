@@ -218,8 +218,7 @@ const Checkout = () => {
 
   const removeCoupon = () => { setAppliedCoupon(null); setCouponCode(""); };
 
-  const activeShipping = availableShippingMethods.find((m) => m.key === selectedShipping);
-  const shippingCost = activeShipping?.cost || 0;
+  // shippingCost already computed above based on deliveryMethod
   const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, checkoutTotal) : 0;
   const afterCoupon = Math.max(0, checkoutTotal - discountAmount);
   const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
@@ -250,6 +249,12 @@ const Checkout = () => {
       return;
     }
 
+    if (deliveryMethod === "pickup" && !selectedPickupId) {
+      toast.error("Please select a pickup location");
+      setStep("shipping");
+      return;
+    }
+
     if (!isFullWalletPayment && !selectedPaymentMethod && paymentGateways.length > 0) {
       toast.error("Please select a payment method");
       return;
@@ -263,7 +268,11 @@ const Checkout = () => {
     try {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
-        shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
+        shipping_method: deliveryMethod === "pickup" ? `pickup:${pickupLocations.find(l => l.id === selectedPickupId)?.name || "Self Pickup"}` : "courier",
+        delivery_method: deliveryMethod,
+        pickup_location_id: deliveryMethod === "pickup" ? selectedPickupId : null,
+        shipping_charge: shippingCost,
+        payment_method: paymentMethod, status: "pending",
         wallet_amount_used: walletDeduction,
         razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
         is_first_order: isFirstOrder,
