@@ -95,6 +95,8 @@ import AdminReels from "./pages/admin/AdminReels";
 import AdminPopups from "./pages/admin/AdminPopups";
 import AdminStorageMonitor from "./pages/admin/AdminStorageMonitor";
 import AdminCommissionReprocessLog from "./pages/admin/AdminCommissionReprocessLog";
+import AdminPickupLocations from "./pages/admin/AdminPickupLocations";
+import AdminShippingSettings from "./pages/admin/AdminShippingSettings";
 import PopupEngine from "./components/PopupEngine";
 
 const queryClient = new QueryClient();
@@ -284,6 +286,8 @@ const App = () => (
             <Route path="/admin/commission-reprocess-log" element={<AdminRoute><AdminCommissionReprocessLog /></AdminRoute>} />
             <Route path="/admin/profile" element={<AdminRoute><AdminProfile /></AdminRoute>} />
             <Route path="/admin/seo" element={<AdminRoute><AdminSEOManager /></AdminRoute>} />
+            <Route path="/admin/pickup-locations" element={<AdminRoute><AdminPickupLocations /></AdminRoute>} />
+            <Route path="/admin/shipping-settings" element={<AdminRoute><AdminShippingSettings /></AdminRoute>} />
             <Route path="/:slug" element={<DynamicPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -11,7 +11,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server, History, Search
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server, History, Search, MapPin, Truck
 } from "lucide-react";
 
 interface MenuItem {
@@ -60,6 +60,8 @@ const menuItems: MenuItem[] = [
     children: [
       { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
       { icon: ShoppingBag, label: "Manual Order", href: "/admin/manual-order" },
+      { icon: MapPin, label: "Pickup Locations", href: "/admin/pickup-locations" },
+      { icon: Truck, label: "Shipping & Delivery", href: "/admin/shipping-settings" },
     ],
   },
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },

@@ -109,48 +109,35 @@ const Checkout = () => {
   const [commissionBalance, setCommissionBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
 
-  // Shipping
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [selectedShipping, setSelectedShipping] = useState<string>("");
-  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
+  // Delivery / Shipping
+  const [deliveryMethod, setDeliveryMethod] = useState<"courier" | "pickup">("courier");
+  const [shipSettings, setShipSettings] = useState<any>(null);
+  const [pickupLocations, setPickupLocations] = useState<any[]>([]);
+  const [selectedPickupId, setSelectedPickupId] = useState<string>("");
 
+  const freeShippingMinAmount = shipSettings?.free_courier_above ? Number(shipSettings.free_courier_above) : 0;
   const freeShippingEligible = freeShippingMinAmount <= 0 || checkoutTotal >= freeShippingMinAmount;
-
-  const availableShippingMethods = shippingMethods.filter((m) => {
-    if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) return false;
-    return true;
-  });
-
-  useEffect(() => {
-    if (freeShippingEligible && availableShippingMethods.find((m) => m.key === "free_shipping")) {
-      setSelectedShipping("free_shipping");
-    } else if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
-      setSelectedShipping(availableShippingMethods[0].key);
-    }
-  }, [freeShippingEligible, availableShippingMethods, selectedShipping]);
+  const courierCost = !shipSettings?.courier_enabled ? 0 : (freeShippingEligible ? 0 : Number(shipSettings?.courier_charge || 0));
+  const pickupCost = Number(shipSettings?.pickup_charge || 0);
+  const shippingCost = deliveryMethod === "pickup" ? pickupCost : courierCost;
+  const activeShippingLabel = deliveryMethod === "pickup"
+    ? `Self Pickup${pickupLocations.find(l => l.id === selectedPickupId)?.name ? ` — ${pickupLocations.find(l => l.id === selectedPickupId)?.name}` : ""}`
+    : (freeShippingEligible && shipSettings?.courier_enabled ? "Free Courier Delivery" : "Courier Delivery");
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
     if (!isBuyNow && cartProducts.length === 0) { navigate("/shop"); return; }
 
-    // Fetch shipping methods
-    supabase.from("pages_content").select("content").eq("page_slug", "shipping-methods").maybeSingle().then(({ data }) => {
-      const methods: ShippingMethod[] = [];
-      let freeShipMinAmt = 0;
-      if (data?.content) {
-        const c = data.content as any;
-        if (c.free_shipping?.enabled) {
-          freeShipMinAmt = Number(c.free_shipping.min_amount) || 0;
-          methods.push({ key: "free_shipping", label: c.free_shipping.label || "Free Shipping", cost: 0 });
-        }
-        if (c.flat_rate?.enabled) {
-          methods.push({ key: "flat_rate", label: c.flat_rate.label || "Flat Rate", cost: Number(c.flat_rate.cost) || 0 });
-        }
-      }
-      if (methods.length === 0) methods.push({ key: "free_shipping", label: "Free Shipping", cost: 0 });
-      setFreeShippingMinAmount(freeShipMinAmt);
-      setShippingMethods(methods);
-      setSelectedShipping(methods[0]?.key || "");
+    // Fetch shipping settings & pickup locations
+    supabase.from("shipping_settings" as any).select("*").maybeSingle().then(({ data }) => {
+      const s: any = data || { courier_enabled: true, pickup_enabled: false, courier_charge: 0, free_courier_above: null, pickup_charge: 0 };
+      setShipSettings(s);
+      if (!s.courier_enabled && s.pickup_enabled) setDeliveryMethod("pickup");
+    });
+    supabase.from("pickup_locations" as any).select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      const locs = (data as any[]) || [];
+      setPickupLocations(locs);
+      if (locs.length > 0) setSelectedPickupId(locs[0].id);
     });
 
     // Fetch enabled payment gateways from admin settings
@@ -231,8 +218,7 @@ const Checkout = () => {
 
   const removeCoupon = () => { setAppliedCoupon(null); setCouponCode(""); };
 
-  const activeShipping = availableShippingMethods.find((m) => m.key === selectedShipping);
-  const shippingCost = activeShipping?.cost || 0;
+  // shippingCost already computed above based on deliveryMethod
   const discountAmount = appliedCoupon ? calculateDiscount(appliedCoupon, checkoutTotal) : 0;
   const afterCoupon = Math.max(0, checkoutTotal - discountAmount);
   const tax = taxAmount(afterCoupon, taxRate, taxEnabled);
@@ -263,6 +249,12 @@ const Checkout = () => {
       return;
     }
 
+    if (deliveryMethod === "pickup" && !selectedPickupId) {
+      toast.error("Please select a pickup location");
+      setStep("shipping");
+      return;
+    }
+
     if (!isFullWalletPayment && !selectedPaymentMethod && paymentGateways.length > 0) {
       toast.error("Please select a payment method");
       return;
@@ -276,7 +268,11 @@ const Checkout = () => {
     try {
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user!.id, total_amount: afterTax, shipping_address: shippingAddr as any,
-        shipping_method: selectedShipping, payment_method: paymentMethod, status: "pending",
+        shipping_method: deliveryMethod === "pickup" ? `pickup:${pickupLocations.find(l => l.id === selectedPickupId)?.name || "Self Pickup"}` : "courier",
+        delivery_method: deliveryMethod,
+        pickup_location_id: deliveryMethod === "pickup" ? selectedPickupId : null,
+        shipping_charge: shippingCost,
+        payment_method: paymentMethod, status: "pending",
         wallet_amount_used: walletDeduction,
         razorpay_amount: isFullWalletPayment ? 0 : finalPrice,
         is_first_order: isFirstOrder,
@@ -664,28 +660,68 @@ const Checkout = () => {
                     })()}
                   </div>
 
-                  {availableShippingMethods.length > 0 && (
-                    <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping} className="space-y-2">
-                      {availableShippingMethods.map((m) => (
-                        <label
-                          key={m.key}
-                          className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                            selectedShipping === m.key ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                  {/* Delivery method picker */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-900">Delivery Method</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {shipSettings?.courier_enabled && (
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryMethod("courier")}
+                          className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                            deliveryMethod === "courier" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
-                            <span className="text-sm font-medium text-gray-900">{m.label}</span>
+                          <Truck className="h-5 w-5 text-gray-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Courier Delivery</p>
+                            <p className="text-xs text-gray-500">{freeShippingEligible ? "Free" : fc(Number(shipSettings?.courier_charge || 0))}</p>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {m.cost === 0 ? "Free" : fc(m.cost)}
-                          </span>
-                        </label>
-                      ))}
-                    </RadioGroup>
+                        </button>
+                      )}
+                      {shipSettings?.pickup_enabled && pickupLocations.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryMethod("pickup")}
+                          className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                            deliveryMethod === "pickup" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <MapPin className="h-5 w-5 text-gray-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Self Pickup</p>
+                            <p className="text-xs text-gray-500">{pickupCost === 0 ? "Free" : fc(pickupCost)}</p>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {deliveryMethod === "pickup" && pickupLocations.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-900">Choose Pickup Location</p>
+                      <RadioGroup value={selectedPickupId} onValueChange={setSelectedPickupId} className="space-y-2">
+                        {pickupLocations.map((loc) => (
+                          <label
+                            key={loc.id}
+                            className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              selectedPickupId === loc.id ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <RadioGroupItem value={loc.id} id={`pickup-${loc.id}`} className="mt-1" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">{loc.name}</p>
+                              <p className="text-xs text-gray-600">{loc.address_line1}{loc.address_line2 ? `, ${loc.address_line2}` : ""}, {loc.city}{loc.state ? `, ${loc.state}` : ""}{loc.pincode ? ` – ${loc.pincode}` : ""}</p>
+                              {loc.phone && <p className="text-xs text-gray-500 mt-0.5">📞 {loc.phone}</p>}
+                              {loc.hours && <p className="text-xs text-gray-500">🕒 {loc.hours}</p>}
+                            </div>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   )}
 
-                  {freeShippingMinAmount > 0 && !freeShippingEligible && (
+                  {deliveryMethod === "courier" && freeShippingMinAmount > 0 && !freeShippingEligible && (
                     <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-amber-700">{fc(checkoutTotal)} / {fc(freeShippingMinAmount)}</span>
@@ -696,11 +732,12 @@ const Checkout = () => {
                       </div>
                     </div>
                   )}
-                  {freeShippingMinAmount > 0 && freeShippingEligible && (
+                  {deliveryMethod === "courier" && freeShippingMinAmount > 0 && freeShippingEligible && (
                     <p className="text-sm text-green-600 flex items-center gap-1.5">
                       <CheckCircle className="h-4 w-4" /> Free shipping unlocked!
                     </p>
                   )}
+
 
                   <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
                     <Button variant="ghost" className="text-gray-600 gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("information")}>
@@ -732,7 +769,7 @@ const Checkout = () => {
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Method: </span>
-                      <span className="text-gray-900">{activeShipping?.label} — {shippingCost === 0 ? "Free" : fc(shippingCost)}</span>
+                      <span className="text-gray-900">{activeShippingLabel} — {shippingCost === 0 ? "Free" : fc(shippingCost)}</span>
                     </div>
                   </div>
 

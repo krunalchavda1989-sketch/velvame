@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Minus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins, Truck } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -67,6 +67,25 @@ const AdminManualOrder = () => {
   const [manualAddress, setManualAddress] = useState({
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
+
+  // Delivery method
+  const [deliveryMethod, setDeliveryMethod] = useState<"courier" | "pickup">("courier");
+  const [shipSettings, setShipSettings] = useState<any>(null);
+  const [pickupLocations, setPickupLocations] = useState<any[]>([]);
+  const [selectedPickupId, setSelectedPickupId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.from("shipping_settings" as any).select("*").maybeSingle().then(({ data }) => {
+      const s: any = data || { courier_enabled: true, pickup_enabled: false, courier_charge: 0, free_courier_above: null, pickup_charge: 0 };
+      setShipSettings(s);
+      if (!s.courier_enabled && s.pickup_enabled) setDeliveryMethod("pickup");
+    });
+    supabase.from("pickup_locations" as any).select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      const locs = (data as any[]) || [];
+      setPickupLocations(locs);
+      if (locs.length > 0) setSelectedPickupId(locs[0].id);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -207,7 +226,14 @@ const AdminManualOrder = () => {
       : Math.min(appliedCoupon.discount_value, afterAdminDiscount)
     : 0;
 
-  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount);
+  // Shipping cost based on delivery method
+  const freeCourierAbove = shipSettings?.free_courier_above ? Number(shipSettings.free_courier_above) : 0;
+  const courierFree = freeCourierAbove > 0 && subtotalAmount >= freeCourierAbove;
+  const shippingCharge = deliveryMethod === "pickup"
+    ? Number(shipSettings?.pickup_charge || 0)
+    : (shipSettings?.courier_enabled ? (courierFree ? 0 : Number(shipSettings?.courier_charge || 0)) : 0);
+
+  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount) + shippingCharge;
 
   // Wallet usage calculation
   const walletAmountToUse = useWallet && userWallet
@@ -310,6 +336,12 @@ const AdminManualOrder = () => {
       const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "free" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
 
+      if (deliveryMethod === "pickup" && !selectedPickupId) {
+        toast.error("Please select a pickup location");
+        setSubmitting(false);
+        return;
+      }
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -323,6 +355,10 @@ const AdminManualOrder = () => {
           is_first_order: isUserFirstOrder,
           is_repurchase: !isUserFirstOrder,
           order_source: "manual",
+          delivery_method: deliveryMethod,
+          pickup_location_id: deliveryMethod === "pickup" ? selectedPickupId : null,
+          shipping_charge: shippingCharge,
+          shipping_method: deliveryMethod === "pickup" ? `pickup:${pickupLocations.find(l => l.id === selectedPickupId)?.name || "Self Pickup"}` : "courier",
         } as any)
         .select()
         .single();
@@ -895,6 +931,68 @@ const AdminManualOrder = () => {
                     </Label>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Delivery Method */}
+          {selectedUserId && (shipSettings?.courier_enabled || shipSettings?.pickup_enabled) && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-foreground">Delivery Method</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {shipSettings?.courier_enabled && (
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("courier")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                      deliveryMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
+                    }`}
+                  >
+                    <Truck className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Courier Delivery</p>
+                      <p className="text-xs text-muted-foreground">{courierFree ? "Free" : `₹${Number(shipSettings?.courier_charge || 0).toFixed(2)}`}</p>
+                    </div>
+                  </button>
+                )}
+                {shipSettings?.pickup_enabled && pickupLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("pickup")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                      deliveryMethod === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
+                    }`}
+                  >
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Self Pickup</p>
+                      <p className="text-xs text-muted-foreground">{Number(shipSettings?.pickup_charge || 0) === 0 ? "Free" : `₹${Number(shipSettings.pickup_charge).toFixed(2)}`}</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+
+              {deliveryMethod === "pickup" && (
+                pickupLocations.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No active pickup locations. Add one under Pickup Locations.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Pickup Location</Label>
+                    <Select value={selectedPickupId} onValueChange={setSelectedPickupId}>
+                      <SelectTrigger className="bg-secondary border-border"><SelectValue placeholder="Select pickup location" /></SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {pickupLocations.map((loc) => (
+                          <SelectItem key={loc.id} value={loc.id}>
+                            {loc.name} — {loc.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )
               )}
             </div>
           )}
