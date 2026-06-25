@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Minus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingBag, RefreshCw, Wallet, Ticket, X, Check, MapPin, Percent, Lock, Search, Banknote, Building2, HandCoins, Truck } from "lucide-react";
 import CouponRecommendations from "@/components/shop/CouponRecommendations";
 
 interface OrderItem {
@@ -67,6 +67,25 @@ const AdminManualOrder = () => {
   const [manualAddress, setManualAddress] = useState({
     name: "", line1: "", line2: "", city: "", state: "", pincode: "", phone: "",
   });
+
+  // Delivery method
+  const [deliveryMethod, setDeliveryMethod] = useState<"courier" | "pickup">("courier");
+  const [shipSettings, setShipSettings] = useState<any>(null);
+  const [pickupLocations, setPickupLocations] = useState<any[]>([]);
+  const [selectedPickupId, setSelectedPickupId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.from("shipping_settings" as any).select("*").maybeSingle().then(({ data }) => {
+      const s: any = data || { courier_enabled: true, pickup_enabled: false, courier_charge: 0, free_courier_above: null, pickup_charge: 0 };
+      setShipSettings(s);
+      if (!s.courier_enabled && s.pickup_enabled) setDeliveryMethod("pickup");
+    });
+    supabase.from("pickup_locations" as any).select("*").eq("is_active", true).order("sort_order").then(({ data }) => {
+      const locs = (data as any[]) || [];
+      setPickupLocations(locs);
+      if (locs.length > 0) setSelectedPickupId(locs[0].id);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
