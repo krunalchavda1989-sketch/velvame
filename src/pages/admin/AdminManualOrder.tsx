@@ -336,6 +336,12 @@ const AdminManualOrder = () => {
       const isConfirmed = effectivePaymentMethod === "wallet" || effectivePaymentMethod === "free" || effectivePaymentMethod === "cod" || effectivePaymentMethod === "manual" || effectivePaymentMethod === "bank_transfer";
 
 
+      if (deliveryMethod === "pickup" && !selectedPickupId) {
+        toast.error("Please select a pickup location");
+        setSubmitting(false);
+        return;
+      }
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -349,6 +355,10 @@ const AdminManualOrder = () => {
           is_first_order: isUserFirstOrder,
           is_repurchase: !isUserFirstOrder,
           order_source: "manual",
+          delivery_method: deliveryMethod,
+          pickup_location_id: deliveryMethod === "pickup" ? selectedPickupId : null,
+          shipping_charge: shippingCharge,
+          shipping_method: deliveryMethod === "pickup" ? `pickup:${pickupLocations.find(l => l.id === selectedPickupId)?.name || "Self Pickup"}` : "courier",
         } as any)
         .select()
         .single();
