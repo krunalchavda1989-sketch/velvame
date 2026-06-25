@@ -660,28 +660,68 @@ const Checkout = () => {
                     })()}
                   </div>
 
-                  {availableShippingMethods.length > 0 && (
-                    <RadioGroup value={selectedShipping} onValueChange={setSelectedShipping} className="space-y-2">
-                      {availableShippingMethods.map((m) => (
-                        <label
-                          key={m.key}
-                          className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                            selectedShipping === m.key ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                  {/* Delivery method picker */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-900">Delivery Method</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {shipSettings?.courier_enabled && (
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryMethod("courier")}
+                          className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                            deliveryMethod === "courier" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <RadioGroupItem value={m.key} id={`ship-${m.key}`} />
-                            <span className="text-sm font-medium text-gray-900">{m.label}</span>
+                          <Truck className="h-5 w-5 text-gray-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Courier Delivery</p>
+                            <p className="text-xs text-gray-500">{freeShippingEligible ? "Free" : fc(Number(shipSettings?.courier_charge || 0))}</p>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {m.cost === 0 ? "Free" : fc(m.cost)}
-                          </span>
-                        </label>
-                      ))}
-                    </RadioGroup>
+                        </button>
+                      )}
+                      {shipSettings?.pickup_enabled && pickupLocations.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryMethod("pickup")}
+                          className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                            deliveryMethod === "pickup" ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <MapPin className="h-5 w-5 text-gray-500" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Self Pickup</p>
+                            <p className="text-xs text-gray-500">{pickupCost === 0 ? "Free" : fc(pickupCost)}</p>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {deliveryMethod === "pickup" && pickupLocations.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-900">Choose Pickup Location</p>
+                      <RadioGroup value={selectedPickupId} onValueChange={setSelectedPickupId} className="space-y-2">
+                        {pickupLocations.map((loc) => (
+                          <label
+                            key={loc.id}
+                            className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              selectedPickupId === loc.id ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <RadioGroupItem value={loc.id} id={`pickup-${loc.id}`} className="mt-1" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">{loc.name}</p>
+                              <p className="text-xs text-gray-600">{loc.address_line1}{loc.address_line2 ? `, ${loc.address_line2}` : ""}, {loc.city}{loc.state ? `, ${loc.state}` : ""}{loc.pincode ? ` – ${loc.pincode}` : ""}</p>
+                              {loc.phone && <p className="text-xs text-gray-500 mt-0.5">📞 {loc.phone}</p>}
+                              {loc.hours && <p className="text-xs text-gray-500">🕒 {loc.hours}</p>}
+                            </div>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   )}
 
-                  {freeShippingMinAmount > 0 && !freeShippingEligible && (
+                  {deliveryMethod === "courier" && freeShippingMinAmount > 0 && !freeShippingEligible && (
                     <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-amber-700">{fc(checkoutTotal)} / {fc(freeShippingMinAmount)}</span>
@@ -692,11 +732,12 @@ const Checkout = () => {
                       </div>
                     </div>
                   )}
-                  {freeShippingMinAmount > 0 && freeShippingEligible && (
+                  {deliveryMethod === "courier" && freeShippingMinAmount > 0 && freeShippingEligible && (
                     <p className="text-sm text-green-600 flex items-center gap-1.5">
                       <CheckCircle className="h-4 w-4" /> Free shipping unlocked!
                     </p>
                   )}
+
 
                   <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-between pt-4">
                     <Button variant="ghost" className="text-gray-600 gap-2 w-full sm:w-auto justify-center" onClick={() => setStep("information")}>
@@ -728,7 +769,7 @@ const Checkout = () => {
                     </div>
                     <div>
                       <span className="text-gray-500 text-xs">Method: </span>
-                      <span className="text-gray-900">{activeShipping?.label} — {shippingCost === 0 ? "Free" : fc(shippingCost)}</span>
+                      <span className="text-gray-900">{activeShippingLabel} — {shippingCost === 0 ? "Free" : fc(shippingCost)}</span>
                     </div>
                   </div>
 
