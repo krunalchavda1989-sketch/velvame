@@ -109,49 +109,22 @@ const Checkout = () => {
   const [commissionBalance, setCommissionBalance] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
 
-  // Shipping
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
-  const [selectedShipping, setSelectedShipping] = useState<string>("");
-  const [freeShippingMinAmount, setFreeShippingMinAmount] = useState(0);
+  // Delivery / Shipping
+  const [deliveryMethod, setDeliveryMethod] = useState<"courier" | "pickup">("courier");
+  const [shipSettings, setShipSettings] = useState<any>(null);
+  const [pickupLocations, setPickupLocations] = useState<any[]>([]);
+  const [selectedPickupId, setSelectedPickupId] = useState<string>("");
 
+  const freeShippingMinAmount = shipSettings?.free_courier_above ? Number(shipSettings.free_courier_above) : 0;
   const freeShippingEligible = freeShippingMinAmount <= 0 || checkoutTotal >= freeShippingMinAmount;
+  const courierCost = !shipSettings?.courier_enabled ? 0 : (freeShippingEligible ? 0 : Number(shipSettings?.courier_charge || 0));
+  const pickupCost = Number(shipSettings?.pickup_charge || 0);
+  const shippingCost = deliveryMethod === "pickup" ? pickupCost : courierCost;
+  const activeShippingLabel = deliveryMethod === "pickup"
+    ? `Self Pickup${pickupLocations.find(l => l.id === selectedPickupId)?.name ? ` — ${pickupLocations.find(l => l.id === selectedPickupId)?.name}` : ""}`
+    : (freeShippingEligible && shipSettings?.courier_enabled ? "Free Courier Delivery" : "Courier Delivery");
 
-  const availableShippingMethods = shippingMethods.filter((m) => {
-    if (m.key === "free_shipping" && freeShippingMinAmount > 0 && !freeShippingEligible) return false;
-    return true;
-  });
 
-  useEffect(() => {
-    if (freeShippingEligible && availableShippingMethods.find((m) => m.key === "free_shipping")) {
-      setSelectedShipping("free_shipping");
-    } else if (availableShippingMethods.length > 0 && !availableShippingMethods.find((m) => m.key === selectedShipping)) {
-      setSelectedShipping(availableShippingMethods[0].key);
-    }
-  }, [freeShippingEligible, availableShippingMethods, selectedShipping]);
-
-  useEffect(() => {
-    if (!user) { navigate("/login"); return; }
-    if (!isBuyNow && cartProducts.length === 0) { navigate("/shop"); return; }
-
-    // Fetch shipping methods
-    supabase.from("pages_content").select("content").eq("page_slug", "shipping-methods").maybeSingle().then(({ data }) => {
-      const methods: ShippingMethod[] = [];
-      let freeShipMinAmt = 0;
-      if (data?.content) {
-        const c = data.content as any;
-        if (c.free_shipping?.enabled) {
-          freeShipMinAmt = Number(c.free_shipping.min_amount) || 0;
-          methods.push({ key: "free_shipping", label: c.free_shipping.label || "Free Shipping", cost: 0 });
-        }
-        if (c.flat_rate?.enabled) {
-          methods.push({ key: "flat_rate", label: c.flat_rate.label || "Flat Rate", cost: Number(c.flat_rate.cost) || 0 });
-        }
-      }
-      if (methods.length === 0) methods.push({ key: "free_shipping", label: "Free Shipping", cost: 0 });
-      setFreeShippingMinAmount(freeShipMinAmt);
-      setShippingMethods(methods);
-      setSelectedShipping(methods[0]?.key || "");
-    });
 
     // Fetch enabled payment gateways from admin settings
     supabase.from("pages_content").select("content").eq("page_slug", "payment-gateway-settings").maybeSingle().then(({ data }) => {
