@@ -226,7 +226,14 @@ const AdminManualOrder = () => {
       : Math.min(appliedCoupon.discount_value, afterAdminDiscount)
     : 0;
 
-  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount);
+  // Shipping cost based on delivery method
+  const freeCourierAbove = shipSettings?.free_courier_above ? Number(shipSettings.free_courier_above) : 0;
+  const courierFree = freeCourierAbove > 0 && subtotalAmount >= freeCourierAbove;
+  const shippingCharge = deliveryMethod === "pickup"
+    ? Number(shipSettings?.pickup_charge || 0)
+    : (shipSettings?.courier_enabled ? (courierFree ? 0 : Number(shipSettings?.courier_charge || 0)) : 0);
+
+  const totalAmount = Math.max(0, afterAdminDiscount - couponDiscount) + shippingCharge;
 
   // Wallet usage calculation
   const walletAmountToUse = useWallet && userWallet
