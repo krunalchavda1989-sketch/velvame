@@ -1904,15 +1904,18 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          delivery_method: string
           id: string
           is_first_order: boolean | null
           is_repurchase: boolean
           order_number: string | null
           order_source: string
           payment_method: string | null
+          pickup_location_id: string | null
           price_type_used: string | null
           razorpay_amount: number
           shipping_address: Json | null
+          shipping_charge: number
           shipping_method: string | null
           status: string
           total_amount: number
@@ -1922,15 +1925,18 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          delivery_method?: string
           id?: string
           is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          pickup_location_id?: string | null
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
+          shipping_charge?: number
           shipping_method?: string | null
           status?: string
           total_amount?: number
@@ -1940,15 +1946,18 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          delivery_method?: string
           id?: string
           is_first_order?: boolean | null
           is_repurchase?: boolean
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          pickup_location_id?: string | null
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
+          shipping_charge?: number
           shipping_method?: string | null
           status?: string
           total_amount?: number
@@ -1956,7 +1965,15 @@ export type Database = {
           user_id?: string
           wallet_amount_used?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_pickup_location_id_fkey"
+            columns: ["pickup_location_id"]
+            isOneToOne: false
+            referencedRelation: "pickup_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pages_content: {
         Row: {
@@ -2078,6 +2095,54 @@ export type Database = {
           status?: string
           transaction_ref?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pickup_locations: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          created_at: string
+          hours: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          pincode: string | null
+          sort_order: number
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          created_at?: string
+          hours?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          pincode?: string | null
+          sort_order?: number
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          created_at?: string
+          hours?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          pincode?: string | null
+          sort_order?: number
+          state?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2868,6 +2933,39 @@ export type Database = {
           created_at?: string
           id?: string
           key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shipping_settings: {
+        Row: {
+          courier_charge: number
+          courier_enabled: boolean
+          created_at: string
+          free_courier_above: number | null
+          id: string
+          pickup_charge: number
+          pickup_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          courier_charge?: number
+          courier_enabled?: boolean
+          created_at?: string
+          free_courier_above?: number | null
+          id?: string
+          pickup_charge?: number
+          pickup_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          courier_charge?: number
+          courier_enabled?: boolean
+          created_at?: string
+          free_courier_above?: number | null
+          id?: string
+          pickup_charge?: number
+          pickup_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
