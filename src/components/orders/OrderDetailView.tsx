@@ -192,6 +192,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       setLoading(false);
     };
     fetchOrder();
+    loadPickupLogs();
   }, [orderId]);
 
   const formatCurrency = (val: number) =>
