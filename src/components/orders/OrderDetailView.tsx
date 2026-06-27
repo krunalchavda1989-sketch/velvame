@@ -347,6 +347,39 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
         </div>
       )}
 
+      {/* Pickup Verification Audit Log — admin only */}
+      {isAdmin && (order as any).delivery_method === "pickup" && pickupLogs.length > 0 && (
+        <div className="rounded-xl bg-card border border-border overflow-hidden mb-5">
+          <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground">Pickup Verification Log</h2>
+            <span className="text-xs text-muted-foreground ml-auto">{pickupLogs.length} attempt{pickupLogs.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {pickupLogs.map((log) => (
+              <div key={log.id} className="px-5 py-3 flex items-center gap-3 flex-wrap">
+                <Badge variant="outline" className={log.success ? "bg-green-500/10 text-green-700 border-green-500/30" : "bg-red-500/10 text-red-700 border-red-500/30"}>
+                  {log.success ? "Success" : "Failed"}
+                </Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">
+                    <span className="font-medium">{log.admin_name}</span>
+                    <span className="text-muted-foreground"> entered </span>
+                    <span className="font-mono">{log.code_entered || "—"}</span>
+                  </p>
+                  {!log.success && log.reason && (
+                    <p className="text-xs text-red-600 mt-0.5">{log.reason}</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{formatDate(log.created_at)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
+
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
