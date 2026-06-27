@@ -90,12 +90,13 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyCode, setVerifyCode] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [pickupLogs, setPickupLogs] = useState<Array<{ id: string; admin_id: string | null; admin_name: string; code_entered: string; success: boolean; reason: string | null; created_at: string }>>([]);
+  const [pickupLogs, setPickupLogs] = useState<Array<{ id: string; admin_id: string | null; admin_name: string; code_entered: string; success: boolean; reason: string | null; created_at: string; ip_address: string | null; user_agent: string | null }>>([]);
+  const [pickupLogFilter, setPickupLogFilter] = useState<"all" | "success" | "failed">("all");
 
   const loadPickupLogs = async () => {
     if (!isAdmin) return;
     const { data: logs } = await (supabase.from as any)("pickup_verification_logs")
-      .select("id, admin_id, code_entered, success, reason, created_at")
+      .select("id, admin_id, code_entered, success, reason, created_at, ip_address, user_agent")
       .eq("order_id", orderId)
       .order("created_at", { ascending: false });
     const rows = (logs || []) as any[];
@@ -119,14 +120,21 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       return;
     }
     setVerifying(true);
+    let ip: string | null = null;
+    try {
+      const r = await fetch("https://api.ipify.org?format=json");
+      if (r.ok) ip = (await r.json())?.ip || null;
+    } catch { /* ignore */ }
     const { data, error } = await (supabase.rpc as any)("admin_verify_pickup_code", {
       _order_id: orderId,
       _code: verifyCode.trim(),
+      _ip_address: ip,
+      _user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
     setVerifying(false);
     if (error) { toast.error(error.message); return; }
     const res = data as { success: boolean; error?: string };
-    if (!res?.success) { toast.error(res?.error || "Verification failed"); return; }
+    if (!res?.success) { toast.error(res?.error || "Verification failed"); await loadPickupLogs(); return; }
     toast.success("Pickup verified. Order marked as delivered.");
     setVerifyOpen(false);
     setVerifyCode("");
@@ -348,35 +356,70 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       )}
 
       {/* Pickup Verification Audit Log — admin only */}
-      {isAdmin && (order as any).delivery_method === "pickup" && pickupLogs.length > 0 && (
-        <div className="rounded-xl bg-card border border-border overflow-hidden mb-5">
-          <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Pickup Verification Log</h2>
-            <span className="text-xs text-muted-foreground ml-auto">{pickupLogs.length} attempt{pickupLogs.length === 1 ? "" : "s"}</span>
-          </div>
-          <div className="divide-y divide-border">
-            {pickupLogs.map((log) => (
-              <div key={log.id} className="px-5 py-3 flex items-center gap-3 flex-wrap">
-                <Badge variant="outline" className={log.success ? "bg-green-500/10 text-green-700 border-green-500/30" : "bg-red-500/10 text-red-700 border-red-500/30"}>
-                  {log.success ? "Success" : "Failed"}
-                </Badge>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{log.admin_name}</span>
-                    <span className="text-muted-foreground"> entered </span>
-                    <span className="font-mono">{log.code_entered || "—"}</span>
-                  </p>
-                  {!log.success && log.reason && (
-                    <p className="text-xs text-red-600 mt-0.5">{log.reason}</p>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{formatDate(log.created_at)}</p>
+      {isAdmin && (order as any).delivery_method === "pickup" && pickupLogs.length > 0 && (() => {
+        const successCount = pickupLogs.filter((l) => l.success).length;
+        const failedCount = pickupLogs.length - successCount;
+        const visibleLogs = pickupLogs.filter((l) =>
+          pickupLogFilter === "all" ? true : pickupLogFilter === "success" ? l.success : !l.success
+        );
+        const chip = (key: typeof pickupLogFilter, label: string, count: number, activeCls: string) => (
+          <button
+            key={key}
+            onClick={() => setPickupLogFilter(key)}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              pickupLogFilter === key ? activeCls : "bg-background border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {label} <span className="opacity-70">({count})</span>
+          </button>
+        );
+        return (
+          <div className="rounded-xl bg-card border border-border overflow-hidden mb-5">
+            <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2 flex-wrap">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">Pickup Verification Log</h2>
+              <div className="flex items-center gap-1.5 ml-auto">
+                {chip("all", "All", pickupLogs.length, "bg-primary/10 border-primary/30 text-primary")}
+                {chip("success", "Success", successCount, "bg-green-500/10 border-green-500/30 text-green-700")}
+                {chip("failed", "Failed", failedCount, "bg-red-500/10 border-red-500/30 text-red-700")}
               </div>
-            ))}
+            </div>
+            <div className="divide-y divide-border">
+              {visibleLogs.length === 0 && (
+                <div className="px-5 py-6 text-center text-xs text-muted-foreground">No attempts match this filter.</div>
+              )}
+              {visibleLogs.map((log) => (
+                <div key={log.id} className="px-5 py-3 flex items-start gap-3 flex-wrap">
+                  <Badge variant="outline" className={log.success ? "bg-green-500/10 text-green-700 border-green-500/30 mt-0.5" : "bg-red-500/10 text-red-700 border-red-500/30 mt-0.5"}>
+                    {log.success ? "Success" : "Failed"}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">
+                      <span className="font-medium">{log.admin_name}</span>
+                      <span className="text-muted-foreground"> entered </span>
+                      <span className="font-mono">{log.code_entered || "—"}</span>
+                    </p>
+                    {!log.success && log.reason && (
+                      <p className="text-xs text-red-600 mt-0.5">{log.reason}</p>
+                    )}
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      {log.ip_address && (
+                        <span><span className="opacity-70">IP:</span> <span className="font-mono">{log.ip_address}</span></span>
+                      )}
+                      {log.user_agent && (
+                        <span className="truncate max-w-[420px]" title={log.user_agent}>
+                          <span className="opacity-70">UA:</span> {log.user_agent}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(log.created_at)}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 
