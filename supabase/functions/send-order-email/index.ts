@@ -167,8 +167,6 @@ function buildEmailHtml(
             </td></tr>
           </table>
         </td></tr>` : ""}
-          </table>
-        </td></tr>
         <!-- Footer -->
         <tr><td style="background:#f9f9f9;padding:16px 32px;text-align:center;">
           <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${e(brandName)}!</p>
