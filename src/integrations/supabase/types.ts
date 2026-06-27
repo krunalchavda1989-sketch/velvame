@@ -2164,27 +2164,33 @@ export type Database = {
           code_entered: string
           created_at: string
           id: string
+          ip_address: string | null
           order_id: string
           reason: string | null
           success: boolean
+          user_agent: string | null
         }
         Insert: {
           admin_id?: string | null
           code_entered: string
           created_at?: string
           id?: string
+          ip_address?: string | null
           order_id: string
           reason?: string | null
           success: boolean
+          user_agent?: string | null
         }
         Update: {
           admin_id?: string | null
           code_entered?: string
           created_at?: string
           id?: string
+          ip_address?: string | null
           order_id?: string
           reason?: string | null
           success?: boolean
+          user_agent?: string | null
         }
         Relationships: [
           {
@@ -3673,10 +3679,17 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_verify_pickup_code: {
-        Args: { _code: string; _order_id: string }
-        Returns: Json
-      }
+      admin_verify_pickup_code:
+        | { Args: { _code: string; _order_id: string }; Returns: Json }
+        | {
+            Args: {
+              _code: string
+              _ip_address?: string
+              _order_id: string
+              _user_agent?: string
+            }
+            Returns: Json
+          }
       admin_wallet_adjust:
         | {
             Args: {
