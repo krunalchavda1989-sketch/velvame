@@ -2158,6 +2158,44 @@ export type Database = {
         }
         Relationships: []
       }
+      pickup_verification_logs: {
+        Row: {
+          admin_id: string | null
+          code_entered: string
+          created_at: string
+          id: string
+          order_id: string
+          reason: string | null
+          success: boolean
+        }
+        Insert: {
+          admin_id?: string | null
+          code_entered: string
+          created_at?: string
+          id?: string
+          order_id: string
+          reason?: string | null
+          success: boolean
+        }
+        Update: {
+          admin_id?: string | null
+          code_entered?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_verification_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       popup_advanced_rules: {
         Row: {
           arriving_from_source: boolean
