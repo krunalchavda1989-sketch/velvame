@@ -90,6 +90,23 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyCode, setVerifyCode] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [pickupLogs, setPickupLogs] = useState<Array<{ id: string; admin_id: string | null; admin_name: string; code_entered: string; success: boolean; reason: string | null; created_at: string }>>([]);
+
+  const loadPickupLogs = async () => {
+    if (!isAdmin) return;
+    const { data: logs } = await (supabase.from as any)("pickup_verification_logs")
+      .select("id, admin_id, code_entered, success, reason, created_at")
+      .eq("order_id", orderId)
+      .order("created_at", { ascending: false });
+    const rows = (logs || []) as any[];
+    const adminIds = [...new Set(rows.map((r) => r.admin_id).filter(Boolean))];
+    let nameMap = new Map<string, string>();
+    if (adminIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("user_id, full_name, referral_code").in("user_id", adminIds);
+      nameMap = new Map((profs || []).map((p: any) => [p.user_id, p.full_name || p.referral_code || "Admin"]));
+    }
+    setPickupLogs(rows.map((r) => ({ ...r, admin_name: r.admin_id ? (nameMap.get(r.admin_id) || "Admin") : "Unknown" })));
+  };
 
   const refreshOrder = async () => {
     const { data } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
