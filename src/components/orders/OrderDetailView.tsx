@@ -120,14 +120,21 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       return;
     }
     setVerifying(true);
+    let ip: string | null = null;
+    try {
+      const r = await fetch("https://api.ipify.org?format=json");
+      if (r.ok) ip = (await r.json())?.ip || null;
+    } catch { /* ignore */ }
     const { data, error } = await (supabase.rpc as any)("admin_verify_pickup_code", {
       _order_id: orderId,
       _code: verifyCode.trim(),
+      _ip_address: ip,
+      _user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
     setVerifying(false);
     if (error) { toast.error(error.message); return; }
     const res = data as { success: boolean; error?: string };
-    if (!res?.success) { toast.error(res?.error || "Verification failed"); return; }
+    if (!res?.success) { toast.error(res?.error || "Verification failed"); await loadPickupLogs(); return; }
     toast.success("Pickup verified. Order marked as delivered.");
     setVerifyOpen(false);
     setVerifyCode("");
