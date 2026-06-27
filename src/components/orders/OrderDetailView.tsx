@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   ArrowLeft, Package, Truck, CreditCard, MapPin, Clock,
   CheckCircle2, XCircle, CircleDot, User, Hash,
-  Copy, ShoppingBag, Printer,
+  Copy, ShoppingBag, Printer, KeyRound, ShieldCheck,
 } from "lucide-react";
 import { useInvoicePrint } from "./InvoicePrint";
 import OrderActivityTimeline from "./OrderActivityTimeline";
