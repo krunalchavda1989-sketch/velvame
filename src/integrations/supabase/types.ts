@@ -1911,7 +1911,11 @@ export type Database = {
           order_number: string | null
           order_source: string
           payment_method: string | null
+          picked_up_at: string | null
+          picked_up_by_admin_id: string | null
+          pickup_code: string | null
           pickup_location_id: string | null
+          pickup_verified: boolean
           price_type_used: string | null
           razorpay_amount: number
           shipping_address: Json | null
@@ -1932,7 +1936,11 @@ export type Database = {
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          picked_up_at?: string | null
+          picked_up_by_admin_id?: string | null
+          pickup_code?: string | null
           pickup_location_id?: string | null
+          pickup_verified?: boolean
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
@@ -1953,7 +1961,11 @@ export type Database = {
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          picked_up_at?: string | null
+          picked_up_by_admin_id?: string | null
+          pickup_code?: string | null
           pickup_location_id?: string | null
+          pickup_verified?: boolean
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
@@ -3621,6 +3633,10 @@ export type Database = {
           _transaction_ref: string
           _user_id: string
         }
+        Returns: Json
+      }
+      admin_verify_pickup_code: {
+        Args: { _code: string; _order_id: string }
         Returns: Json
       }
       admin_wallet_adjust:
