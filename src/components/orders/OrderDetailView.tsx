@@ -87,6 +87,35 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [pickupLoc, setPickupLoc] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyCode, setVerifyCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+
+  const refreshOrder = async () => {
+    const { data } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (data) setOrder(data as any);
+  };
+
+  const handleVerifyPickup = async () => {
+    if (verifyCode.trim().length !== 6) {
+      toast.error("Enter the 6-digit pickup code");
+      return;
+    }
+    setVerifying(true);
+    const { data, error } = await (supabase.rpc as any)("admin_verify_pickup_code", {
+      _order_id: orderId,
+      _code: verifyCode.trim(),
+    });
+    setVerifying(false);
+    if (error) { toast.error(error.message); return; }
+    const res = data as { success: boolean; error?: string };
+    if (!res?.success) { toast.error(res?.error || "Verification failed"); return; }
+    toast.success("Pickup verified. Order marked as delivered.");
+    setVerifyOpen(false);
+    setVerifyCode("");
+    await refreshOrder();
+  };
+
 
   const { handlePrint } = useInvoicePrint({
     orderId,
