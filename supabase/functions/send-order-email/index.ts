@@ -156,6 +156,17 @@ function buildEmailHtml(
             </tr>
           </table>
         </td></tr>
+        ${order.delivery_method === "pickup" && order.pickup_code && !order.pickup_verified ? `
+        <!-- Pickup Code -->
+        <tr><td style="padding:0 32px 24px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;border:2px dashed #D4AF37;border-radius:10px;">
+            <tr><td style="padding:18px 20px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:#8a6d00;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Your Pickup Code</p>
+              <p style="margin:0;font-size:32px;font-weight:bold;letter-spacing:8px;color:#1a1a2e;font-family:'Courier New',monospace;">${e(order.pickup_code)}</p>
+              <p style="margin:8px 0 0;font-size:12px;color:#666;">Show this code at the pickup counter to collect your order.</p>
+            </td></tr>
+          </table>
+        </td></tr>` : ""}
         <!-- Footer -->
         <tr><td style="background:#f9f9f9;padding:16px 32px;text-align:center;">
           <p style="font-size:12px;color:#999;margin:0;">Thank you for shopping with ${e(brandName)}!</p>
