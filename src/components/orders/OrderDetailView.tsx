@@ -570,6 +570,38 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
           </div>
         </div>
       </div>
+
+      {/* Admin Verify Pickup Dialog */}
+      <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Verify Pickup
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Ask the customer for the 6-digit pickup code shown on their order or sent to their email, and enter it below.
+            </p>
+            <Input
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="••••••"
+              inputMode="numeric"
+              className="text-center font-mono text-2xl tracking-[0.4em] h-14"
+              maxLength={6}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVerifyOpen(false)} disabled={verifying}>Cancel</Button>
+            <Button onClick={handleVerifyPickup} disabled={verifying || verifyCode.length !== 6}>
+              {verifying ? "Verifying..." : "Confirm Pickup"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
