@@ -131,6 +131,7 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
     setVerifyOpen(false);
     setVerifyCode("");
     await refreshOrder();
+    await loadPickupLogs();
   };
 
 
