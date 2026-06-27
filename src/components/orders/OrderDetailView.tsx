@@ -33,6 +33,9 @@ interface OrderDetailData {
   delivery_method?: string | null;
   pickup_location_id?: string | null;
   shipping_charge?: number | null;
+  pickup_code?: string | null;
+  pickup_verified?: boolean;
+  picked_up_at?: string | null;
 }
 
 interface OrderItemData {
