@@ -356,35 +356,70 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       )}
 
       {/* Pickup Verification Audit Log — admin only */}
-      {isAdmin && (order as any).delivery_method === "pickup" && pickupLogs.length > 0 && (
-        <div className="rounded-xl bg-card border border-border overflow-hidden mb-5">
-          <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-foreground">Pickup Verification Log</h2>
-            <span className="text-xs text-muted-foreground ml-auto">{pickupLogs.length} attempt{pickupLogs.length === 1 ? "" : "s"}</span>
-          </div>
-          <div className="divide-y divide-border">
-            {pickupLogs.map((log) => (
-              <div key={log.id} className="px-5 py-3 flex items-center gap-3 flex-wrap">
-                <Badge variant="outline" className={log.success ? "bg-green-500/10 text-green-700 border-green-500/30" : "bg-red-500/10 text-red-700 border-red-500/30"}>
-                  {log.success ? "Success" : "Failed"}
-                </Badge>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{log.admin_name}</span>
-                    <span className="text-muted-foreground"> entered </span>
-                    <span className="font-mono">{log.code_entered || "—"}</span>
-                  </p>
-                  {!log.success && log.reason && (
-                    <p className="text-xs text-red-600 mt-0.5">{log.reason}</p>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">{formatDate(log.created_at)}</p>
+      {isAdmin && (order as any).delivery_method === "pickup" && pickupLogs.length > 0 && (() => {
+        const successCount = pickupLogs.filter((l) => l.success).length;
+        const failedCount = pickupLogs.length - successCount;
+        const visibleLogs = pickupLogs.filter((l) =>
+          pickupLogFilter === "all" ? true : pickupLogFilter === "success" ? l.success : !l.success
+        );
+        const chip = (key: typeof pickupLogFilter, label: string, count: number, activeCls: string) => (
+          <button
+            key={key}
+            onClick={() => setPickupLogFilter(key)}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              pickupLogFilter === key ? activeCls : "bg-background border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {label} <span className="opacity-70">({count})</span>
+          </button>
+        );
+        return (
+          <div className="rounded-xl bg-card border border-border overflow-hidden mb-5">
+            <div className="px-5 py-3 border-b border-border bg-secondary/30 flex items-center gap-2 flex-wrap">
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">Pickup Verification Log</h2>
+              <div className="flex items-center gap-1.5 ml-auto">
+                {chip("all", "All", pickupLogs.length, "bg-primary/10 border-primary/30 text-primary")}
+                {chip("success", "Success", successCount, "bg-green-500/10 border-green-500/30 text-green-700")}
+                {chip("failed", "Failed", failedCount, "bg-red-500/10 border-red-500/30 text-red-700")}
               </div>
-            ))}
+            </div>
+            <div className="divide-y divide-border">
+              {visibleLogs.length === 0 && (
+                <div className="px-5 py-6 text-center text-xs text-muted-foreground">No attempts match this filter.</div>
+              )}
+              {visibleLogs.map((log) => (
+                <div key={log.id} className="px-5 py-3 flex items-start gap-3 flex-wrap">
+                  <Badge variant="outline" className={log.success ? "bg-green-500/10 text-green-700 border-green-500/30 mt-0.5" : "bg-red-500/10 text-red-700 border-red-500/30 mt-0.5"}>
+                    {log.success ? "Success" : "Failed"}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">
+                      <span className="font-medium">{log.admin_name}</span>
+                      <span className="text-muted-foreground"> entered </span>
+                      <span className="font-mono">{log.code_entered || "—"}</span>
+                    </p>
+                    {!log.success && log.reason && (
+                      <p className="text-xs text-red-600 mt-0.5">{log.reason}</p>
+                    )}
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      {log.ip_address && (
+                        <span><span className="opacity-70">IP:</span> <span className="font-mono">{log.ip_address}</span></span>
+                      )}
+                      {log.user_agent && (
+                        <span className="truncate max-w-[420px]" title={log.user_agent}>
+                          <span className="opacity-70">UA:</span> {log.user_agent}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(log.created_at)}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 
