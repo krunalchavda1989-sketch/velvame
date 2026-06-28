@@ -84,6 +84,7 @@ import AdminHowItWorks from "./pages/admin/AdminHowItWorks";
 import AdminManageSections from "./pages/admin/AdminManageSections";
 import AdminMarquee from "./pages/admin/AdminMarquee";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminReviewPlatforms from "./pages/admin/AdminReviewPlatforms";
 import AdminInventory from "./pages/admin/AdminInventory";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import SEOHead from "./components/SEOHead";
