@@ -62,7 +62,7 @@ const OrdersPage = () => {
         const { data: products } = await supabase
           .rpc("get_products_basic" as any, { _ids: productIds });
 
-        const productMap = new Map((products || []).map((p: any) => [p.id, p]));
+        const productMap = new Map(((products as any[]) || []).map((p: any) => [p.id, p]));
 
         (items || []).forEach((item: any) => {
           const order = orderList.find((o) => o.id === item.order_id);
