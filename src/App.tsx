@@ -84,7 +84,6 @@ import AdminHowItWorks from "./pages/admin/AdminHowItWorks";
 import AdminManageSections from "./pages/admin/AdminManageSections";
 import AdminMarquee from "./pages/admin/AdminMarquee";
 import AdminReviews from "./pages/admin/AdminReviews";
-import AdminReviewPlatforms from "./pages/admin/AdminReviewPlatforms";
 import AdminInventory from "./pages/admin/AdminInventory";
 import CustomCodeInjector from "./components/CustomCodeInjector";
 import SEOHead from "./components/SEOHead";
@@ -240,7 +239,6 @@ const App = () => (
             <Route path="/admin/products/:id/edit" element={<AdminRoute><AdminProductForm /></AdminRoute>} />
             <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
             <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
-            <Route path="/admin/review-platforms" element={<AdminRoute><AdminReviewPlatforms /></AdminRoute>} />
             <Route path="/admin/inventory" element={<AdminRoute><AdminInventory /></AdminRoute>} />
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
             <Route path="/admin/orders/:id" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />

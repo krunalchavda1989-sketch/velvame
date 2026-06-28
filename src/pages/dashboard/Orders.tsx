@@ -60,9 +60,11 @@ const OrdersPage = () => {
         // Fetch product info
         const productIds = [...new Set((items || []).map((i: any) => i.product_id))];
         const { data: products } = await supabase
-          .rpc("get_products_basic" as any, { _ids: productIds });
+          .from("products")
+          .select("id, name, image_url")
+          .in("id", productIds);
 
-        const productMap = new Map(((products as any[]) || []).map((p: any) => [p.id, p]));
+        const productMap = new Map((products || []).map((p: any) => [p.id, p]));
 
         (items || []).forEach((item: any) => {
           const order = orderList.find((o) => o.id === item.order_id);
@@ -71,7 +73,7 @@ const OrdersPage = () => {
               id: item.id,
               quantity: item.quantity,
               price: item.price,
-              product: (productMap.get(item.product_id) as any) || null,
+              product: productMap.get(item.product_id) || null,
             });
           }
         });

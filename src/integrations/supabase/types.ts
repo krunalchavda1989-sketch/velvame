@@ -2936,51 +2936,6 @@ export type Database = {
         }
         Relationships: []
       }
-      review_platforms: {
-        Row: {
-          brand_name: string
-          created_at: string
-          description: string | null
-          icon_url: string | null
-          id: string
-          is_active: boolean
-          platform: string
-          rating: number | null
-          review_count: number | null
-          review_url: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          brand_name: string
-          created_at?: string
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          is_active?: boolean
-          platform: string
-          rating?: number | null
-          review_count?: number | null
-          review_url: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          brand_name?: string
-          created_at?: string
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          is_active?: boolean
-          platform?: string
-          rating?: number | null
-          review_count?: number | null
-          review_url?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       seo_redirects: {
         Row: {
           created_at: string
@@ -3827,16 +3782,6 @@ export type Database = {
           subscription_paid: boolean
           title: string
           user_id: string
-        }[]
-      }
-      get_products_basic: {
-        Args: { _ids: string[] }
-        Returns: {
-          active: boolean
-          category: string
-          id: string
-          image_url: string
-          name: string
         }[]
       }
       get_public_products: {

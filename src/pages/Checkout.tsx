@@ -71,9 +71,8 @@ const Checkout = () => {
       if (found) {
         setBuyNowProduct({ ...found, qty: qty || 1 });
       } else {
-        supabase.rpc("get_public_products" as any).then(({ data }) => {
-          const found = (data as any[] | null)?.find((p) => p.id === id);
-          if (found) setBuyNowProduct({ ...found, qty: qty || 1 });
+        supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
+          if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
           else { toast.error("Product not found"); navigate("/shop"); }
         });
       }
