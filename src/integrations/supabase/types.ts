@@ -3829,6 +3829,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_products_basic: {
+        Args: { _ids: string[] }
+        Returns: {
+          active: boolean
+          category: string
+          id: string
+          image_url: string
+          name: string
+        }[]
+      }
       get_public_products: {
         Args: never
         Returns: {

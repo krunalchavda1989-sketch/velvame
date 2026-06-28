@@ -179,10 +179,8 @@ const OrderDetailView = ({ orderId, isAdmin = false, backPath }: OrderDetailView
       let productMap = new Map();
       if (productIds.length > 0) {
         const { data: products } = await supabase
-          .from("products")
-          .select("id, name, image_url, category")
-          .in("id", productIds);
-        productMap = new Map((products || []).map((p: any) => [p.id, p]));
+          .rpc("get_products_basic" as any, { _ids: productIds });
+        productMap = new Map(((products as any[]) || []).map((p: any) => [p.id, p]));
       }
 
       setItems(
