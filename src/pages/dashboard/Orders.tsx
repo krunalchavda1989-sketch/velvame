@@ -71,7 +71,7 @@ const OrdersPage = () => {
               id: item.id,
               quantity: item.quantity,
               price: item.price,
-              product: productMap.get(item.product_id) || null,
+              product: (productMap.get(item.product_id) as any) || null,
             });
           }
         });
