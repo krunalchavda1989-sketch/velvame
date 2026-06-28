@@ -2936,6 +2936,51 @@ export type Database = {
         }
         Relationships: []
       }
+      review_platforms: {
+        Row: {
+          brand_name: string
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          platform: string
+          rating: number | null
+          review_count: number | null
+          review_url: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          brand_name: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          platform: string
+          rating?: number | null
+          review_count?: number | null
+          review_url: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          platform?: string
+          rating?: number | null
+          review_count?: number | null
+          review_url?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_redirects: {
         Row: {
           created_at: string
