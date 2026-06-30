@@ -167,17 +167,15 @@ export const BrandProvider = ({ children }: { children: ReactNode }) => {
           setBrand(b);
           applyBrandTheme(b);
 
-          // GST is private (authenticated users only) — fetch separately, silently fail for anon
+          // GST exposed via SECURITY DEFINER RPC — table itself is admin-only
           supabase
-            .from("tax_settings" as any)
-            .select("gst_number")
-            .limit(1)
-            .maybeSingle()
-            .then(({ data: tax }) => {
-              if (tax && (tax as any).gst_number) {
-                setBrand((prev) => ({ ...prev, gst_number: (tax as any).gst_number }));
+            .rpc("get_public_gst_number" as any)
+            .then(({ data: gst }) => {
+              if (gst) {
+                setBrand((prev) => ({ ...prev, gst_number: gst as unknown as string }));
               }
             });
+
         }
       });
   }, []);

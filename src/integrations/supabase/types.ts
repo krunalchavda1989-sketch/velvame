@@ -1911,7 +1911,11 @@ export type Database = {
           order_number: string | null
           order_source: string
           payment_method: string | null
+          picked_up_at: string | null
+          picked_up_by_admin_id: string | null
+          pickup_code: string | null
           pickup_location_id: string | null
+          pickup_verified: boolean
           price_type_used: string | null
           razorpay_amount: number
           shipping_address: Json | null
@@ -1932,7 +1936,11 @@ export type Database = {
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          picked_up_at?: string | null
+          picked_up_by_admin_id?: string | null
+          pickup_code?: string | null
           pickup_location_id?: string | null
+          pickup_verified?: boolean
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
@@ -1953,7 +1961,11 @@ export type Database = {
           order_number?: string | null
           order_source?: string
           payment_method?: string | null
+          picked_up_at?: string | null
+          picked_up_by_admin_id?: string | null
+          pickup_code?: string | null
           pickup_location_id?: string | null
+          pickup_verified?: boolean
           price_type_used?: string | null
           razorpay_amount?: number
           shipping_address?: Json | null
@@ -2145,6 +2157,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      pickup_verification_logs: {
+        Row: {
+          admin_id: string | null
+          code_entered: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          order_id: string
+          reason: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          code_entered: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          order_id: string
+          reason?: string | null
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          code_entered?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string
+          reason?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_verification_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       popup_advanced_rules: {
         Row: {
@@ -2876,6 +2932,51 @@ export type Database = {
           next_number?: number
           padding?: number
           prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      review_platforms: {
+        Row: {
+          brand_name: string
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          platform: string
+          rating: number | null
+          review_count: number | null
+          review_url: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          brand_name: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          platform: string
+          rating?: number | null
+          review_count?: number | null
+          review_url: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          platform?: string
+          rating?: number | null
+          review_count?: number | null
+          review_url?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -3623,6 +3724,17 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_verify_pickup_code:
+        | { Args: { _code: string; _order_id: string }; Returns: Json }
+        | {
+            Args: {
+              _code: string
+              _ip_address?: string
+              _order_id: string
+              _user_agent?: string
+            }
+            Returns: Json
+          }
       admin_wallet_adjust:
         | {
             Args: {
@@ -3717,6 +3829,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_products_basic: {
+        Args: { _ids: string[] }
+        Returns: {
+          active: boolean
+          category: string
+          id: string
+          image_url: string
+          name: string
+        }[]
+      }
+      get_public_gst_number: { Args: never; Returns: string }
       get_public_products: {
         Args: never
         Returns: {
