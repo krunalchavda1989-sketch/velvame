@@ -3839,6 +3839,7 @@ export type Database = {
           name: string
         }[]
       }
+      get_public_gst_number: { Args: never; Returns: string }
       get_public_products: {
         Args: never
         Returns: {
