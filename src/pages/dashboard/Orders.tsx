@@ -60,9 +60,8 @@ const OrdersPage = () => {
         // Fetch product info
         const productIds = [...new Set((items || []).map((i: any) => i.product_id))];
         const { data: products } = await supabase
-          .from("products")
-          .select("id, name, image_url")
-          .in("id", productIds);
+          .rpc("get_products_basic", { _ids: productIds as string[] });
+
 
         const productMap = new Map((products || []).map((p: any) => [p.id, p]));
 
