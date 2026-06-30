@@ -71,10 +71,12 @@ const Checkout = () => {
       if (found) {
         setBuyNowProduct({ ...found, qty: qty || 1 });
       } else {
-        supabase.from("products").select("*").eq("id", id).single().then(({ data }) => {
-          if (data) setBuyNowProduct({ ...(data as any), qty: qty || 1 });
+        supabase.rpc("get_public_products").then(({ data }) => {
+          const match = (data as any[] | null)?.find((p) => p.id === id);
+          if (match) setBuyNowProduct({ ...match, qty: qty || 1 });
           else { toast.error("Product not found"); navigate("/shop"); }
         });
+
       }
     } catch { navigate("/shop"); }
   }, [isBuyNow, allProducts]);
