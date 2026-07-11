@@ -124,8 +124,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const brand = useBrand();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin/login");
+    try {
+      await supabase.auth.signOut({ scope: "global" });
+    } catch {
+      // ignore
+    }
+    // Replace history entry so browser back cannot return to an admin page,
+    // then hard-reload to purge any in-memory admin state and bfcache.
+    window.location.replace("/admin/login");
   };
 
   const { showWarning, countdown, keepAlive, logout: sessionLogout } = useSessionTimeout(handleLogout);
