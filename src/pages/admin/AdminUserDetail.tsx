@@ -79,6 +79,8 @@ const AdminUserDetail = () => {
   
   const [newPassword, setNewPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [emailConfirmedAt, setEmailConfirmedAt] = useState<string | null>(null);
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
