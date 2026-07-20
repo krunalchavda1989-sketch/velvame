@@ -157,6 +157,7 @@ const AdminUserDetail = () => {
           body: { action: "get_user_email", user_id: prof.user_id },
         });
         if (emailData?.email) setUserEmail(emailData.email);
+        setEmailConfirmedAt(emailData?.email_confirmed_at || null);
 
         // Fetch upline (sponsor) details
         if (prof.referred_by) {
@@ -321,6 +322,26 @@ const AdminUserDetail = () => {
     toast({ title: "Password Reset", description: "New password has been sent to the user's email." });
     setNewPassword("");
     
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!profile) return;
+    setVerifyingEmail(true);
+    const { data, error } = await supabase.functions.invoke("admin-settings", {
+      body: { action: "verify_user_email", user_id: profile.user_id },
+    });
+    setVerifyingEmail(false);
+    if (error || data?.error) {
+      toast({ title: "Error", description: data?.error || "Failed to verify email.", variant: "destructive" });
+      return;
+    }
+    setEmailConfirmedAt(data?.email_confirmed_at || new Date().toISOString());
+    toast({
+      title: data?.already_verified ? "Already Verified" : "Email Verified",
+      description: data?.already_verified
+        ? "This user's email was already verified."
+        : "User can now sign in without clicking the confirmation link.",
+    });
   };
 
   const handleQuickToggleSubscription = async () => {
