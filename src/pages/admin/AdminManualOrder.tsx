@@ -838,8 +838,8 @@ const AdminManualOrder = () => {
             )}
           </div>
 
-          {/* Shipping Address */}
-          {selectedUserId && (
+          {/* Shipping Address — only for courier delivery */}
+          {selectedUserId && deliveryMethod === "courier" && (
             <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
