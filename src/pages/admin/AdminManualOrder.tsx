@@ -304,11 +304,13 @@ const AdminManualOrder = () => {
       return;
     }
 
-    // Address validation
+    // Address validation — only required for courier delivery
     const shippingAddr = getShippingAddress();
-    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
-      toast.error("Please fill all required shipping address fields");
-      return;
+    if (deliveryMethod === "courier") {
+      if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+        toast.error("Please fill all required shipping address fields");
+        return;
+      }
     }
 
     // Payment note is compulsory when payment method is shown
@@ -836,8 +838,70 @@ const AdminManualOrder = () => {
             )}
           </div>
 
-          {/* Shipping Address */}
-          {selectedUserId && (
+          {/* Delivery Method */}
+          {selectedUserId && (shipSettings?.courier_enabled || shipSettings?.pickup_enabled) && (
+            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <Truck className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-foreground">Delivery Method</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {shipSettings?.courier_enabled && (
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("courier")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                      deliveryMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
+                    }`}
+                  >
+                    <Truck className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Courier Delivery</p>
+                      <p className="text-xs text-muted-foreground">{courierFree ? "Free" : `₹${Number(shipSettings?.courier_charge || 0).toFixed(2)}`}</p>
+                    </div>
+                  </button>
+                )}
+                {shipSettings?.pickup_enabled && pickupLocations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("pickup")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
+                      deliveryMethod === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
+                    }`}
+                  >
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Self Pickup</p>
+                      <p className="text-xs text-muted-foreground">{Number(shipSettings?.pickup_charge || 0) === 0 ? "Free" : `₹${Number(shipSettings.pickup_charge).toFixed(2)}`}</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+
+              {deliveryMethod === "pickup" && (
+                pickupLocations.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No active pickup locations. Add one under Pickup Locations.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Pickup Location</Label>
+                    <Select value={selectedPickupId} onValueChange={setSelectedPickupId}>
+                      <SelectTrigger className="bg-secondary border-border"><SelectValue placeholder="Select pickup location" /></SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {pickupLocations.map((loc) => (
+                          <SelectItem key={loc.id} value={loc.id}>
+                            {loc.name} — {loc.city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Shipping Address — only for courier delivery */}
+          {selectedUserId && deliveryMethod === "courier" && (
             <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" />
@@ -935,67 +999,6 @@ const AdminManualOrder = () => {
             </div>
           )}
 
-          {/* Delivery Method */}
-          {selectedUserId && (shipSettings?.courier_enabled || shipSettings?.pickup_enabled) && (
-            <div className="p-4 sm:p-6 rounded-xl bg-card border border-border space-y-4">
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold text-foreground">Delivery Method</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {shipSettings?.courier_enabled && (
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryMethod("courier")}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
-                      deliveryMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
-                    }`}
-                  >
-                    <Truck className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Courier Delivery</p>
-                      <p className="text-xs text-muted-foreground">{courierFree ? "Free" : `₹${Number(shipSettings?.courier_charge || 0).toFixed(2)}`}</p>
-                    </div>
-                  </button>
-                )}
-                {shipSettings?.pickup_enabled && pickupLocations.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryMethod("pickup")}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${
-                      deliveryMethod === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
-                    }`}
-                  >
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">Self Pickup</p>
-                      <p className="text-xs text-muted-foreground">{Number(shipSettings?.pickup_charge || 0) === 0 ? "Free" : `₹${Number(shipSettings.pickup_charge).toFixed(2)}`}</p>
-                    </div>
-                  </button>
-                )}
-              </div>
-
-              {deliveryMethod === "pickup" && (
-                pickupLocations.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No active pickup locations. Add one under Pickup Locations.</p>
-                ) : (
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Pickup Location</Label>
-                    <Select value={selectedPickupId} onValueChange={setSelectedPickupId}>
-                      <SelectTrigger className="bg-secondary border-border"><SelectValue placeholder="Select pickup location" /></SelectTrigger>
-                      <SelectContent className="bg-card border-border">
-                        {pickupLocations.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.id}>
-                            {loc.name} — {loc.city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )
-              )}
-            </div>
-          )}
 
           </div>
 
