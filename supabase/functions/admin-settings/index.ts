@@ -166,7 +166,50 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ email: userData.user.email || "" }),
+        JSON.stringify({
+          email: userData.user.email || "",
+          email_confirmed_at: userData.user.email_confirmed_at || null,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "verify_user_email") {
+      const { user_id: targetUserId } = body;
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: "user_id is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: existing, error: getErr } = await serviceClient.auth.admin.getUserById(targetUserId);
+      if (getErr || !existing?.user) {
+        return new Response(JSON.stringify({ error: "User not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (existing.user.email_confirmed_at) {
+        return new Response(
+          JSON.stringify({ success: true, already_verified: true, email_confirmed_at: existing.user.email_confirmed_at }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: updated, error: updErr } = await serviceClient.auth.admin.updateUserById(targetUserId, {
+        email_confirm: true,
+      });
+      if (updErr) {
+        return new Response(JSON.stringify({ error: updErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, email_confirmed_at: updated?.user?.email_confirmed_at || new Date().toISOString() }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
