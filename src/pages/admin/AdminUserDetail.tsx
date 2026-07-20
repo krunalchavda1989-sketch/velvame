@@ -19,7 +19,7 @@ import {
 import {
   ArrowLeft, ShoppingBag, Users, Wallet, Trophy,
   CreditCard, TrendingUp, Calendar, Phone, Hash, Pencil, Save, Loader2,
-  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MapPin, Landmark, User, RotateCcw, Camera, KeyRound, RefreshCw
+  Ban, Trash2, Shield, CheckCircle, XCircle, Clock, Eye, Mail, MailCheck, MapPin, Landmark, User, RotateCcw, Camera, KeyRound, RefreshCw
 } from "lucide-react";
 import DateDropdowns from "@/components/ui/date-dropdowns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -534,6 +534,50 @@ const AdminUserDetail = () => {
                         {resettingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
                         {resettingPassword ? "Resetting..." : "Reset & Send to Email"}
                       </Button>
+                    </div>
+
+                    {/* Email Verification Section */}
+                    <div className="border-t border-border pt-4 space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <MailCheck className="h-4 w-4" /> Email Verification
+                      </Label>
+                      <div className="flex items-center justify-between rounded-md border border-border bg-secondary/30 p-3">
+                        <div className="text-xs">
+                          <div className="font-medium text-foreground">
+                            {emailConfirmedAt ? "Verified" : "Not verified"}
+                          </div>
+                          <div className="text-muted-foreground break-all">{userEmail || "—"}</div>
+                        </div>
+                        <Badge
+                          className={
+                            emailConfirmedAt
+                              ? "bg-success/15 text-success border-success/30"
+                              : "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                          }
+                        >
+                          {emailConfirmedAt ? "✓" : "Pending"}
+                        </Badge>
+                      </div>
+                      <Button
+                        onClick={handleVerifyEmail}
+                        disabled={verifyingEmail || !!emailConfirmedAt}
+                        variant="default"
+                        className="w-full gap-2"
+                      >
+                        {verifyingEmail ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MailCheck className="h-4 w-4" />
+                        )}
+                        {emailConfirmedAt
+                          ? "Email Already Verified"
+                          : verifyingEmail
+                          ? "Verifying..."
+                          : "Verify Email Now"}
+                      </Button>
+                      <p className="text-[11px] text-muted-foreground">
+                        Marks the user's email as verified so they can sign in without clicking the confirmation link.
+                      </p>
                     </div>
                   </div>
                 </DialogContent>
