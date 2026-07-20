@@ -304,11 +304,13 @@ const AdminManualOrder = () => {
       return;
     }
 
-    // Address validation
+    // Address validation — only required for courier delivery
     const shippingAddr = getShippingAddress();
-    if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
-      toast.error("Please fill all required shipping address fields");
-      return;
+    if (deliveryMethod === "courier") {
+      if (!shippingAddr || !shippingAddr.name || !shippingAddr.line1 || !shippingAddr.city || !shippingAddr.state || !shippingAddr.pincode || !shippingAddr.phone) {
+        toast.error("Please fill all required shipping address fields");
+        return;
+      }
     }
 
     // Payment note is compulsory when payment method is shown
