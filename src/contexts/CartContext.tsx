@@ -37,8 +37,9 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const { profile } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
   const isMember = !!profile?.subscription_paid;
+
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
