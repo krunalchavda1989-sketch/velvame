@@ -159,7 +159,7 @@ const ProductDetail = () => {
     };
     fetchProduct();
     window.scrollTo(0, 0);
-  }, [slug]);
+  }, [slug, user?.id, isMember]);
 
   const isImageUrl = (url: string) =>
     url?.startsWith("http") || url?.startsWith("/") || url?.startsWith("data:");

@@ -37,8 +37,9 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const { profile } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
   const isMember = !!profile?.subscription_paid;
+
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
@@ -56,8 +57,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  // Fetch all active products once
+  // Fetch active products — refetch when auth/membership changes so the
+  // pricing RPC (which depends on auth.uid()) returns distributor pricing.
   useEffect(() => {
+    if (authLoading) return;
     const fetchProducts = async () => {
       // Use safe RPC: hides distributor pricing from non-members / anonymous users
       const { data } = await supabase.rpc("get_public_products");
@@ -69,7 +72,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setProducts(sorted);
     };
     fetchProducts();
-  }, []);
+  }, [authLoading, user?.id, profile?.subscription_paid]);
+
 
   const getPrice = (product: Product) => {
     return isMember ? product.distributor_price : product.retail_price;
