@@ -11,7 +11,7 @@ import {
   BarChart3, ArrowDownToLine, ChevronLeft, ChevronRight, Settings,
   Store, Map, Trophy, Megaphone, Ticket, Layers, FolderTree, FileText,
   CreditCard, ShoppingBag, ChevronDown, LogOut, MessageSquareQuote, PanelTop,
-  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server, History, Search, MapPin, Truck
+  TrendingUp, Menu, X, MessageSquare, Mail, Share2, Wallet, UserPlus, User, ShieldCheck, Palette, LayoutList, MoveHorizontal, Star, Film, Zap, Server, History, Search, MapPin, Truck, CalendarClock
 } from "lucide-react";
 
 interface MenuItem {
