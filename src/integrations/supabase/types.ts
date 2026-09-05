@@ -2071,6 +2071,30 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_settings: {
+        Row: {
+          created_at: string
+          id: string
+          min_payout_amount: number
+          payout_day_of_month: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_payout_amount?: number
+          payout_day_of_month?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_payout_amount?: number
+          payout_day_of_month?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payout_transactions: {
         Row: {
           amount: number

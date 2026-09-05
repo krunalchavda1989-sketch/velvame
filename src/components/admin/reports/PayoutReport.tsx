@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Download, Search, CreditCard, Eye, Loader2, Users, DollarSign, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { aggregateLedger, aggregatePayouts, computePayoutFigures } from "@/lib/payoutCalc";
+
 
 interface PayoutUser {
   user_id: string;
@@ -130,64 +132,22 @@ const PayoutReport = () => {
       commissionsTableMap.set(c.beneficiary_id, (commissionsTableMap.get(c.beneficiary_id) || 0) + Number(c.amount));
     });
 
-    // Aggregate payouts per user
-    const paidMap = new Map<string, { total: number; lastDate: string | null }>();
-    payouts.forEach(p => {
-      const prev = paidMap.get(p.user_id) || { total: 0, lastDate: null };
-      prev.total += Number(p.amount);
-      if (!prev.lastDate || p.payment_date > prev.lastDate) prev.lastDate = p.payment_date;
-      paidMap.set(p.user_id, prev);
-    });
+    // Aggregate payouts per user (shared helper)
+    const paidMap = aggregatePayouts(payouts as any);
 
-    // Aggregate commission-balance ledger per user: credits, reversal debits,
-    // payout-mirror debits (written by admin_record_payout / withdrawals) and
-    // real order-usage debits.
-    const walletCreditMap = new Map<string, number>();
-    const walletReversalMap = new Map<string, number>();
-    const walletUsedMap = new Map<string, number>();
-    const walletPayoutMap = new Map<string, number>();
-    walletTxns.forEach((w: any) => {
-      if (w.balance_type !== "commission") return;
-      const amt = Number(w.amount);
-      const desc: string = w.description || "";
-      if (w.type === "credit") {
-        walletCreditMap.set(w.user_id, (walletCreditMap.get(w.user_id) || 0) + amt);
-      } else if (w.type === "debit") {
-        const isReversal = /Reversal|Correction|Reprocess/i.test(desc);
-        // Payout / withdrawal debits are the ledger MIRROR of a payout_transactions
-        // row — counting both would double-count the same payment (VM552 case).
-        const isPayoutMirror = /payout|withdraw/i.test(desc);
-        if (isReversal) {
-          walletReversalMap.set(w.user_id, (walletReversalMap.get(w.user_id) || 0) + amt);
-        } else if (isPayoutMirror) {
-          walletPayoutMap.set(w.user_id, (walletPayoutMap.get(w.user_id) || 0) + amt);
-        } else {
-          walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + amt);
-        }
-      }
-    });
+    // Aggregate commission-balance ledger per user (shared helper)
+    const ledgerMap = aggregateLedger(walletTxns as any);
 
     // Bank details map
     const bankMap = new Map(bankDetails.map(b => [b.user_id, b]));
 
     const result: PayoutUser[] = profiles.map(p => {
-      const walletCredited = walletCreditMap.get(p.user_id) || 0;
-      const walletReversed = walletReversalMap.get(p.user_id) || 0;
-      const netWalletEarned = Math.max(0, walletCredited - walletReversed);
-      const commissionTableTotal = commissionsTableMap.get(p.user_id) || 0;
-      // Earned = max(net wallet after reversals, commissions table). Net wallet subtracts
-      // reprocess/correction reversals so users with credit→reversal→re-credit cycles
-      // (e.g. VM518) no longer double-count. Commissions table acts as a fallback.
-      const earned = Math.max(netWalletEarned, commissionTableTotal);
-
       const paidInfo = paidMap.get(p.user_id) || { total: 0, lastDate: null };
-      const walletUsed = walletUsedMap.get(p.user_id) || 0;
-      const ledgerPayouts = walletPayoutMap.get(p.user_id) || 0;
-      // Payout records and their ledger mirrors describe the SAME money, so take the
-      // larger of the two (covers legacy payouts that only exist in one place).
-      const payoutsSettled = Math.max(paidInfo.total, ledgerPayouts);
-      // Cap settled at earned so Total Paid can never exceed Total Earned.
-      const settled = Math.min(earned, payoutsSettled + walletUsed);
+      const figures = computePayoutFigures(
+        ledgerMap.get(p.user_id),
+        paidInfo.total,
+        commissionsTableMap.get(p.user_id) || 0,
+      );
 
       const bank = bankMap.get(p.user_id);
       return {
@@ -197,9 +157,10 @@ const PayoutReport = () => {
         last_name: p.last_name || "",
         phone: p.phone || "",
         referral_code: p.referral_code || "",
-        total_earned: earned,
-        total_paid: settled,
-        pending_payout: Math.max(0, earned - settled),
+        total_earned: figures.earned,
+        total_paid: figures.paid,
+        pending_payout: figures.pending,
+
         bank_name: bank?.bank_name || "",
         account_holder_name: bank?.account_holder_name || "",
         account_number: bank?.account_number || "",
