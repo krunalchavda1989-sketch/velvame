@@ -3473,6 +3473,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_reconciliation_runs: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          net_adjustment: number
+          run_at: string
+          triggered_by: string
+          users_checked: number
+          users_corrected: number
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          net_adjustment?: number
+          run_at?: string
+          triggered_by?: string
+          users_checked?: number
+          users_corrected?: number
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          net_adjustment?: number
+          run_at?: string
+          triggered_by?: string
+          users_checked?: number
+          users_corrected?: number
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
@@ -3736,6 +3769,7 @@ export type Database = {
         Args: { _order_id: string }
         Returns: Json
       }
+      admin_reconcile_commission_wallets: { Args: never; Returns: Json }
       admin_record_payout: {
         Args: {
           _admin_id: string
@@ -3931,6 +3965,10 @@ export type Database = {
           max_discount_amount: number
           min_order_amount: number
         }[]
+      }
+      reconcile_commission_wallets: {
+        Args: { _triggered_by?: string }
+        Returns: Json
       }
       validate_coupon: {
         Args: { _code: string; _order_amount: number }
