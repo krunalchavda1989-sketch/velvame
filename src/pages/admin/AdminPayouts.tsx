@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { CalendarClock, Clock, Users, Wallet, Search, Eye, Loader2, Save } from "lucide-react";
+import { CalendarClock, Clock, Users, Wallet, Search, Eye, Loader2, Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
@@ -127,7 +127,7 @@ const AdminPayouts = () => {
       setPayouts(payoutRows as PayoutRow[]);
       setLoading(false);
     })();
-  }, []);
+  }, [reloadKey]);
 
   const nextDate = useMemo(() => nextPayoutDate(payoutDay), [payoutDay]);
 
@@ -222,6 +222,10 @@ const AdminPayouts = () => {
                 </Button>
               </div>
             </div>
+            <Button variant="outline" onClick={runReconciliation} disabled={reconciling} className="gap-2">
+              {reconciling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Recheck balances
+            </Button>
           </CardContent>
         </Card>
 
