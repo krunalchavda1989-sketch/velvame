@@ -723,12 +723,14 @@ const AdminUserDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Wallet Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Wallet Summary — figures come from the shared payout calculation so this
+            page always matches the admin Payout Report / Payout Dashboard. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           {[
             { icon: Wallet, label: "Wallet Balance", value: `₹${wallet?.balance || 0}`, color: "text-primary" },
-            { icon: TrendingUp, label: "Total Earned (Commissions)", value: `₹${commissions.reduce((s: number, c: any) => s + Number(c.amount), 0)}`, color: "text-success" },
-            { icon: CreditCard, label: "Total Withdrawn", value: `₹${wallet?.total_withdrawn || 0}`, color: "text-muted-foreground" },
+            { icon: TrendingUp, label: "Total Earned (Commissions)", value: `₹${(payoutSummary?.earned ?? 0).toLocaleString("en-IN")}`, color: "text-success" },
+            { icon: CreditCard, label: "Total Paid Out", value: `₹${(payoutSummary?.paid ?? 0).toLocaleString("en-IN")}`, color: "text-muted-foreground" },
+            { icon: Clock, label: "Pending Payout", value: `₹${(payoutSummary?.pending ?? 0).toLocaleString("en-IN")}`, color: "text-amber-600" },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4">
@@ -743,6 +745,42 @@ const AdminUserDetail = () => {
             </Card>
           ))}
         </div>
+
+        {/* Payout history */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-muted-foreground" /> Payout History
+              </h3>
+              {(payoutSummary?.pending ?? 0) > 0.01 && (
+                <span className="text-xs text-muted-foreground">
+                  Next payout date: <strong>{format(nextPayout, "dd MMM yyyy")}</strong>
+                </span>
+              )}
+            </div>
+            {!payoutSummary?.history?.length ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No payouts recorded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {payoutSummary.history.map((p) => (
+                  <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 border rounded-md px-3 py-2">
+                    <div>
+                      <p className="text-sm font-medium">₹{Number(p.amount).toLocaleString("en-IN")}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {(p.payment_mode || "").replace("_", " ")} · Ref: {p.transaction_ref || "—"}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(p.payment_date), "dd MMM yyyy")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-4">
