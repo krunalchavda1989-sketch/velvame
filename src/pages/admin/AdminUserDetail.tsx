@@ -25,6 +25,7 @@ import DateDropdowns from "@/components/ui/date-dropdowns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import ManualSubscriptionForm from "@/components/admin/ManualSubscriptionForm";
+import { usePayoutSummary } from "@/hooks/usePayoutSummary";
 
 const getCommissionDisplayLevel = (commissionType: string | null | undefined, level: number | string | null | undefined) => {
   const numericLevel = Number(level ?? 0);
@@ -43,6 +44,8 @@ const normalizeStoredCommissionRate = (rate: number | string | null | undefined)
 
 const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
+  const [payoutUserId, setPayoutUserId] = useState<string | undefined>();
+  const { data: payoutSummary, nextPayoutDate: nextPayout } = usePayoutSummary(payoutUserId);
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [wallet, setWallet] = useState<any>(null);
@@ -94,6 +97,7 @@ const AdminUserDetail = () => {
       ]);
 
       setProfile(prof);
+      setPayoutUserId(prof.user_id);
       setReferrals(refs || []);
       setAwards(aw || []);
       setTitleRoadmap(tr || []);
