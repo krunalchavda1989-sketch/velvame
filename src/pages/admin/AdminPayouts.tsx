@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { CalendarClock, Clock, Users, Wallet, Search, Eye, Loader2, Save } from "lucide-react";
+import { CalendarClock, Clock, Users, Wallet, Search, Eye, Loader2, Save, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import {
@@ -65,10 +65,26 @@ const AdminPayouts = () => {
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [savingDay, setSavingDay] = useState(false);
   const [historyUser, setHistoryUser] = useState<Row | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [reconciling, setReconciling] = useState(false);
 
   const fc = (n: number) => `${currencySymbol}${Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
+  const runReconciliation = async () => {
+    setReconciling(true);
+    const { data, error } = await (supabase as any).rpc("admin_reconcile_commission_wallets");
+    setReconciling(false);
+    if (error) return toast.error(error.message);
+    if (data?.success === false) return toast.error(data.error || "Not allowed");
+    const corrected = data?.users_corrected ?? 0;
+    toast.success(corrected > 0
+      ? `${corrected} member${corrected > 1 ? "s" : ""} corrected`
+      : "All balances already correct");
+    setReloadKey((k) => k + 1);
+  };
+
   useEffect(() => {
+
     (async () => {
       setLoading(true);
       const [profiles, commissions, payoutRows, walletTxns, settings] = await Promise.all([
@@ -111,7 +127,7 @@ const AdminPayouts = () => {
       setPayouts(payoutRows as PayoutRow[]);
       setLoading(false);
     })();
-  }, []);
+  }, [reloadKey]);
 
   const nextDate = useMemo(() => nextPayoutDate(payoutDay), [payoutDay]);
 
@@ -206,6 +222,10 @@ const AdminPayouts = () => {
                 </Button>
               </div>
             </div>
+            <Button variant="outline" onClick={runReconciliation} disabled={reconciling} className="gap-2">
+              {reconciling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Recheck balances
+            </Button>
           </CardContent>
         </Card>
 
