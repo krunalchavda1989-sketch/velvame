@@ -28,6 +28,7 @@ import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminWithdrawals from "./pages/admin/AdminWithdrawals";
+import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminBrandSettings from "./pages/admin/AdminBrandSettings";
 import AdminTitleRoadmap from "./pages/admin/AdminTitleRoadmap";
@@ -244,6 +245,7 @@ const App = () => (
             <Route path="/admin/orders/:id" element={<AdminRoute><AdminOrderDetail /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><AdminCommissions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><AdminWithdrawals /></AdminRoute>} />
+            <Route path="/admin/payouts" element={<AdminRoute><AdminPayouts /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/brand-settings" element={<AdminRoute><AdminBrandSettings /></AdminRoute>} />
             <Route path="/admin/system-colors" element={<AdminRoute><AdminSystemColors /></AdminRoute>} />

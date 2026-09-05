@@ -67,6 +67,7 @@ const menuItems: MenuItem[] = [
   { icon: BarChart3, label: "Commissions", href: "/admin/commissions" },
   { icon: History, label: "Reprocess Audit Log", href: "/admin/commission-reprocess-log" },
   { icon: ArrowDownToLine, label: "Withdrawals", href: "/admin/withdrawals" },
+  { icon: CalendarClock, label: "Payout Dashboard", href: "/admin/payouts" },
   { icon: Wallet, label: "Wallet Management", href: "/admin/wallet-management" },
   {
     icon: Store, label: "Website", href: "/admin/brand-settings",
