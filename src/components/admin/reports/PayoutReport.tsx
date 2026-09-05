@@ -139,10 +139,13 @@ const PayoutReport = () => {
       paidMap.set(p.user_id, prev);
     });
 
-    // Aggregate commission-balance ledger per user: credits, reversal debits, order-usage debits
+    // Aggregate commission-balance ledger per user: credits, reversal debits,
+    // payout-mirror debits (written by admin_record_payout / withdrawals) and
+    // real order-usage debits.
     const walletCreditMap = new Map<string, number>();
     const walletReversalMap = new Map<string, number>();
     const walletUsedMap = new Map<string, number>();
+    const walletPayoutMap = new Map<string, number>();
     walletTxns.forEach((w: any) => {
       if (w.balance_type !== "commission") return;
       const amt = Number(w.amount);
@@ -151,8 +154,13 @@ const PayoutReport = () => {
         walletCreditMap.set(w.user_id, (walletCreditMap.get(w.user_id) || 0) + amt);
       } else if (w.type === "debit") {
         const isReversal = /Reversal|Correction|Reprocess/i.test(desc);
+        // Payout / withdrawal debits are the ledger MIRROR of a payout_transactions
+        // row — counting both would double-count the same payment (VM552 case).
+        const isPayoutMirror = /payout|withdraw/i.test(desc);
         if (isReversal) {
           walletReversalMap.set(w.user_id, (walletReversalMap.get(w.user_id) || 0) + amt);
+        } else if (isPayoutMirror) {
+          walletPayoutMap.set(w.user_id, (walletPayoutMap.get(w.user_id) || 0) + amt);
         } else {
           walletUsedMap.set(w.user_id, (walletUsedMap.get(w.user_id) || 0) + amt);
         }
@@ -174,8 +182,13 @@ const PayoutReport = () => {
 
       const paidInfo = paidMap.get(p.user_id) || { total: 0, lastDate: null };
       const walletUsed = walletUsedMap.get(p.user_id) || 0;
+      const ledgerPayouts = walletPayoutMap.get(p.user_id) || 0;
+      // Payout records and their ledger mirrors describe the SAME money, so take the
+      // larger of the two (covers legacy payouts that only exist in one place).
+      const payoutsSettled = Math.max(paidInfo.total, ledgerPayouts);
       // Cap settled at earned so Total Paid can never exceed Total Earned.
-      const settled = Math.min(earned, paidInfo.total + walletUsed);
+      const settled = Math.min(earned, payoutsSettled + walletUsed);
+
       const bank = bankMap.get(p.user_id);
       return {
         user_id: p.user_id,
