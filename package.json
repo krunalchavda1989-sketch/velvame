@@ -101,7 +101,6 @@
   },
   "overrides": {
     "tinypool": "^2.2.0",
-    "esbuild": "^0.28.2",
     "minimatch": "^11.0.3"
   }
 }
