@@ -12,6 +12,22 @@ dist
 dist-ssr
 *.local
 
+# Environment & credentials
+.env
+.env.*
+!.env.example
+
+# Database dumps & backup files
+*.backup
+*.dump
+*.zip
+supabase/*.sql
+supabase/.temp/
+velvame/
+
+# Ensure migrations are tracked
+!supabase/migrations/*.sql
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
